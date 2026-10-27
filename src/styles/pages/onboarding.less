@@ -1,0 +1,708 @@
+@import "../variables.less";
+@import "../mixins.less";
+
+// ─── Onboarding Overlay ──────────────────────────────────────────────────────
+.onboarding {
+	position: fixed;
+	inset: 0;
+	z-index: 9999;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: rgba(15, 23, 42, 0.6);
+	backdrop-filter: blur(0.75rem);
+	-webkit-backdrop-filter: blur(0.75rem);
+	animation: onboarding-backdrop-in 0.4s ease-out;
+
+	&__card {
+		position: relative;
+		width: 95vw;
+		max-width: 53.75rem;
+		min-height: 30rem;
+		max-height: 90vh;
+		background: @white;
+		border-radius: 1.25rem;
+		box-shadow:
+			0 1.5625rem 3.75rem rgba(0, 0, 0, 0.18),
+			0 0 0 0.0625rem rgba(255, 255, 255, 0.08);
+		overflow: hidden;
+		display: flex;
+		flex-direction: column;
+		animation: onboarding-card-in 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+	}
+
+	// ── Step content area ────────────────────────────────────────────────────────
+	&__body {
+		flex: 1;
+		display: flex;
+		overflow: hidden;
+		position: relative;
+	}
+
+	&__step {
+		width: 100%;
+		flex-shrink: 0;
+		display: flex;
+		animation: onboarding-step-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+	}
+
+	// ── Footer ───────────────────────────────────────────────────────────────────
+	&__footer {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 1rem 2rem 1.5rem;
+		border-top: 0.0625rem solid @gray-100;
+	}
+
+	&__dots {
+		display: flex;
+		gap: 0.5rem;
+		align-items: center;
+	}
+
+	&__dot {
+		width: 0.5rem;
+		height: 0.5rem;
+		border-radius: 50%;
+		background: @gray-200;
+		transition: all 0.3s ease;
+
+		&--active {
+			width: 1.5rem;
+			border-radius: 0.25rem;
+			background: @blue-600;
+		}
+
+		&--done {
+			background: @blue-500;
+		}
+	}
+
+	&__step-label {
+		font-size: 0.75rem;
+		color: @gray-400;
+		font-weight: 500;
+	}
+
+	&__btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.625rem 1.75rem;
+		border-radius: 0.625rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		border: none;
+		cursor: pointer;
+		transition: all 0.2s ease;
+
+		&--primary {
+			background: @blue-600;
+			color: @white;
+			box-shadow: 0 0.25rem 0.875rem rgba(37, 99, 235, 0.35);
+
+			&:hover {
+				background: @blue-700;
+				box-shadow: 0 0.375rem 1.25rem rgba(37, 99, 235, 0.45);
+				transform: translateY(-0.0625rem);
+			}
+		}
+
+		&--ghost {
+			background: transparent;
+			color: @gray-500;
+
+			&:hover {
+				color: @gray-700;
+				background: @gray-50;
+			}
+		}
+
+		&--success {
+			background: #059669;
+			color: @white;
+			box-shadow: 0 0.25rem 0.875rem rgba(5, 150, 105, 0.35);
+
+			&:hover {
+				background: #047857;
+				transform: translateY(-0.0625rem);
+			}
+		}
+	}
+
+	&__skip {
+		position: absolute;
+		top: 1rem;
+		right: 1.25rem;
+		z-index: 10;
+		background: none;
+		border: none;
+		font-size: 0.75rem;
+		color: @gray-400;
+		cursor: pointer;
+		font-weight: 500;
+		padding: 0.25rem 0.5rem;
+		border-radius: 0.375rem;
+		transition: all 0.15s ease;
+
+		&:hover {
+			color: @gray-600;
+			background: @gray-50;
+		}
+	}
+
+	// ═══════════════════════════════════════════════════════════════════════════════
+	// Step 1 – Welcome
+	// ═══════════════════════════════════════════════════════════════════════════════
+	&__welcome {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 3rem 2.5rem 1.5rem;
+	}
+
+	&__avatar-cluster {
+		position: relative;
+		width: 7.5rem;
+		height: 4.375rem;
+		margin-bottom: 1.75rem;
+	}
+
+	&__avatar-bubble {
+		position: absolute;
+		border-radius: 50%;
+		border: 0.1875rem solid @white;
+		box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.12);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-weight: 700;
+		color: @white;
+		font-size: 0.8125rem;
+
+		&:nth-child(1) {
+			width: 3rem;
+			height: 3rem;
+			left: 0;
+			top: 0.625rem;
+			background: @blue-600;
+			animation: onboarding-bubble 0.6s ease 0.1s both;
+		}
+		&:nth-child(2) {
+			width: 2.5rem;
+			height: 2.5rem;
+			left: 1.875rem;
+			top: 0;
+			background: #7c3aed;
+			animation: onboarding-bubble 0.6s ease 0.2s both;
+		}
+		&:nth-child(3) {
+			width: 2.75rem;
+			height: 2.75rem;
+			left: 3.4375rem;
+			top: 1rem;
+			background: #ea580c;
+			animation: onboarding-bubble 0.6s ease 0.3s both;
+		}
+		&:nth-child(4) {
+			width: 2.25rem;
+			height: 2.25rem;
+			left: 5.3125rem;
+			top: 0.125rem;
+			background: #059669;
+			animation: onboarding-bubble 0.6s ease 0.4s both;
+		}
+	}
+
+	&__welcome-title {
+		font-size: 1.625rem;
+		font-weight: 800;
+		color: @gray-900;
+		margin-bottom: 0.75rem;
+		line-height: 1.2;
+		letter-spacing: -0.03125rem;
+	}
+
+	&__welcome-desc {
+		font-size: 0.9375rem;
+		color: @gray-500;
+		line-height: 1.65;
+		max-width: 27.5rem;
+	}
+
+	// ═══════════════════════════════════════════════════════════════════════════════
+	// Step 2 – Your Role
+	// ═══════════════════════════════════════════════════════════════════════════════
+	&__role {
+		flex: 1;
+		display: flex;
+		min-height: 0;
+	}
+
+	&__role-sidebar {
+		width: 13.75rem;
+		background: @gray-900;
+		padding: 1.75rem 0;
+		display: flex;
+		flex-direction: column;
+		flex-shrink: 0;
+	}
+
+	&__role-sidebar-logo {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		padding: 0 1.5rem;
+		margin-bottom: 2rem;
+		color: @white;
+		font-weight: 700;
+		font-size: 1rem;
+
+		svg {
+			width: 1.375rem;
+			height: 1.375rem;
+			opacity: 0.9;
+		}
+	}
+
+	&__role-nav {
+		list-style: none;
+		display: flex;
+		flex-direction: column;
+		gap: 0.125rem;
+		padding: 0 0.75rem;
+	}
+
+	&__role-nav-item {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.625rem 0.875rem;
+		border-radius: 0.5rem;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: rgba(255, 255, 255, 0.5);
+		transition: all 0.15s ease;
+
+		svg {
+			width: 1rem;
+			height: 1rem;
+			flex-shrink: 0;
+			opacity: 0.6;
+		}
+
+		&--active {
+			background: rgba(255, 255, 255, 0.1);
+			color: @white;
+			svg {
+				opacity: 1;
+			}
+		}
+	}
+
+	&__role-content {
+		flex: 1;
+		padding: 2.25rem 2.5rem 1.5rem;
+		display: flex;
+		flex-direction: column;
+		overflow-y: auto;
+	}
+
+	&__role-title {
+		font-size: 1.375rem;
+		font-weight: 800;
+		color: @gray-900;
+		margin-bottom: 0.375rem;
+		letter-spacing: -0.025rem;
+	}
+
+	&__role-subtitle {
+		font-size: 0.8125rem;
+		color: @gray-400;
+		margin-bottom: 1.5rem;
+	}
+
+	&__role-card {
+		background: @gray-50;
+		border: 0.0625rem solid @gray-200;
+		border-radius: 0.75rem;
+		padding: 1.25rem 1.5rem;
+		margin-bottom: 1.25rem;
+	}
+
+	&__role-card-label {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.03125rem;
+		color: @gray-400;
+		margin-bottom: 0.375rem;
+	}
+
+	&__role-card-value {
+		font-size: 1.125rem;
+		font-weight: 700;
+		color: @gray-900;
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+	}
+
+	&__role-badge {
+		display: inline-flex;
+		padding: 0.1875rem 0.625rem;
+		border-radius: 0.375rem;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		background: @blue-50;
+		color: @blue-600;
+		border: 0.0625rem solid @blue-100;
+	}
+
+	&__role-features {
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+		margin-top: 0.25rem;
+	}
+
+	&__role-feature {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		font-size: 0.8125rem;
+		color: @gray-600;
+		font-weight: 500;
+
+		&-icon {
+			width: 1.75rem;
+			height: 1.75rem;
+			border-radius: 0.5rem;
+			background: @blue-50;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			flex-shrink: 0;
+			font-size: 0.875rem;
+		}
+	}
+
+	// ═══════════════════════════════════════════════════════════════════════════════
+	// Step 3 – Feature Tour
+	// ═══════════════════════════════════════════════════════════════════════════════
+	&__tour {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		padding: 2.25rem 2.5rem 1.5rem;
+		position: relative;
+	}
+
+	&__tour-title {
+		font-size: 1.375rem;
+		font-weight: 800;
+		color: @gray-900;
+		margin-bottom: 0.375rem;
+		letter-spacing: -0.025rem;
+	}
+
+	&__tour-subtitle {
+		font-size: 0.8125rem;
+		color: @gray-400;
+		margin-bottom: 1.75rem;
+	}
+
+	&__tour-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+		flex: 1;
+	}
+
+	&__tour-card {
+		background: @white;
+		border: 0.0625rem solid @gray-200;
+		border-radius: 0.875rem;
+		padding: 1.375rem;
+		display: flex;
+		flex-direction: column;
+		gap: 0.625rem;
+		transition: all 0.25s ease;
+		position: relative;
+		overflow: hidden;
+
+		&::before {
+			content: "";
+			position: absolute;
+			top: 0;
+			left: 0;
+			right: 0;
+			height: 0.1875rem;
+			border-radius: 0.875rem 0.875rem 0 0;
+		}
+
+		&:nth-child(1)::before {
+			background: @blue-600;
+		}
+		&:nth-child(2)::before {
+			background: #059669;
+		}
+		&:nth-child(3)::before {
+			background: #7c3aed;
+		}
+		&:nth-child(4)::before {
+			background: #ea580c;
+		}
+
+		&:hover {
+			border-color: @blue-500;
+			box-shadow: 0 0.5rem 1.5rem rgba(0, 0, 0, 0.06);
+			transform: translateY(-0.125rem);
+		}
+	}
+
+	&__tour-card-icon {
+		width: 2.625rem;
+		height: 2.625rem;
+		border-radius: 0.75rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.25rem;
+
+		&--blue {
+			background: @blue-50;
+			color: @blue-600;
+		}
+		&--green {
+			background: @green-50;
+			color: @green-600;
+		}
+		&--purple {
+			background: @purple-100;
+			color: #7c3aed;
+		}
+		&--orange {
+			background: @orange-50;
+			color: @orange-600;
+		}
+	}
+
+	&__tour-card-title {
+		font-size: 0.9375rem;
+		font-weight: 700;
+		color: @gray-900;
+	}
+
+	&__tour-card-desc {
+		font-size: 0.78125rem;
+		color: @gray-500;
+		line-height: 1.55;
+	}
+
+	// ═══════════════════════════════════════════════════════════════════════════════
+	// Step 4 – All Set
+	// ═══════════════════════════════════════════════════════════════════════════════
+	&__done {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: center;
+		text-align: center;
+		padding: 3rem 2.5rem 1.5rem;
+	}
+
+	&__done-check {
+		width: 4.5rem;
+		height: 4.5rem;
+		border-radius: 50%;
+		background: linear-gradient(135deg, #059669, #10b981);
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-bottom: 1.5rem;
+		box-shadow: 0 0.5rem 1.5rem rgba(5, 150, 105, 0.3);
+		animation: onboarding-check-pop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s
+			both;
+
+		svg {
+			width: 2.25rem;
+			height: 2.25rem;
+			color: @white;
+			stroke-width: 2.5;
+		}
+	}
+
+	&__done-title {
+		font-size: 1.625rem;
+		font-weight: 800;
+		color: @gray-900;
+		margin-bottom: 0.625rem;
+		letter-spacing: -0.03125rem;
+	}
+
+	&__done-desc {
+		font-size: 0.875rem;
+		color: @gray-500;
+		line-height: 1.6;
+		max-width: 25rem;
+		margin-bottom: 2rem;
+	}
+
+	&__done-features {
+		display: flex;
+		gap: 1.25rem;
+		margin-bottom: 0.5rem;
+	}
+
+	&__done-feature {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 0.625rem;
+		padding: 1.25rem 1.5rem;
+		background: @gray-50;
+		border: 0.0625rem solid @gray-200;
+		border-radius: 0.875rem;
+		min-width: 9.375rem;
+		transition: all 0.2s ease;
+
+		&:hover {
+			border-color: @blue-500;
+			transform: translateY(-0.125rem);
+			box-shadow: 0 0.25rem 1rem rgba(0, 0, 0, 0.06);
+		}
+	}
+
+	&__done-feature-icon {
+		width: 2.5rem;
+		height: 2.5rem;
+		border-radius: 0.75rem;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		font-size: 1.125rem;
+
+		&--blue {
+			background: @blue-50;
+		}
+		&--green {
+			background: @green-50;
+		}
+		&--purple {
+			background: @purple-100;
+		}
+	}
+
+	&__done-feature-title {
+		font-size: 0.875rem;
+		font-weight: 700;
+		color: @gray-900;
+	}
+
+	&__done-feature-desc {
+		font-size: 0.71875rem;
+		color: @gray-500;
+		line-height: 1.45;
+		text-align: center;
+	}
+}
+
+// ─── Animations ──────────────────────────────────────────────────────────────
+@keyframes onboarding-backdrop-in {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 1;
+	}
+}
+
+@keyframes onboarding-card-in {
+	from {
+		opacity: 0;
+		transform: scale(0.92) translateY(1.25rem);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes onboarding-step-in {
+	from {
+		opacity: 0;
+		transform: translateX(2.5rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateX(0);
+	}
+}
+
+@keyframes onboarding-bubble {
+	from {
+		opacity: 0;
+		transform: scale(0) translateY(0.625rem);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1) translateY(0);
+	}
+}
+
+@keyframes onboarding-check-pop {
+	from {
+		opacity: 0;
+		transform: scale(0.3);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+// ─── Responsive ──────────────────────────────────────────────────────────────
+@media (max-width: 45rem) {
+	.onboarding {
+		&__card {
+			max-width: 100%;
+			border-radius: 1rem;
+			min-height: 26.25rem;
+		}
+		&__role {
+			flex-direction: column;
+		}
+		&__role-sidebar {
+			width: 100%;
+			flex-direction: row;
+			padding: 1rem;
+			overflow-x: auto;
+		}
+		&__role-nav {
+			flex-direction: row;
+			padding: 0;
+		}
+		&__role-content {
+			padding: 1.5rem;
+		}
+		&__tour-grid {
+			grid-template-columns: 1fr;
+		}
+		&__done-features {
+			flex-direction: column;
+			align-items: center;
+		}
+		&__welcome {
+			padding: 2rem 1.5rem 1rem;
+		}
+		&__done {
+			padding: 2rem 1.5rem 1rem;
+		}
+	}
+}

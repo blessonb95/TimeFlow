@@ -1,0 +1,444 @@
+@import "../variables.less";
+@import "../mixins.less";
+
+.settings {
+	max-width: 40rem;
+
+	&__section {
+		.card-base();
+		padding: @space-6;
+		margin-bottom: @space-5;
+
+		&-title {
+			font-size: @font-size-lg;
+			font-weight: 600;
+			margin-bottom: @space-1;
+		}
+		&-desc {
+			font-size: @font-size-sm;
+			color: @color-text-secondary;
+			margin-bottom: @space-5;
+		}
+		&-divider {
+			height: 0.0625rem;
+			background: @color-border;
+			margin: @space-5 0;
+		}
+	}
+
+	&__avatar-row {
+		.flex-center();
+		gap: 0.625rem;
+		margin-bottom: @space-5;
+	}
+	&__avatar-wrapper {
+		position: relative;
+		cursor: pointer;
+	}
+	&__user-name {
+		font-weight: 600;
+		font-size: 0.9375rem;
+		color: #0f172a;
+		margin-bottom: 0.1875rem;
+	}
+	&__avatar-actions {
+		.flex-center();
+		gap: 0.75rem;
+	}
+	&__avatar-change {
+		background: none;
+		border: none;
+		padding: 0;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: @blue-600;
+		cursor: pointer;
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+	&__avatar-remove {
+		background: none;
+		border: none;
+		padding: 0;
+		font-size: 0.8125rem;
+		font-weight: 500;
+		color: @red-500;
+		cursor: pointer;
+		&:hover {
+			text-decoration: underline;
+		}
+	}
+	&__file-input {
+		display: none;
+	}
+	&__upload-msg {
+		margin-top: 0.5rem;
+		font-size: 0.75rem;
+		font-weight: 500;
+
+		&--success {
+			color: #16a34a;
+		}
+		&--error {
+			color: #dc2626;
+		}
+	}
+	&__input-readonly {
+		background: #f9fafb;
+		color: #6b7280;
+	}
+	&__signout-btn {
+		.flex-center();
+		gap: 0.5rem;
+	}
+
+	&__form-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: @space-4;
+	}
+
+	// Toggle
+	&__toggle-row {
+		.flex-between();
+		padding: @space-3 0;
+		border-bottom: 0.0625rem solid @color-border;
+		&:last-child {
+			border-bottom: none;
+		}
+	}
+	&__toggle-info {
+		.flex-col();
+		gap: 0.125rem;
+	}
+	&__toggle-label {
+		font-size: @font-size-base;
+		font-weight: 500;
+	}
+	&__toggle-desc {
+		font-size: @font-size-sm;
+		color: @color-text-secondary;
+	}
+
+	&__toggle {
+		position: relative;
+		width: 2.5rem;
+		height: 1.375rem;
+		flex-shrink: 0;
+		cursor: pointer;
+
+		input {
+			opacity: 0;
+			width: 0;
+			height: 0;
+			position: absolute;
+		}
+
+		&-track {
+			position: absolute;
+			inset: 0;
+			background: @gray-300;
+			border-radius: @radius-full;
+			cursor: pointer;
+			transition: background 0.18s;
+		}
+
+		&-thumb {
+			position: absolute;
+			width: 1rem;
+			height: 1rem;
+			border-radius: @radius-full;
+			background: @white;
+			top: 0.1875rem;
+			left: 0.1875rem;
+			transition: transform 0.18s;
+			box-shadow: @shadow-xs;
+		}
+
+		input:checked ~ &-track {
+			background: @gray-900;
+		}
+		input:checked ~ &-track &-thumb {
+			transform: translateX(1.125rem);
+		}
+	}
+
+	&__danger-zone {
+		border: 0.0625rem solid @red-200;
+		border-radius: @radius-xl;
+		padding: @space-5;
+	}
+	&__danger-title {
+		font-size: @font-size-md;
+		font-weight: 600;
+		color: @red-600;
+		margin-bottom: @space-1;
+	}
+	&__danger-desc {
+		font-size: @font-size-sm;
+		color: @color-text-secondary;
+		margin-bottom: @space-4;
+	}
+
+	// ─── About section ───────────────────────────────────────────────────────
+	&__section--about {
+		// Slightly quieter than regular sections
+		.settings__section-title {
+			margin: 0;
+			color: @color-text-secondary;
+			font-size: @font-size-base;
+			font-weight: 600;
+		}
+		.settings__section-desc {
+			margin-bottom: @space-2;
+		}
+	}
+
+	&__about-meta {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: @font-size-sm;
+		color: @color-text-muted;
+		margin-bottom: @space-4;
+	}
+
+	&__about-dot {
+		color: @gray-300;
+	}
+
+	&__about-hint {
+		display: inline-flex;
+		align-items: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+		font-size: @font-size-sm;
+		color: @color-text-muted;
+		font-style: italic;
+		padding: 0.5rem 0.75rem;
+		background: @gray-50;
+		border: 0.0625rem solid @color-border;
+		border-radius: @radius-md;
+		user-select: none;
+
+		svg {
+			flex-shrink: 0;
+			opacity: 0.5;
+		}
+	}
+
+	// Row of 8 letter tiles
+	&__about-tiles {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.1875rem;
+	}
+
+	&__about-tile {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 1.25rem;
+		height: 1.375rem;
+		border-radius: 0.25rem;
+		border: 0.0625rem solid @gray-300;
+		background: @white;
+		font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		font-style: normal;
+		color: @gray-300;
+		transition:
+			background 0.15s ease,
+			border-color 0.15s ease,
+			color 0.15s ease,
+			transform 0.12s ease;
+
+		&--active {
+			background: @gray-900;
+			border-color: @gray-900;
+			color: @white;
+			transform: translateY(-0.125rem);
+		}
+	}
+
+	// "The Rundown" label after the tiles
+	&__about-hint-label {
+		font-size: 0.625rem;
+		font-weight: 600;
+		font-style: normal;
+		letter-spacing: 0.01875rem;
+		color: @color-text-muted;
+		background: @gray-100;
+		border: 0.0625rem solid @color-border;
+		border-radius: @radius-full;
+		padding: 0.125rem 0.5rem;
+	}
+
+	// Remove old blur-reveal (no longer used)
+	&__about-secret { display: none; }
+}
+
+@media (max-width: 40rem) {
+	.settings {
+		max-width: 100%;
+		&__form-grid {
+			grid-template-columns: 1fr;
+		}
+		&__toggle-row {
+			flex-direction: column;
+			align-items: flex-start;
+			gap: @space-3;
+		}
+		&__avatar-row {
+			flex-direction: column;
+			align-items: flex-start;
+		}
+		&__about-egg {
+			grid-template-columns: 1.75rem minmax(0, 1fr);
+			align-items: start;
+
+			&-clue {
+				grid-column: 2;
+			}
+		}
+	}
+}
+
+// ─── About footer ─────────────────────────────────────────────────────────────
+.settings__about-footer {
+	max-width: 40rem;
+	padding: @space-5 0 @space-8;
+	display: flex;
+	flex-direction: column;
+	gap: @space-3;
+
+	&-top {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+
+	&-version {
+		font-size: @font-size-sm;
+		color: @color-text-muted;
+	}
+
+	&-label {
+		font-size: 0.625rem;
+		font-weight: 600;
+		letter-spacing: 0.03125rem;
+		color: @color-text-muted;
+		text-transform: uppercase;
+	}
+}
+
+.settings__about-toggle {
+	width: 1.625rem;
+	height: 1.625rem;
+	border-radius: @radius-full;
+	background: transparent;
+	border: 0.0625rem solid @color-border;
+	font-size: 0.75rem;
+	color: @color-text-muted;
+	cursor: pointer;
+	transition: @transition-fast;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	padding: 0;
+
+	&:hover {
+		background: @gray-100;
+		color: @color-text-primary;
+		border-color: @gray-300;
+	}
+
+	&--active {
+		background: @gray-900;
+		color: @white;
+		border-color: @gray-900;
+
+		&:hover {
+			background: @gray-800;
+			color: @white;
+		}
+	}
+}
+
+// ─── Egg hint rows ────────────────────────────────────────────────────────────
+@keyframes settings-egg-fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-0.375rem);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.settings__about-eggs {
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	border: 0.0625rem solid @color-border;
+	border-radius: @radius-lg;
+	overflow: hidden;
+	background: @white;
+	animation: settings-egg-fadeIn 0.2s ease forwards;
+
+	&-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.5rem 0.875rem;
+		background: @gray-50;
+		border-bottom: 0.0625rem solid @color-border;
+		font-size: 0.6875rem;
+		color: @color-text-muted;
+		font-style: italic;
+
+		svg {
+			opacity: 0.6;
+			flex-shrink: 0;
+		}
+	}
+}
+
+.settings__about-egg {
+	display: grid;
+	grid-template-columns: 1.75rem 8.75rem 1fr;
+	align-items: center;
+	gap: @space-3;
+	padding: 0.5625rem 0.875rem;
+	border-bottom: 0.0625rem solid @color-border;
+
+	&:last-child {
+		border-bottom: none;
+	}
+
+	&-emoji {
+		font-size: 0.9375rem;
+		line-height: 1;
+		text-align: center;
+	}
+
+	&-word {
+		font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: @gray-600;
+		letter-spacing: 0.0625rem;
+		background: none;
+		border: none;
+		padding: 0;
+	}
+
+	&-clue {
+		font-size: @font-size-sm;
+		color: @color-text-muted;
+		font-style: italic;
+	}
+}

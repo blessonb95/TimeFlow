@@ -1,0 +1,116 @@
+@import "../variables.less";
+@import "../mixins.less";
+
+.btn {
+	.btn-base();
+	transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, box-shadow 160ms ease, transform 160ms ease;
+
+	&:hover:not(:disabled) {
+		transform: translateY(-0.0625rem);
+	}
+	&:active:not(:disabled) {
+		transform: translateY(0) scale(0.985);
+	}
+
+	&--primary {
+		background: @primary-action; // #2563EB
+		color: @pure-white;
+		box-shadow: 0 0.0625rem 0.125rem rgba(37, 99, 235, 0.2);
+		&:hover {
+			background: @color-primary-hover; // #1D4ED8
+			box-shadow: 0 0.125rem 0.25rem rgba(37, 99, 235, 0.28);
+		}
+		&:active {
+			background: #1e40af;
+		}
+	}
+
+	&--navy {
+		background: @deep-navy; // #111827
+		color: @pure-white;
+		&:hover {
+			background: @gray-800;
+		}
+		&:active {
+			background: @gray-700;
+		}
+	}
+
+	&--secondary {
+		background: @pure-white;
+		color: @color-text-primary;
+		border: 0.0625rem solid @color-border;
+		&:hover {
+			background: @canvas-light;
+		}
+	}
+
+	&--ghost {
+		background: transparent;
+		color: @color-text-secondary;
+		border: 0.0625rem solid @color-border;
+		&:hover {
+			background: @canvas-light;
+			color: @color-text-primary;
+		}
+	}
+
+	&--success {
+		background: @success-green; // #16A34A
+		color: @pure-white;
+		&:hover {
+			background: #15803d;
+		}
+	}
+
+	&--warning {
+		background: @warning-gold; // #D97706
+		color: @pure-white;
+		&:hover {
+			background: #b45309;
+		}
+	}
+
+	&--danger {
+		background: @red-500;
+		color: @pure-white;
+		&:hover {
+			background: @red-600;
+		}
+	}
+
+	&--icon {
+		padding: 0.4375rem;
+		border-radius: @radius-lg;
+		background: transparent;
+		color: @color-text-secondary;
+		border: 0.0625rem solid @color-border;
+		&:hover {
+			background: @canvas-light;
+		}
+		svg {
+			width: 1rem;
+			height: 1rem;
+			display: block;
+		}
+	}
+
+	&--sm {
+		padding: 0.3125rem 0.6875rem;
+		font-size: @font-size-sm;
+	}
+	&--lg {
+		padding: 0.625rem 1.25rem;
+		font-size: @font-size-md;
+	}
+
+	svg {
+		width: 0.9375rem;
+		height: 0.9375rem;
+	}
+
+	&:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+}

@@ -1,0 +1,163 @@
+@import "./variables.less";
+@import "./mixins.less";
+@import "./layout.less";
+@import "./components/badge.less";
+@import "./components/button.less";
+@import "./components/avatar.less";
+@import "./components/table.less";
+@import "./components/progress.less";
+@import "./components/drawer.less";
+@import "./components/modal.less";
+@import "./components/search-modal.less";
+@import "./components/rich-text-editor.less";
+@import "./components/easter-egg.less";
+@import "./pages/login.less";
+@import "./pages/dashboard.less";
+@import "./pages/worklogs.less";
+@import "./pages/projects.less";
+@import "./pages/project-detail.less";
+@import "./pages/employees.less";
+@import "./pages/approvals.less";
+@import "./pages/reports.less";
+@import "./pages/settings.less";
+@import "./pages/onboarding.less";
+
+// ─── Design System Root Tokens ───────────────────────────────────────────────
+:root {
+	--deep-navy: #111827;
+	--primary-action: #2563eb;
+	--success-green: #16a34a;
+	--warning-gold: #d97706;
+	--canvas-light: #f3f4f6;
+	--pure-white: #ffffff;
+
+	--color-bg: #f3f4f6;
+	--color-surface: #ffffff;
+	--color-border: #e5e7eb;
+	--color-text-primary: #111827;
+	--color-text-secondary: #4b5563;
+	--color-text-muted: #6b7280;
+	--color-primary: #2563eb;
+	--color-success: #16a34a;
+	--color-warning: #d97706;
+	--font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+// ─── Reset ────────────────────────────────────────────────────────────────────
+*,
+*::before,
+*::after {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html {
+	font-size: 1rem; /* Respects the browser default, normally 16px */
+}
+
+html,
+body,
+#root {
+	height: 100%;
+	font-family: @font-family;
+	font-size: @font-size-base;
+	color: @color-text-primary;
+	background: @color-bg;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+}
+
+a {
+	text-decoration: none;
+	color: inherit;
+}
+button {
+	font-family: @font-family;
+	transition-property: background-color, border-color, color, box-shadow, transform;
+	transition-duration: 180ms;
+	transition-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+	button:not(:disabled):hover {
+		transform: translateY(-0.0625rem);
+	}
+
+	button:not(:disabled):active {
+		transform: translateY(0) scale(0.985);
+	}
+}
+
+@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+	.dashboard__week-hero,
+	.dashboard__panel,
+	.dashboard__stat-card,
+	.projects__card,
+	.employees__card {
+		transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+	}
+
+	.dashboard__week-hero:hover,
+	.dashboard__panel:hover,
+	.dashboard__stat-card:hover,
+	.projects__card:hover,
+	.employees__card:hover {
+		transform: translateY(-0.125rem);
+	}
+
+	button:not(:disabled):active {
+		transform: scale(0.985);
+	}
+}
+
+.worklogs__grid-hours--link,
+.worklogs__grid-dash,
+.worklogs__grid-dropdown-item,
+.task-panel__task-name--link {
+	border: 0;
+	padding: 0;
+	background: transparent;
+	font: inherit;
+	text-align: left;
+}
+input,
+select,
+textarea {
+	font-family: @font-family;
+	font-size: @font-size-base;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible {
+	outline: 0.1875rem solid @color-primary;
+	outline-offset: 0.125rem;
+}
+
+@media (forced-colors: active) {
+	a:focus-visible,
+	button:focus-visible,
+	input:focus-visible,
+	select:focus-visible,
+	textarea:focus-visible,
+	summary:focus-visible,
+	[tabindex]:focus-visible {
+		outline-color: Highlight;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*,
+	*::before,
+	*::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+		transition-duration: 0.01ms !important;
+	}
+}

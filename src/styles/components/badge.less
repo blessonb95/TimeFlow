@@ -1,0 +1,108 @@
+@import "../variables.less";
+@import "../mixins.less";
+
+.badge {
+	.badge-base();
+
+	&--green {
+		background: @green-50;
+		color: @success-green;
+		border: 0.0625rem solid @green-200;
+	}
+	&--blue {
+		background: @blue-50;
+		color: @primary-action;
+		border: 0.0625rem solid @blue-200;
+	}
+	&--yellow {
+		background: @yellow-50;
+		color: @warning-gold;
+		border: 0.0625rem solid @yellow-200;
+	}
+	&--orange {
+		background: @orange-50;
+		color: @warning-gold;
+		border: 0.0625rem solid @orange-200;
+	}
+	&--red {
+		background: @red-50;
+		color: @red-600;
+		border: 0.0625rem solid @red-200;
+	}
+	&--purple {
+		background: @purple-100;
+		color: @purple-600;
+		border: 0.0625rem solid @purple-500;
+	}
+	&--gray {
+		background: @canvas-light;
+		color: @gray-600;
+		border: 0.0625rem solid @gray-300;
+	}
+
+	&--outline {
+		background: @pure-white;
+		border: 0.0625rem solid transparent;
+	}
+
+	&--outline.badge--green {
+		border-color: @success-green;
+		color: @success-green;
+	}
+	&--outline.badge--blue {
+		border-color: @primary-action;
+		color: @primary-action;
+	}
+	&--outline.badge--yellow {
+		border-color: @warning-gold;
+		color: @warning-gold;
+	}
+	&--outline.badge--orange {
+		border-color: @warning-gold;
+		color: @warning-gold;
+	}
+	&--outline.badge--red {
+		border-color: @red-500;
+		color: @red-600;
+	}
+	&--outline.badge--purple {
+		border-color: @purple-500;
+		color: @purple-600;
+	}
+	&--outline.badge--gray {
+		border-color: @gray-300;
+		color: @gray-600;
+	}
+
+	&--dot {
+		&::before {
+			content: "";
+			width: 0.375rem;
+			height: 0.375rem;
+			border-radius: @radius-full;
+			margin-right: 0.375rem;
+			display: inline-block;
+		}
+		&.badge--green::before {
+			background: @success-green;
+		}
+		&.badge--orange::before {
+			background: @warning-gold;
+		}
+		&.badge--yellow::before {
+			background: @warning-gold;
+		}
+		&.badge--red::before {
+			background: @red-500;
+		}
+		&.badge--gray::before {
+			background: @gray-400;
+		}
+		&.badge--blue::before {
+			background: @primary-action;
+		}
+		&.badge--purple::before {
+			background: @purple-500;
+		}
+	}
+}
