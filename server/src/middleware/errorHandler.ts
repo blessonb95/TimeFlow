@@ -15,8 +15,16 @@ export const errorHandler = (
   const statusCode = err.statusCode || 500;
   const message = statusCode < 500 ? err.message : 'Internal Server Error';
 
-  if (env.nodeEnv === 'development') {
-    console.error(err);
+  if (statusCode >= 500) {
+    console.error('[API] Request failed', {
+      method: _req.method,
+      path: _req.originalUrl,
+      statusCode,
+      code: err.code || err.name || 'SERVER_ERROR',
+    });
+    if (env.nodeEnv === 'development') {
+      console.error(err.stack);
+    }
   }
 
   res.status(statusCode).json({
