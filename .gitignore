@@ -26,6 +26,7 @@ server/.env
 # Local environment and credentials
 .env*
 !.env.production.example
+!server/.env.example
 env.production
 *Credentials*.txt
 
