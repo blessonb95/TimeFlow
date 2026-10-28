@@ -6,7 +6,7 @@
 
 services:
   - type: web
-    name: timesheet-api
+    name: timeflow
     runtime: node
     region: singapore              # closest to India (adjust if needed)
     plan: free                     # change to "starter" for always-on
