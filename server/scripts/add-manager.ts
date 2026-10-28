@@ -8,7 +8,7 @@ const MANAGER = {
   firstName: 'Sarah',
   lastName: 'Miller',
   username: 'manager',
-  email: 'manager@eglobeits.com',
+  email: 'manager@timeflow.local',
   password: 'Manager@123',
   role: 'manager',
   department: 'Engineering',

@@ -32,7 +32,7 @@ export const authController = {
     body('firstName').trim().isLength({ min: 1, max: 100 }),
     body('lastName').trim().optional(),
     body('username').trim().isLength({ min: 3, max: 100 }),
-    body('email').isEmail().normalizeEmail().matches(/@eglobeits\.com$/).withMessage('Work email must be an @eglobeits.com domain'),
+    body('email').isEmail().normalizeEmail(),
     body('password').isLength({ min: 1 }), // Validation passes since encrypted str is long
   ],
 
