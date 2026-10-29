@@ -349,10 +349,23 @@ const EmployeeDashboard: React.FC = () => {
 			(acc: number, d: { hours: number }) => acc + d.hours,
 			0,
 		) || 0;
-	const remainingToday = Math.max(0, 8 - todayHours);
+	const todayProgress = Math.min(100, Math.round((todayHours / 8) * 100));
+	const weeklyProgress = Math.min(100, Math.round((weekTotal / 40) * 100));
+	const allProjects = data.projects || [];
+	const projectProgress = allProjects.length
+		? Math.min(
+				100,
+				Math.round(
+					allProjects.reduce(
+						(total: number, project: DashboardProject) => total + project.progress,
+						0,
+					) / allProjects.length,
+				),
+			)
+		: 0;
 
 	return (
-		<div className="page-inner">
+		<div className="page-inner dashboard">
 			<div className="dashboard__header-row">
 				<div>
 				<h1 className="dashboard__greeting">
@@ -452,29 +465,38 @@ const EmployeeDashboard: React.FC = () => {
 				</div>
 
 				<div className="dashboard__grid-right">
-					<section className="dashboard__section dashboard__attention" aria-labelledby="attention-title">
+					<section className="dashboard__section dashboard__progress-statistics" aria-labelledby="attention-title">
 						<div className="dashboard__section-header">
-							<div>
-								<p className="dashboard__attention-eyebrow">NEXT UP</p>
-								<h2 className="dashboard__section-title" id="attention-title">Keep your week moving</h2>
-							</div>
+							<h2 className="dashboard__section-title" id="attention-title">Progress statistics</h2>
 						</div>
-						<div className="dashboard__attention-item">
-							<span className="dashboard__attention-marker dashboard__attention-marker--blue" aria-hidden="true">1</span>
-							<div className="dashboard__attention-copy">
-								<strong>Today</strong>
-								<p>{remainingToday > 0 ? `${todayHours}h logged · ${remainingToday}h to your daily target` : `${todayHours}h logged · daily target reached`}</p>
-							</div>
+						<div className="dashboard__activity-summary">
+							<strong>{weeklyProgress}%</strong>
+							<span>Weekly<br />goal<small>{weekTotal}h of 40h</small></span>
 						</div>
-						<div className="dashboard__attention-item">
-							<span className="dashboard__attention-marker dashboard__attention-marker--amber" aria-hidden="true">2</span>
-							<div className="dashboard__attention-copy">
-								<strong>This week</strong>
-								<p>{weekTotal >= 40 ? "Your weekly target is complete." : `${Math.max(0, 40 - weekTotal)}h left to reach your 40h target.`}</p>
-							</div>
+						<div className="dashboard__activity-metrics">
+							{[
+								{ label: "Today", value: todayProgress, tone: "purple" },
+								{ label: "This week", value: weeklyProgress, tone: "green" },
+								{ label: "Projects", value: projectProgress, tone: "orange" },
+							].map((metric) => (
+								<div className="dashboard__activity-metric" key={metric.label}>
+									<div
+										className="dashboard__activity-track"
+										role="progressbar"
+										aria-label={`${metric.label} progress`}
+										aria-valuemin={0}
+										aria-valuemax={100}
+										aria-valuenow={metric.value}
+									>
+										<span className={`dashboard__activity-fill dashboard__activity-fill--${metric.tone}`} style={{ width: `${metric.value}%` }} />
+									</div>
+									<div className="dashboard__activity-caption">
+										<span className="dashboard__activity-percent">{metric.value}%</span>
+										<span className="dashboard__activity-label">{metric.label}</span>
+									</div>
+								</div>
+							))}
 						</div>
-						<button type="button" className="dashboard__attention-action" onClick={() => setShowLogTask(true)}>Log time <span aria-hidden="true">→</span></button>
-						<button type="button" className="dashboard__section-link dashboard__attention-link" onClick={() => navigate("/reports")}>View reports <span aria-hidden="true">→</span></button>
 					</section>
 				</div>
 			</div>
@@ -523,7 +545,7 @@ const ManagerDashboard: React.FC = () => {
 	};
 
 	return (
-		<div className="page-inner">
+		<div className="page-inner dashboard">
 			<div className="dashboard__header-row">
 				<div>
 					<h1 className="dashboard__greeting">
@@ -806,6 +828,7 @@ const ManagerDashboard: React.FC = () => {
 								subtitle="Your team currently has no timesheets logged for this period."
 							/>
 						) : (
+							<div className="table-responsive">
 							<table className="data-table">
 				<caption className="sr-only">Team timesheets for this week</caption>
 								<thead>
@@ -868,6 +891,7 @@ const ManagerDashboard: React.FC = () => {
 									)}
 								</tbody>
 							</table>
+							</div>
 						)}
 					</div>
 				</div>
@@ -877,76 +901,27 @@ const ManagerDashboard: React.FC = () => {
 						<div className="dashboard__section-header">
 											<h2 className="dashboard__section-title">Timesheet Status</h2>
 						</div>
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr 1fr",
-								gap: '0.75rem',
-								marginBottom: '0.5rem',
-							}}
-						>
-							<div
-								style={{
-									padding: '0.75rem',
-									borderRadius: 8,
-									border: "1px solid #e5e7eb",
-									textAlign: "center",
-								}}
-							>
-								<div
-									style={{ fontSize: '1.25rem', fontWeight: 700, color: "#166534" }}
-								>
-									{
-										employeeTable.filter(
-											(e: any) => e.timesheetStatus === "Submitted",
-										).length
-									}
-								</div>
-								<div style={{ fontSize: '0.6875rem', color: "#4b5563", marginTop: '0.25rem'}}>
-									Submitted
-								</div>
+						<div className="dashboard__timesheet-status">
+							<div className="dashboard__timesheet-status-item">
+								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--pending" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+								</span>
+								<strong className="dashboard__timesheet-status-count">{employeeTable.filter((e: any) => e.timesheetStatus === "Pending").length}</strong>
+								<span className="dashboard__timesheet-status-label">Pending</span>
 							</div>
-							<div
-								style={{
-									padding: '0.75rem',
-									borderRadius: 8,
-									border: "1px solid #e5e7eb",
-									textAlign: "center",
-								}}
-							>
-								<div
-									style={{ fontSize: '1.25rem', fontWeight: 700, color: "#b45309" }}
-								>
-									{
-										employeeTable.filter(
-											(e: any) => e.timesheetStatus === "Pending",
-										).length
-									}
-								</div>
-								<div style={{ fontSize: '0.6875rem', color: "#4b5563", marginTop: '0.25rem'}}>
-									Pending
-								</div>
+							<div className="dashboard__timesheet-status-item">
+								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--submitted" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></svg>
+								</span>
+								<strong className="dashboard__timesheet-status-count">{employeeTable.filter((e: any) => e.timesheetStatus === "Submitted").length}</strong>
+								<span className="dashboard__timesheet-status-label">Submitted</span>
 							</div>
-							<div
-								style={{
-									padding: '0.75rem',
-									borderRadius: 8,
-									border: "1px solid #e5e7eb",
-									textAlign: "center",
-								}}
-							>
-								<div
-									style={{ fontSize: '1.25rem', fontWeight: 700, color: "#4b5563" }}
-								>
-									{
-										employeeTable.filter(
-											(e: any) => e.timesheetStatus === "Not Started",
-										).length
-									}
-								</div>
-								<div style={{ fontSize: '0.6875rem', color: "#4b5563", marginTop: '0.25rem'}}>
-									Not Started
-								</div>
+							<div className="dashboard__timesheet-status-item">
+								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--upcoming" aria-hidden="true">
+									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4m8-4v4M4 10h16" /></svg>
+								</span>
+								<strong className="dashboard__timesheet-status-count">{employeeTable.filter((e: any) => e.timesheetStatus === "Not Started").length}</strong>
+								<span className="dashboard__timesheet-status-label">Not Started</span>
 							</div>
 						</div>
 					</div>
@@ -979,7 +954,7 @@ const CEODashboard: React.FC = () => {
 	).length;
 
 	return (
-		<div className="page-inner">
+		<div className="page-inner dashboard">
 			<div className="dashboard__header-row">
 				<div>
 					<h1 className="dashboard__greeting">
@@ -1271,6 +1246,7 @@ const CEODashboard: React.FC = () => {
 								subtitle="No employee timesheet submissions found for this period."
 							/>
 						) : (
+			<div className="table-responsive">
 							<table className="data-table">
 								<caption className="sr-only">All personnel timesheets for this week</caption>
 								<thead>
@@ -1336,6 +1312,7 @@ const CEODashboard: React.FC = () => {
 									))}
 								</tbody>
 							</table>
+			</div>
 						)}
 					</div>
 				</div>
@@ -1433,7 +1410,7 @@ const HRDashboard: React.FC = () => {
 	const employeeTable = data.employeeTable || [];
 
 	return (
-		<div className="page-inner">
+		<div className="page-inner dashboard">
 			<div className="dashboard__header-row">
 				<div>
 					<h1 className="dashboard__greeting">
@@ -1581,6 +1558,7 @@ const HRDashboard: React.FC = () => {
 								subtitle="No employee timesheet submissions found for this period."
 							/>
 						) : (
+			<div className="table-responsive">
 							<table className="data-table">
 								<caption className="sr-only">Workforce timesheets for this week</caption>
 								<thead>
@@ -1634,6 +1612,7 @@ const HRDashboard: React.FC = () => {
 									))}
 							</tbody>
 						</table>
+			</div>
 					)}
 					</div>
 				</div>
@@ -1689,7 +1668,7 @@ const AdminDashboard: React.FC = () => {
 
 	if (isLoading || !data) {
 		return (
-			<div className="page-inner">
+			<div className="page-inner dashboard">
 				<LoadingSpinner
 					message="Loading System Admin Control Center…"
 					fullPage
@@ -1734,7 +1713,7 @@ const AdminDashboard: React.FC = () => {
 	];
 
 	return (
-		<div className="page-inner">
+		<div className="page-inner dashboard">
 			<div className="dashboard__header-row">
 				<div>
 					<h1 className="dashboard__greeting">

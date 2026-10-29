@@ -321,13 +321,16 @@
 		background: @white;
 		border: 0.0625rem solid @color-border;
 		border-radius: 0.75rem;
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
 		margin-top: @space-4;
 		box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.03);
 	}
 
 	&__grid-table {
 		width: 100%;
+		min-width: 58rem;
 		border-collapse: collapse;
 		text-align: left;
 

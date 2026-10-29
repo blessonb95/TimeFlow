@@ -46,7 +46,9 @@
 
 	&--card {
 		border-radius: @radius-xl;
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
 		box-shadow: @shadow-xs;
 		border: 0.0625rem solid @color-border;
 		background: @white;
@@ -84,13 +86,17 @@
 
 @media (max-width: 48rem) {
 	.data-table {
-		min-width: 31.25rem;
+		min-width: 38rem;
 		thead th {
 			padding: 0.5rem 0.625rem;
 		}
 		tbody td {
 			padding: 0.5rem 0.625rem;
 		}
+	}
+
+	.data-table--card {
+		min-width: 0;
 	}
 
 	.pagination__page-btn,
