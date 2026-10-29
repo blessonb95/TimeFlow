@@ -12,19 +12,21 @@ import { Reports }       from './pages/Reports';
 import { Settings }      from './pages/Settings';
 import { AcceptInvite }  from './pages/AcceptInvite';
 import { Onboarding }    from './pages/Onboarding';
+import { NotFound }      from './pages/NotFound';
 import { useAppStore }   from './store/useAppStore';
 import { useCurrentUser } from './hooks/useAuth';
 import './styles/main.less';
 
 // Hydrates the store on first load if a token exists
 function AuthSync() {
-  const { setAuthUser, authToken } = useAppStore();
+  const { setAuthUser, authToken, isGuest } = useAppStore();
   const { data } = useCurrentUser();
   useEffect(() => {
+    if (isGuest || authToken === 'demo-guest-token') return;
     if (data && authToken) {
       setAuthUser(data as Parameters<typeof setAuthUser>[0], authToken);
     }
-  }, [data, authToken, setAuthUser]);
+  }, [data, authToken, setAuthUser, isGuest]);
   return null;
 }
 
@@ -35,7 +37,11 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function OnboardingGate({ children }: { children: React.ReactNode }) {
-  const { currentUser } = useAppStore();
+  const { currentUser, isGuest } = useAppStore();
+  if (isGuest || currentUser.id === 'guest-demo-user') {
+    return <>{children}</>;
+  }
+
   const onboardingKey = currentUser.id ? `onboarding_completed_${currentUser.id}` : 'onboarding_completed';
 
   const [showOnboarding, setShowOnboarding] = useState(
@@ -79,7 +85,7 @@ function App() {
           <Route path="/reports"       element={<Reports />} />
           <Route path="/settings"      element={<Settings />} />
         </Route>
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

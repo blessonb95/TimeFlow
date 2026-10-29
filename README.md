@@ -1,6 +1,6 @@
-# React + TypeScript + Vite
+# TimeFlow
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+TimeFlow is a modern time-tracking and project management web app designed to make logging work hours simple and effortless. It helps users track their time, manage projects, monitor tasks, and understand their workload through a clear, centralized dashboard.
 
 Currently, two official plugins are available:
 

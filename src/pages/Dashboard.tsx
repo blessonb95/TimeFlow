@@ -11,7 +11,7 @@ import {
 } from "../hooks/useDashboard";
 import { useApprovals, useBulkApprove } from "../hooks/useApprovals";
 import { LogTaskDrawer } from "../components/ui/LogTaskDrawer";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";`r`nimport { DashboardSkeleton } from "../components/ui/LoadingState";
 import { WeekBars } from "../components/ui/Charts";
 import { EmptyState } from "../components/ui/EmptyState";
 
@@ -338,13 +338,7 @@ const EmployeeDashboard: React.FC = () => {
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 	const [showLogTask, setShowLogTask] = useState(false);
 
-	if (isLoading || !data) {
-		return (
-			<div className="page-inner">
-				<LoadingSpinner message="Loading dashboard…" fullPage />
-			</div>
-		);
-	}
+	if (isLoading || !data) { return <DashboardSkeleton />; }
 
 	const myProjects = (data.projects || []).slice(0, 3);
 	const weekHours = data.weekHours || [];
@@ -499,13 +493,7 @@ const ManagerDashboard: React.FC = () => {
 	const greeting =
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-	if (isLoading || !data) {
-		return (
-			<div className="page-inner">
-				<LoadingSpinner message="Loading dashboard…" fullPage />
-			</div>
-		);
-	}
+	if (isLoading || !data) { return <DashboardSkeleton />; }
 
 	const monthlyHours = data.monthlyHours || [];
 	const deptUtilization = data.deptUtilization || [];
@@ -976,13 +964,7 @@ const CEODashboard: React.FC = () => {
 	const { data, isLoading } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 
-	if (isLoading || !data) {
-		return (
-			<div className="page-inner">
-				<LoadingSpinner message="Loading CEO dashboard…" fullPage />
-			</div>
-		);
-	}
+	if (isLoading || !data) { return <DashboardSkeleton />; }
 
 	const deptUtilization = data.deptUtilization || [];
 	const employeeTable = data.employeeTable || [];
@@ -1444,13 +1426,7 @@ const HRDashboard: React.FC = () => {
 	const { data, isLoading } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 
-	if (isLoading || !data) {
-		return (
-			<div className="page-inner">
-				<LoadingSpinner message="Loading HR dashboard…" fullPage />
-			</div>
-		);
-	}
+	if (isLoading || !data) { return <DashboardSkeleton />; }
 
 	const deptUtilization = data.deptUtilization || [];
 	const employeeTable = data.employeeTable || [];

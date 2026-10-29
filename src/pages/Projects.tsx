@@ -9,6 +9,7 @@ import { EditProjectModal } from "../components/ui/EditProjectModal";
 import { useProjects } from "../hooks/useProjects";
 import { useAppStore } from "../store/useAppStore";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { CardGridSkeleton, Skeleton } from "../components/ui/LoadingState";
 
 export const Projects: React.FC = () => {
 	const { role } = useAppStore();
@@ -92,8 +93,11 @@ export const Projects: React.FC = () => {
 
 	if (isLoading && projects.length === 0 && !search) {
 		return (
-			<div className="page-inner">
-				<LoadingSpinner message="Loading projects…" fullPage />
+			<div className="page-inner" style={{ animation: "fadeIn 0.2s ease" }}>
+				<div className="page-header" style={{ marginBottom: "1.5rem" }}>
+					<Skeleton width="180px" height="2rem" />
+				</div>
+				<CardGridSkeleton count={6} />
 			</div>
 		);
 	}
