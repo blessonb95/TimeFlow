@@ -443,6 +443,9 @@
 		transition: @transition-fast;
 		letter-spacing: -0.00625rem;
 		box-shadow: 0 0.0625rem 0.1875rem rgba(37, 99, 235, 0.25);
+		display: flex;
+		align-items: center;
+		justify-content: center;
 
 		&:hover {
 			background: @color-primary-hover;
@@ -451,7 +454,109 @@
 		&:active {
 			background: #1e40af;
 		}
+
+		&:disabled {
+			opacity: 0.65;
+			cursor: not-allowed;
+			pointer-events: none;
+			box-shadow: none;
+			filter: grayscale(0.2);
+		}
 	}
+
+	&__btn-spinner-wrap {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+
+	&__btn-spinner {
+		width: 1.125rem;
+		height: 1.125rem;
+		animation: spin 0.8s linear infinite;
+	}
+
+	// ── Divider ───────────────────────────────────────────────────────────────
+	&__divider {
+		display: flex;
+		align-items: center;
+		margin: 1.25rem 0 0.875rem;
+		color: #94a3b8;
+		font-size: 0.6875rem;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+
+		&::before,
+		&::after {
+			content: '';
+			flex: 1;
+			height: 1px;
+			background: #e2e8f0;
+		}
+
+		span {
+			padding: 0 0.75rem;
+		}
+	}
+
+	// ── Guest Access Button ───────────────────────────────────────────────────
+	&__guest-btn {
+		width: 100%;
+		height: 2.75rem;
+		background: #ffffff;
+		color: #0f172a;
+		border: 1.5px solid #cbd5e1;
+		border-radius: @radius-lg;
+		font-size: @font-size-sm;
+		font-weight: 600;
+		cursor: pointer;
+		font-family: @font-family;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		transition: all 0.15s ease;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+
+		&:hover:not(:disabled) {
+			background: #f8fafc;
+			border-color: #6366f1;
+			color: #4f46e5;
+			box-shadow: 0 2px 6px rgba(99, 102, 241, 0.12);
+			transform: translateY(-1px);
+		}
+
+		&:active:not(:disabled) {
+			transform: translateY(0);
+			background: #f1f5f9;
+		}
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+			pointer-events: none;
+		}
+
+		svg {
+			color: #6366f1;
+			transition: transform 0.15s ease;
+		}
+
+		&:hover svg {
+			transform: scale(1.08);
+		}
+	}
+
+	&__guest-hint {
+		margin-top: 0.5rem;
+		font-size: 0.71875rem;
+		color: #64748b;
+		text-align: center;
+		line-height: 1.45;
+	}
+	
 
 	// ── Quick demo card ───────────────────────────────────────────────────────
 	&__demo {

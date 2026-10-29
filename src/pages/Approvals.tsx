@@ -6,6 +6,7 @@ import { TimesheetReviewModal } from '../components/ui/TimesheetReviewModal';
 import { EditTimesheetModal } from '../components/ui/EditTimesheetModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
 import { formatDisplayDate } from '../utils/date';
 import { useApprovals, useApproveTimesheet, useRejectTimesheet, useBulkApprove, useBulkReject } from '../hooks/useApprovals';
 import { useProjects } from '../hooks/useProjects';
@@ -301,8 +302,18 @@ export const Approvals: React.FC = () => {
 
   if (isLoading && approvals.length === 0) {
     return (
-      <div className="page-inner">
-        <LoadingSpinner message="Loading approvals…" fullPage />
+      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div>
+            <Skeleton width="180px" height="2rem" style={{ marginBottom: '0.375rem' }} />
+            <Skeleton width="260px" height="0.875rem" />
+          </div>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
+            <Skeleton width="110px" height="2.25rem" borderRadius="0.5rem" />
+            <Skeleton width="110px" height="2.25rem" borderRadius="0.5rem" />
+          </div>
+        </div>
+        <TableSkeleton rows={5} columns={6} />
       </div>
     );
   }

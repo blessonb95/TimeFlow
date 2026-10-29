@@ -4,11 +4,12 @@
   "description": "Timesheet Management Platform – Express API",
   "main": "dist/index.js",
   "scripts": {
-		"dev": "npx nodemon --exec npx ts-node src/server.ts",
+    "dev": "npx nodemon --exec npx ts-node src/server.ts",
     "build": "npx tsc",
-		"start": "node dist/server.js",
+    "start": "node dist/server.js",
     "migrate": "npx ts-node src/db/run-migrations.ts",
-    "seed": "npx ts-node src/db/seed.ts"
+    "seed": "npx ts-node src/db/seed.ts",
+    "render:build": "npm install && npx tsc && npm run migrate"
   },
   "dependencies": {
     "@types/bcryptjs": "^2.4.6",

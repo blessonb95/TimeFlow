@@ -1,0 +1,49 @@
+## render.yaml — Render Blueprint (Infrastructure as Code)
+## https://docs.render.com/blueprint-spec
+##
+## Connect this repo on Render → "New Blueprint Instance" and point
+## root directory to ./server. Render reads this file automatically.
+
+services:
+  - type: web
+    name: timeflow
+    runtime: node
+    region: singapore              # closest to India (adjust if needed)
+    plan: free                     # change to "starter" for always-on
+    rootDir: ./server
+    buildCommand: npm install && npx tsc && npm run migrate
+    startCommand: node dist/server.js
+    healthCheckPath: /health
+    envVars:
+      # ─── Server ───────────────────────────────────────────────────────
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "10000"             # Render uses 10000 by default
+
+      # ─── MySQL (Aiven Cloud) ──────────────────────────────────────────
+      - key: DB_HOST
+        sync: false                # set manually in Render dashboard
+      - key: DB_PORT
+        sync: false
+      - key: DB_USER
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_NAME
+        sync: false
+      - key: DB_SSL
+        value: "true"
+
+      # ─── JWT & Security ───────────────────────────────────────────────
+      - key: JWT_SECRET
+        generateValue: true        # Render auto-generates a secure random value
+      - key: JWT_EXPIRES_IN
+        value: "7d"
+      - key: ENCRYPTION_KEY
+        sync: false                # must match VITE_ENCRYPTION_KEY on frontend
+
+      # ─── CORS ─────────────────────────────────────────────────────────
+      - key: CLIENT_URL
+        value: "https://blesson-eglobe.github.io/timesheet-app,https://blesson-eglobe.github.io"
+

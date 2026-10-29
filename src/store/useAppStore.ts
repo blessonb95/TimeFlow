@@ -1,8 +1,9 @@
 import { create } from "zustand";
 import type { Role } from "../types";
-import { clearStoredAuthToken, getStoredAuthToken } from "../utils/authTokenStorage";
+import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from "../utils/authTokenStorage";
+import { GUEST_USER as DEMO_USER } from "../api/mockData";
 
-interface AuthUser {
+export interface AuthUser {
 	id: string;
 	name: string;
 	email: string;
@@ -21,16 +22,18 @@ interface AppState {
 	authToken: string | null;
 	isSidebarCollapsed: boolean;
 	notifications: number;
+	isGuest: boolean;
 
 	setRole: (role: Role) => void;
 	setUser: (user: any) => void;
 	setAuthUser: (user: AuthUser, token: string) => void;
+	setGuestMode: () => void;
 	updateCurrentUser: (updates: Partial<AuthUser>) => void;
 	clearAuth: () => void;
 	toggleSidebar: () => void;
 }
 
-const GUEST_USER: AuthUser = {
+const DEFAULT_GUEST_USER: AuthUser = {
 	id: "",
 	name: "Guest",
 	email: "",
@@ -44,6 +47,7 @@ const GUEST_USER: AuthUser = {
 };
 
 const storedToken = getStoredAuthToken();
+const initialIsGuest = storedToken === "demo-guest-token" || localStorage.getItem("is_guest") === "true";
 
 /** Read the cached user from localStorage (set on every login / auth sync) */
 const getCachedUser = (): AuthUser | null => {
@@ -62,7 +66,11 @@ const cacheUser = (user: AuthUser) => {
 };
 
 const cachedUser = getCachedUser();
-const initialUser: AuthUser = cachedUser && storedToken ? cachedUser : GUEST_USER;
+const initialUser: AuthUser = initialIsGuest
+	? DEMO_USER
+	: cachedUser && storedToken
+		? cachedUser
+		: DEFAULT_GUEST_USER;
 const initialRole: Role = initialUser.role;
 
 export const useAppStore = create<AppState>((set) => ({
@@ -71,6 +79,7 @@ export const useAppStore = create<AppState>((set) => ({
 	authToken: storedToken,
 	isSidebarCollapsed: false,
 	notifications: 3,
+	isGuest: initialIsGuest,
 
 	setRole: (role) => {
 		localStorage.setItem("active_role", role);
@@ -90,10 +99,25 @@ export const useAppStore = create<AppState>((set) => ({
 	setAuthUser: (user, token) => {
 		const authUser = { ...user, status: user.status || 'Active' } as AuthUser;
 		cacheUser(authUser);
+		localStorage.removeItem("is_guest");
 		set({
 			currentUser: authUser,
 			role: user.role,
 			authToken: token,
+			isGuest: false,
+		});
+	},
+
+	setGuestMode: () => {
+		const token = "demo-guest-token";
+		storeAuthToken(token, false);
+		localStorage.setItem("is_guest", "true");
+		cacheUser(DEMO_USER);
+		set({
+			currentUser: DEMO_USER,
+			role: DEMO_USER.role,
+			authToken: token,
+			isGuest: true,
 		});
 	},
 
@@ -109,14 +133,15 @@ export const useAppStore = create<AppState>((set) => ({
 		localStorage.removeItem("active_role");
 		localStorage.removeItem("active_user_id");
 		localStorage.removeItem("cached_user");
+		localStorage.removeItem("is_guest");
 		set({
-			currentUser: GUEST_USER,
+			currentUser: DEFAULT_GUEST_USER,
 			role: "employee",
 			authToken: null,
+			isGuest: false,
 		});
 	},
 
 	toggleSidebar: () =>
 		set((state) => ({ isSidebarCollapsed: !state.isSidebarCollapsed })),
 }));
-

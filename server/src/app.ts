@@ -36,7 +36,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // ─── Health Check & Root Routes ──────────────────────────────────────────────
-app.get('/', (_req, res) => res.json({ status: 'ok', message: 'Timesheet API Server Running (MySQL WAMP)', version: '1.0.0' }));
+app.get('/', (_req, res) => res.json({ status: 'ok', message: 'TimeFlow API Server Running', version: '1.0.0', env: env.nodeEnv }));
 app.get('/favicon.ico', (_req, res) => res.status(204).end());
 app.get('/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));
 app.get('/api/health', (_req, res) => res.json({ status: 'ok', ts: new Date().toISOString() }));

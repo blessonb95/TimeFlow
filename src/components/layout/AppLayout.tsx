@@ -4,6 +4,7 @@ import { Sidebar } from './Sidebar';
 import { Topbar } from './Topbar';
 import { useAppStore } from '../../store/useAppStore';
 import { EasterEgg } from '../ui/EasterEgg';
+import { GuestBanner } from '../ui/GuestBanner';
 
 export const AppLayout: React.FC = () => {
   const { isSidebarCollapsed, toggleSidebar } = useAppStore();
@@ -36,6 +37,7 @@ export const AppLayout: React.FC = () => {
         />
       )}
       <div className="main-area" style={{ position: 'relative' }}>
+        <GuestBanner />
         <Topbar />
         <main className="page-content" id="main-content" tabIndex={-1}>
           <Outlet />

@@ -11,6 +11,7 @@ import { TimesheetReviewModal } from '../components/ui/TimesheetReviewModal';
 import { formatDisplayDate } from '../utils/date';
 import { useAppStore } from '../store/useAppStore';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
 
 type TaskStatus = 'Completed' | 'In Progress' | 'Todo' | 'Not Started';
 type TaskPriority = 'High' | 'Medium' | 'Low' | 'Critical';
@@ -51,8 +52,19 @@ export const ProjectDetail: React.FC = () => {
 
   if (isLoading) {
     return (
-      <div className="page-inner">
-        <LoadingSpinner message="Loading project details…" fullPage />
+      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
+        <Skeleton width="140px" height="1.25rem" style={{ marginBottom: '1.25rem' }} />
+        <div className="skeleton-card" style={{ padding: '1.75rem', marginBottom: '1.5rem' }}>
+          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+            <Skeleton width="3rem" height="3rem" borderRadius="0.75rem" />
+            <div style={{ flex: 1 }}>
+              <Skeleton width="280px" height="1.75rem" style={{ marginBottom: '0.5rem' }} />
+              <Skeleton width="180px" height="1rem" />
+            </div>
+          </div>
+          <Skeleton width="100%" height="0.5rem" borderRadius="9999px" />
+        </div>
+        <TableSkeleton rows={5} columns={4} />
       </div>
     );
   }

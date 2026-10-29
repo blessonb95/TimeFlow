@@ -6,6 +6,7 @@ import { useProjects } from '../hooks/useProjects';
 import { LogTaskDrawer } from '../components/ui/LogTaskDrawer';
 import { TaskDescriptionModal } from '../components/ui/TaskDescriptionModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
+import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
 import { Pagination } from '../components/ui/Pagination';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Badge, statusVariant } from '../components/ui/Badge';
@@ -211,8 +212,15 @@ export const WorkLogs: React.FC = () => {
 
   if (isLoading && !workLogs.length && !search) {
     return (
-      <div className="page-inner">
-        <LoadingSpinner message="Loading work logs…" fullPage />
+      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <div>
+            <Skeleton width="180px" height="2rem" style={{ marginBottom: '0.375rem' }} />
+            <Skeleton width="280px" height="0.875rem" />
+          </div>
+          <Skeleton width="120px" height="2.25rem" borderRadius="0.5rem" />
+        </div>
+        <TableSkeleton rows={6} columns={6} />
       </div>
     );
   }

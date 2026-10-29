@@ -1,0 +1,220 @@
+.not-found-page {
+	min-height: 100vh;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 2rem 1.25rem;
+	background: #f8fafc;
+	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+.not-found-card {
+	max-width: 32rem;
+	width: 100%;
+	background: #ffffff;
+	border: 1px solid #e2e8f0;
+	border-radius: 1.25rem;
+	padding: 2.75rem 2.25rem;
+	text-align: center;
+	box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.02);
+	animation: notFoundFadeIn 0.3s ease-out;
+
+	@media (max-width: 30rem) {
+		padding: 2rem 1.5rem;
+	}
+}
+
+.not-found-illustration {
+	position: relative;
+	width: 10rem;
+	height: 6rem;
+	margin: 0 auto 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.not-found-glow {
+	position: absolute;
+	inset: -1rem;
+	background: radial-gradient(circle, rgba(37, 99, 235, 0.15) 0%, transparent 70%);
+	pointer-events: none;
+}
+
+.not-found-code {
+	font-size: 5rem;
+	font-weight: 900;
+	letter-spacing: -0.05em;
+	color: #e2e8f0;
+	line-height: 1;
+	user-select: none;
+}
+
+.not-found-icon-wrap {
+	position: absolute;
+	width: 3.5rem;
+	height: 3.5rem;
+	background: #ffffff;
+	border: 2px solid #dbeafe;
+	border-radius: 1rem;
+	box-shadow: 0 8px 20px rgba(37, 99, 235, 0.18);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	transform: translateY(0.25rem);
+}
+
+.not-found-title {
+	font-size: 1.625rem;
+	font-weight: 700;
+	color: #0f172a;
+	letter-spacing: -0.025em;
+	margin-bottom: 0.625rem;
+}
+
+.not-found-desc {
+	font-size: 0.9375rem;
+	color: #64748b;
+	line-height: 1.55;
+	margin-bottom: 1.75rem;
+	max-width: 26rem;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.not-found-actions {
+	display: flex;
+	gap: 0.75rem;
+	justify-content: center;
+	margin-bottom: 2rem;
+
+	@media (max-width: 26rem) {
+		flex-direction: column;
+	}
+}
+
+.not-found-btn {
+	&--primary {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.5rem;
+		background: #2563eb;
+		color: #ffffff;
+		padding: 0.6875rem 1.25rem;
+		border-radius: 0.625rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		text-decoration: none;
+		box-shadow: 0 2px 8px rgba(37, 99, 235, 0.25);
+		transition: all 0.15s ease;
+
+		&:hover {
+			background: #1d4ed8;
+			box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+			transform: translateY(-1px);
+		}
+		&:active {
+			transform: translateY(0);
+		}
+	}
+
+	&--secondary {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 0.375rem;
+		background: #ffffff;
+		color: #334155;
+		border: 1.5px solid #cbd5e1;
+		padding: 0.6875rem 1.125rem;
+		border-radius: 0.625rem;
+		font-size: 0.875rem;
+		font-weight: 600;
+		cursor: pointer;
+		transition: all 0.15s ease;
+
+		&:hover {
+			background: #f8fafc;
+			border-color: #94a3b8;
+			color: #0f172a;
+		}
+		&:active {
+			background: #f1f5f9;
+		}
+	}
+}
+
+.not-found-quicklinks {
+	text-align: left;
+	padding-top: 1.5rem;
+	border-top: 1px solid #f1f5f9;
+	margin-bottom: 1.25rem;
+}
+
+.not-found-quicklinks-title {
+	display: block;
+	font-size: 0.6875rem;
+	font-weight: 700;
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+	color: #94a3b8;
+	margin-bottom: 0.75rem;
+}
+
+.not-found-links-grid {
+	display: grid;
+	gap: 0.5rem;
+}
+
+.not-found-link-item {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	padding: 0.625rem 0.875rem;
+	background: #f8fafc;
+	border: 1px solid #f1f5f9;
+	border-radius: 0.625rem;
+	text-decoration: none;
+	transition: all 0.15s ease;
+
+	&:hover {
+		background: #ffffff;
+		border-color: #cbd5e1;
+		box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+		transform: translateX(2px);
+	}
+}
+
+.not-found-link-icon {
+	font-size: 1.125rem;
+}
+
+.not-found-link-label {
+	font-size: 0.8125rem;
+	font-weight: 600;
+	color: #0f172a;
+}
+
+.not-found-link-sub {
+	font-size: 0.71875rem;
+	color: #64748b;
+}
+
+.not-found-footer {
+	font-size: 0.75rem;
+	color: #94a3b8;
+	margin-top: 1rem;
+}
+
+@keyframes notFoundFadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
