@@ -727,7 +727,17 @@ textarea {
 	padding: @space-6;
 	max-width: 87.5rem;
 	width: 100%;
+	min-width: 0;
 	box-sizing: border-box;
+}
+
+.page-inner :where(div, section, form, main) {
+	min-width: 0;
+}
+
+// Keep long names, URLs, and other unbroken strings inside their layout cells.
+body {
+	overflow-wrap: anywhere;
 }
 
 .page-header {
@@ -846,6 +856,11 @@ textarea {
 
 	.page-inner {
 		padding: 1rem 1rem;
+		min-width: 0;
+	}
+
+	.page-inner :where(input, select, textarea) {
+		max-width: 100%;
 	}
 
 	.page-header {

@@ -689,7 +689,11 @@ textarea {
   padding: 1.5rem;
   max-width: 87.5rem;
   width: 100%;
+  min-width: 0;
   box-sizing: border-box;
+}
+body {
+  overflow-wrap: anywhere;
 }
 .page-header {
   margin-bottom: 1.5rem;
@@ -795,6 +799,7 @@ textarea {
   }
   .page-inner {
     padding: 1rem 1rem;
+    min-width: 0;
   }
   .page-header {
     margin-bottom: 0.875rem;

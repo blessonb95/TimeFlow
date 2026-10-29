@@ -157,7 +157,9 @@
 	// ── Employee Table Card ──────────────────────────────────────────────────────
 	&__table-card {
 		.card-base();
-		overflow: hidden;
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
 		margin-bottom: @space-4;
 	}
 
@@ -610,6 +612,7 @@
 	&__preview-modal-body {
 		flex: 1;
 		overflow-y: auto;
+		overflow-x: auto;
 		padding: 1.5rem;
 		.thin-scrollbar();
 	}
@@ -859,6 +862,17 @@
 			flex-basis: 100%;
 			min-width: 0;
 			width: 100%;
+		}
+		&__table,
+		&__preview-table {
+			min-width: 38rem;
+		}
+		&__preview-modal-body {
+			padding: 1rem;
+			-webkit-overflow-scrolling: touch;
+		}
+		&__table-card {
+			min-width: 0;
 		}
 	}
 }

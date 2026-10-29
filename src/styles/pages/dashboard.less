@@ -1294,6 +1294,18 @@
 		text-align: left;
 		background: transparent;
 		font-family: inherit;
+		color: @color-text-primary;
+
+		&--primary,
+		&--primary:hover,
+		&--primary:focus-visible {
+			background: @gray-900;
+			color: @white;
+		}
+
+		&--primary:hover {
+			background: @gray-800;
+		}
 
 		&--default:hover {
 			padding-left: @space-4;
@@ -1388,5 +1400,207 @@
 		animation-iteration-count: 1 !important;
 		transition-duration: 0.01ms !important;
 		scroll-behavior: auto !important;
+	}
+}
+
+.dashboard__timesheet-status {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	margin-bottom: 0.5rem;
+	padding: 0.5rem 0.375rem;
+	border: 1px solid #edf1f6;
+	border-radius: 0.75rem;
+	background: #f8fafc;
+}
+
+.dashboard__timesheet-status-item {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 0.3125rem;
+	min-height: 4.5rem;
+	padding: 0.25rem;
+	text-align: center;
+
+	& + & {
+		border-left: 1px solid #e2e8f0;
+	}
+}
+
+.dashboard__timesheet-status-icon {
+	display: grid;
+	width: 1.625rem;
+	height: 1.625rem;
+	place-items: center;
+	border-radius: 50%;
+	color: #ffffff;
+	flex: 0 0 auto;
+
+	svg {
+		width: 0.875rem;
+		height: 0.875rem;
+	}
+
+	&--pending {
+		background: #7c3aed;
+	}
+
+	&--submitted {
+		background: #059669;
+	}
+
+	&--upcoming {
+		background: #ea580c;
+	}
+}
+
+.dashboard__timesheet-status-count {
+	color: #111827;
+	font-size: 1.125rem;
+	font-weight: 700;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+}
+
+.dashboard__timesheet-status-label {
+	color: #475569;
+	font-size: 0.75rem;
+	font-weight: 500;
+	line-height: 1.3;
+	text-wrap: balance;
+}
+
+.dashboard__activity-summary {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+	margin: 0 0 1.25rem;
+
+	strong {
+		color: #111827;
+		font-size: 3.75rem;
+		font-weight:500;
+		letter-spacing: -0.12rem;
+		line-height: 1;
+		font-variant-numeric: tabular-nums;
+	}
+
+	span {
+		color: #64748b;
+		font-size: 0.9375rem;
+		line-height: 1.25;
+
+		small {
+			display: block;
+			margin-top: 0.25rem;
+			font-size: 0.6875rem;
+			white-space: nowrap;
+		}
+	}
+}
+
+.dashboard__progress-statistics {
+	padding: 1.75rem 2rem;
+	border-radius: 1.25rem;
+	box-shadow: 0 0.25rem 0.875rem rgba(36, 56, 83, 0.08);
+
+	.dashboard__section-header {
+		margin-bottom: 1.5rem;
+	}
+
+	.dashboard__section-title {
+		font-size: 1rem;
+		letter-spacing: -0.04rem;
+	}
+}
+
+.dashboard__activity-metrics {
+	display: grid;
+	grid-template-columns: repeat(3, minmax(0, 1fr));
+	gap: 0.375rem;
+}
+
+.dashboard__activity-metric {
+	display: flex;
+	min-width: 0;
+	flex-direction: column;
+	align-items: stretch;
+	gap: 0.3125rem;
+}
+
+.dashboard__activity-track {
+	height: 0.4375rem;
+	min-width: 0;
+	overflow: hidden;
+	border-radius: 999px;
+	background: #e2e8f0;
+}
+
+.dashboard__activity-fill {
+	display: block;
+	height: 100%;
+	border-radius: inherit;
+	transition: width 0.25s ease;
+
+	&--purple {
+		background: #7b2ff7;
+	}
+
+	&--green {
+		background: #4fc48c;
+	}
+
+	&--orange {
+		background: #ff8526;
+	}
+}
+
+.dashboard__activity-percent {
+	color: #111827;
+	font-size: 0.75rem;
+	font-weight: 400;
+	line-height: 1.2;
+	font-variant-numeric: tabular-nums;
+}
+
+.dashboard__activity-caption {
+	display: flex;
+	align-items: baseline;
+	justify-content: space-between;
+	gap: 0.25rem;
+}
+
+.dashboard__activity-label {
+	color: #64748b;
+	font-size: 0.6875rem;
+	line-height: 1.2;
+	text-align: right;
+}
+
+@media (max-width: 40rem) {
+	.dashboard__progress-statistics {
+		padding: 1.25rem;
+
+		.dashboard__section-header {
+			margin-bottom: 1.25rem;
+		}
+
+		.dashboard__section-title {
+			font-size: 1.5rem;
+		}
+	}
+
+	.dashboard__activity-summary strong {
+		font-size: 3.25rem;
+	}
+
+	.dashboard__activity-metrics {
+		gap: 0.5rem;
+	}
+
+	.dashboard__activity-label {
+		font-size: 0.625rem;
 	}
 }
