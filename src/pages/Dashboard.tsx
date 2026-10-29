@@ -11,7 +11,8 @@ import {
 } from "../hooks/useDashboard";
 import { useApprovals, useBulkApprove } from "../hooks/useApprovals";
 import { LogTaskDrawer } from "../components/ui/LogTaskDrawer";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";`r`nimport { DashboardSkeleton } from "../components/ui/LoadingState";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { DashboardSkeleton } from "../components/ui/LoadingState";
 import { WeekBars } from "../components/ui/Charts";
 import { EmptyState } from "../components/ui/EmptyState";
 

@@ -1,7 +1,8 @@
 import React, { useRef, useState } from "react";
 import { Pagination } from "../components/ui/Pagination";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";`r`nimport { DashboardSkeleton } from "../components/ui/LoadingState";
+import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { DashboardSkeleton } from "../components/ui/LoadingState";
 import { useReports } from "../hooks/useReports";
 import { useEmployees } from "../hooks/useEmployees";
 import { useProjects } from "../hooks/useProjects";
