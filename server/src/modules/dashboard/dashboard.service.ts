@@ -138,8 +138,8 @@ export const dashboardService = {
 
 	async manager(userRole: string, managerId: string) {
 		const pendingSql = userRole === 'admin' || userRole === 'ceo' || userRole === 'hr'
-			? `(SELECT COUNT(DISTINCT a.timesheet_id) FROM approvals a WHERE a.status = 'Pending')`
-			: `(SELECT COUNT(DISTINCT a.timesheet_id) FROM approvals a JOIN timesheets t ON t.id = a.timesheet_id WHERE a.status = 'Pending' AND (a.manager_id = $1 OR (a.manager_id IS NULL AND EXISTS (SELECT 1 FROM project_members pm WHERE pm.user_id = t.user_id AND pm.project_id IN (SELECT project_id FROM project_members WHERE user_id = $1)))))`;
+			? `(SELECT COUNT(wl.id) FROM work_logs wl WHERE wl.status NOT IN ('Approved', 'Rejected', 'Draft'))`
+			: `(SELECT COUNT(wl.id) FROM work_logs wl JOIN users wu ON wu.id = wl.user_id WHERE wl.status NOT IN ('Approved', 'Rejected', 'Draft') AND (wu.reporting_manager_id = $1 OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.project_id = wl.project_id AND pm.user_id = $1)))`;
 
 		const params = userRole === 'admin' ? [] : [managerId];
 
@@ -225,15 +225,16 @@ export const dashboardService = {
              AND wl.date < DATE_ADD(DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY), INTERVAL 7 DAY)), 0
          ) AS week_hours,
          COALESCE(
-           (SELECT CASE WHEN a.status = 'Approved' THEN 'Approved' WHEN a.status = 'Rejected' THEN 'Rejected' ELSE 'Awaiting approval' END
-            FROM approvals a JOIN timesheets t ON t.id = a.timesheet_id
-            WHERE t.user_id = u.id
+           (SELECT CASE
+              WHEN t.status = 'Approved' OR a.status = 'Approved' THEN 'Approved'
+              WHEN t.status = 'Rejected' OR a.status = 'Rejected' THEN 'Rejected'
+              WHEN t.status = 'Submitted' OR a.status = 'Pending' THEN 'Awaiting approval'
+				ELSE 'Awaiting submission'
+            END
+            FROM timesheets t LEFT JOIN approvals a ON a.timesheet_id = t.id
+							WHERE t.user_id = u.id
               AND t.week_start = DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY)
-              ${userRole === 'admin' ? '' : 'AND (a.manager_id = $1 OR a.manager_id IS NULL)'}
-            ORDER BY t.updated_at DESC LIMIT 1),
-           (SELECT CASE WHEN t.status = 'Draft' THEN 'Awaiting submission' ELSE 'Awaiting approval' END
-            FROM timesheets t WHERE t.user_id = u.id
-              AND t.week_start = DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY)
+              ${userRole === 'admin' ? '' : 'AND (a.manager_id = $1 OR (a.manager_id IS NULL AND (u.reporting_manager_id = $1 OR EXISTS (SELECT 1 FROM project_members pm WHERE pm.user_id = $1 AND pm.project_id IN (SELECT project_id FROM project_members WHERE user_id = u.id)))))'}
             ORDER BY t.updated_at DESC LIMIT 1),
            CASE WHEN EXISTS (SELECT 1 FROM work_logs wl WHERE wl.user_id = u.id
              AND wl.date >= DATE_SUB(CURRENT_DATE, INTERVAL WEEKDAY(CURRENT_DATE) DAY)
@@ -248,6 +249,11 @@ export const dashboardService = {
 		const teamUtilization = (empRes.rows as Record<string, unknown>[]).length
 			? Math.min(100, Math.round(teamHours / ((empRes.rows as Record<string, unknown>[]).length * 40) * 100))
 			: null;
+		const teamStatusCounts = (empRes.rows as Record<string, unknown>[]).reduce((counts: Record<string, number>, u) => {
+			const status = String(u['timesheet_status'] || 'Not started');
+			counts[status] = (counts[status] || 0) + 1;
+			return counts;
+		}, {});
 
 		return {
 			totalEmployees: Number(stats["total_employees"]),
@@ -256,6 +262,7 @@ export const dashboardService = {
 			pendingApprovals: Number(stats["pending_approvals"]),
 			teamHours,
 			teamUtilization,
+			teamStatusCounts,
 			weekStart: getWeekStart(new Date()),
 			weekEnd: (() => { const end = new Date(getWeekStart(new Date())); end.setDate(end.getDate() + 6); return end.toISOString().slice(0, 10); })(),
 			monthlyHours: (monthlyRes.rows as Record<string, unknown>[]).map((r) => ({

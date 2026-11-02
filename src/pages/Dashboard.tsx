@@ -529,11 +529,7 @@ const ManagerDashboard: React.FC = () => {
 		? `${formatDisplayDate(data.weekStart)} – ${formatDisplayDate(data.weekEnd)}`
 		: "this week";
 	const approvalCount = Number(data.pendingApprovals) || 0;
-	const statusCounts = employeeTable.slice(0, 5).reduce((counts: Record<string, number>, row: { timesheetStatus?: string }) => {
-		const status = row.timesheetStatus || "Not started";
-		counts[status] = (counts[status] || 0) + 1;
-		return counts;
-	}, {});
+	const statusCounts = data.teamStatusCounts || {};
 
 	const handleBulkApproveAll = () => {
 		const pendingIds = approvals
@@ -902,7 +898,7 @@ const ManagerDashboard: React.FC = () => {
 					{/* Timesheet Summary */}
 					<div className="dashboard__section">
 						<div className="dashboard__section-header">
-									<h2 className="dashboard__section-title">Team status · {weekLabel}</h2>
+										<h2 className="dashboard__section-title">Team status · {weekLabel}</h2>
 						</div>
 						<div className="dashboard__timesheet-status">
 							<div className="dashboard__timesheet-status-item">
