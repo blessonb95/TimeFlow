@@ -23,6 +23,8 @@ export const statusVariant = (status: string): BadgeVariant => {
     case 'Completed':    return 'green';
     case 'Ongoing':      return 'blue';
     case 'Pending':      return 'yellow';
+    case 'Awaiting approval': return 'blue';
+    case 'Awaiting submission': return 'yellow';
     case 'Submitted':    return 'blue';
     case 'In Progress':  return 'blue';
     case 'At Risk':      return 'orange';
