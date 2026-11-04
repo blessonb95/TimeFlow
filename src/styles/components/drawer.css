@@ -1,19 +1,28 @@
 .drawer-overlay {
   position: fixed;
   inset: 0;
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.3);
   z-index: 200;
   display: flex;
   justify-content: flex-end;
+  align-items: stretch;
+  overscroll-behavior: contain;
   animation: fadeIn 0.15s ease;
 }
 .drawer {
   width: 27.5rem;
+  min-width: 0;
   max-width: 100%;
-  height: 100%;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100%;
   background: #ffffff;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 0.625rem 1.5rem rgba(0, 0, 0, 0.08);
   animation: slideInRight 0.2s ease;
 }
@@ -23,7 +32,7 @@
   justify-content: space-between;
   padding: 1.25rem 1.5rem;
   border-bottom: 0.0625rem solid #e5e7eb;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 .drawer__header-title {
   font-size: 1rem;
@@ -52,9 +61,12 @@
   height: 1rem;
 }
 .drawer__body {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
   overflow-y: auto;
+  overflow-x: hidden;
   padding: 1.25rem 1.5rem;
+  overscroll-behavior: contain;
 }
 .drawer__body::-webkit-scrollbar {
   width: 0.25rem;
@@ -74,7 +86,7 @@
   align-items: center;
   justify-content: flex-end;
   gap: 0.75rem;
-  flex-shrink: 0;
+  flex: 0 0 auto;
 }
 .form-group {
   margin-bottom: 1.25rem;

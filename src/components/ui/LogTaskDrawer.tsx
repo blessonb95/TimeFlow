@@ -7,6 +7,7 @@ import type { TaskStatus } from "../../types";
 import { RichTextEditor } from "./RichTextEditor";
 import { LoadingSpinner } from "./LoadingSpinner";
 import { useDialogAccessibility } from "../../hooks/useDialogAccessibility";
+import { createPortal } from "react-dom";
 
 interface DrawerProps {
 	onClose: () => void;
@@ -233,7 +234,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 		);
 	};
 
-	return (
+	return createPortal((
 		<div className="drawer-overlay">
 			<section ref={dialogRef} className="drawer" role="dialog" aria-modal="true" aria-labelledby="log-task-title" tabIndex={-1}>
 				<div className="drawer__header">
@@ -558,5 +559,5 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 				</div>
 			</section>
 		</div>
-	);
+	), document.body);
 };
