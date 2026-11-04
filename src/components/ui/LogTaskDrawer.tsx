@@ -361,7 +361,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 					</div>
 
 					<div className="form-group">
-						<label className="form-group__label">Linked Tickets</label>
+						<span className="form-group__label" id="linked-tickets-label">Linked Tickets</span>
 						<div className="ticket-chips">
 							{tickets.map((t) => (
 								<div className="ticket-chip" key={t}>
@@ -384,7 +384,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 								<div style={{ display: "flex", gap: '0.5rem'}}>
 									<input
 										className="form-group__input"
-						aria-label="Ticket ID or URL"
+										aria-label="Ticket ID or URL"
+										aria-describedby="linked-tickets-label"
 										placeholder="JIRA-324, GH-88, or paste URL…"
 										value={ticketInput}
 										onChange={(e) => setTicketInput(e.target.value)}
@@ -410,7 +411,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 						style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: '1rem'}}
 					>
 						<div className="form-group">
-							<label className="form-group__label">
+							<label className="form-group__label" id="time-spent-label">
 								Time Spent <span style={{ color: "#ef4444" }}>*</span>
 							</label>
 							<div
@@ -425,6 +426,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										className="form-group__input"
 										type="number"
 										aria-label="Hours spent"
+										aria-describedby="time-spent-label"
 										min="0"
 										max="24"
 										step="1"
@@ -447,6 +449,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										className="form-group__input"
 										type="number"
 										aria-label="Minutes spent"
+										aria-describedby="time-spent-label"
 										min="0"
 										max="59"
 										step="1"

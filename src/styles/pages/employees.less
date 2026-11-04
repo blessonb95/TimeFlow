@@ -71,7 +71,7 @@
 	&__view-toggle {
 		.flex-center();
 		gap: @space-1;
-		margin-left: auto;
+		margin-inline-start: auto;
 	}
 	&__view-btn {
 		width: 2rem;
@@ -127,7 +127,7 @@
 	// Grid view
 	&__card-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(13.75rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(13.75rem, 100%), 1fr));
 		gap: @space-4;
 	}
 
@@ -182,7 +182,7 @@
 			white-space: nowrap;
 		}
 		&__card-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 	}
 }

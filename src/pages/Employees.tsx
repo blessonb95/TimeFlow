@@ -181,8 +181,8 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
 
-            <div className="form-group" style={{ marginBottom: '1rem'}}>
-              <label className="form-group__label">Role <span style={{ color: '#ef4444' }}>*</span></label>
+            <fieldset className="form-group" style={{ marginBottom: '1rem', border: 0, minWidth: 0 }}>
+              <legend className="form-group__label">Role <span style={{ color: '#ef4444' }}>*</span></legend>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
                 {INVITE_ROLES.map(r => (
                   <label
@@ -208,7 +208,7 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
                   </label>
                 ))}
               </div>
-            </div>
+            </fieldset>
 
             <div className="form-group" style={{ marginBottom: '1.25rem'}}>
               <label className="form-group__label" htmlFor="invite-department">Department <span style={{ color: '#ef4444' }}>*</span></label>
@@ -223,7 +223,7 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
 
             {error && (
-              <p style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '0.75rem'}}>{error}</p>
+              <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '0.75rem'}}>{error}</p>
             )}
 
             <div style={{ display: 'flex', gap: '0.5rem'}}>

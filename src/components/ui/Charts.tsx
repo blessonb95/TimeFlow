@@ -481,7 +481,7 @@ export const WeekBars: React.FC<{ data: DayHour[]; targetHours?: number }> = ({
               <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${pct}%`, background: col, borderRadius: 7, transition: 'height 0.35s ease' }} />
             </div>
             {/* Day label */}
-            <span style={{ fontSize: '0.75rem', color: d.isToday ? CC.primary : '#526176', fontWeight: d.isToday ? 700 : 500 }}>
+            <span aria-hidden="true" style={{ fontSize: '0.75rem', color: d.isToday ? CC.primary : '#526176', fontWeight: d.isToday ? 700 : 500 }}>
               {d.day}
             </span>
           </div>

@@ -177,7 +177,7 @@ export const Login: React.FC = () => {
 			</div>
 
 			{/* ── RIGHT PANEL ────────────────────────────────────────────────────── */}
-			<div className="auth-page__right" role="main">
+			<main className="auth-page__right">
 				<div className="auth-page__form-wrap">
 					<div className="auth-page__form-header">
 						<img
@@ -389,7 +389,7 @@ export const Login: React.FC = () => {
 						</p>
 					</div>
 				</div>
-			</div>
+			</main>
 		</div>
 	);
 };

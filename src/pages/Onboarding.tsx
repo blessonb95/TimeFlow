@@ -349,7 +349,7 @@ export const Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete })
   const steps = [renderWelcome, renderRole, renderTour, renderDone];
 
   return (
-    <div className="onboarding" role="main">
+    <div className="onboarding">
       <div className="onboarding__card">
         <button className="onboarding__skip" onClick={handleSkip} type="button">
           Skip tour

@@ -176,8 +176,8 @@ export const Topbar: React.FC = () => {
 											key={n.id}
 											className="topbar__notification-item"
 											onClick={() => !n.read && markReadMutation.mutate(n.id)}
-											disabled={n.read}
 											aria-label={`${n.message}${n.read ? ', read' : ', mark as read'}`}
+											aria-disabled={n.read || undefined}
 											style={{
 												padding: "0.625rem 1rem",
 												borderBottom: "1px solid #f9fafb",
