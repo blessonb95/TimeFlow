@@ -129,19 +129,19 @@ export const AcceptInvite: React.FC = () => {
   if (pageState === 'loading') return (
     <div className="auth-page">
       <LeftPanel />
-      <div className="auth-page__right" role="main">
+      <main className="auth-page__right">
         <div className="auth-page__form-wrap invite-page__loading">
           <div className="invite-page__spinner" />
           <p style={{ color: '#6b7280', marginTop: '1rem', fontSize: '0.875rem'}}>Validating your invite…</p>
         </div>
-      </div>
+      </main>
     </div>
   );
 
   if (pageState === 'expired') return (
     <div className="auth-page">
       <LeftPanel />
-      <div className="auth-page__right" role="main">
+      <main className="auth-page__right">
         <div className="auth-page__form-wrap">
           <div className="invite-page__state-icon invite-page__state-icon--warn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -152,14 +152,14 @@ export const AcceptInvite: React.FC = () => {
             Please ask your admin to send a new invite.
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 
   if (pageState === 'used') return (
     <div className="auth-page">
       <LeftPanel />
-      <div className="auth-page__right" role="main">
+      <main className="auth-page__right">
         <div className="auth-page__form-wrap">
           <div className="invite-page__state-icon invite-page__state-icon--info">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -170,14 +170,14 @@ export const AcceptInvite: React.FC = () => {
             If that was you, <button type="button" className="auth-page__switch-link" onClick={() => navigate('/login')}>sign in here</button>.
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 
   if (pageState === 'error') return (
     <div className="auth-page">
       <LeftPanel />
-      <div className="auth-page__right" role="main">
+      <main className="auth-page__right">
         <div className="auth-page__form-wrap">
           <div className="invite-page__state-icon invite-page__state-icon--error">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -185,14 +185,14 @@ export const AcceptInvite: React.FC = () => {
           <h1 className="auth-page__title" style={{ textAlign: 'center' }}>Invalid Link</h1>
           <p style={{ color: '#6b7280', textAlign: 'center', fontSize: '0.875rem'}}>{errorMsg}</p>
         </div>
-      </div>
+      </main>
     </div>
   );
 
   if (pageState === 'success') return (
     <div className="auth-page">
       <LeftPanel />
-      <div className="auth-page__right" role="main">
+      <main className="auth-page__right">
         <div className="auth-page__form-wrap">
           <div className="invite-page__state-icon invite-page__state-icon--success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -202,7 +202,7 @@ export const AcceptInvite: React.FC = () => {
             Your account has been created successfully. Redirecting to the login screen…
           </p>
         </div>
-      </div>
+      </main>
     </div>
   );
 
@@ -212,7 +212,7 @@ export const AcceptInvite: React.FC = () => {
   return (
     <div className="auth-page">
       <LeftPanel />
-      <div className="auth-page__right" role="main">
+      <main className="auth-page__right">
         <div className="auth-page__form-wrap">
 
           {/* Header */}
@@ -356,7 +356,7 @@ export const AcceptInvite: React.FC = () => {
             </div>
 
             {formError && (
-              <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '0.25rem'}}>{formError}</p>
+              <p id="invite-form-error" role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '0.25rem'}}>{formError}</p>
             )}
 
             <button
@@ -379,7 +379,7 @@ export const AcceptInvite: React.FC = () => {
             </p>
           </form>
         </div>
-      </div>
+      </main>
     </div>
   );
 };

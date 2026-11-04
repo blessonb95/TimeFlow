@@ -95,7 +95,7 @@
 
 	&__form-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: @space-4;
 	}
 
@@ -284,7 +284,7 @@
 	.settings {
 		max-width: 100%;
 		&__form-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 		&__toggle-row {
 			flex-direction: column;
@@ -409,7 +409,7 @@
 
 .settings__about-egg {
 	display: grid;
-	grid-template-columns: 1.75rem 8.75rem 1fr;
+	grid-template-columns: 1.75rem 8.75rem minmax(0, 1fr);
 	align-items: center;
 	gap: @space-3;
 	padding: 0.5625rem 0.875rem;

@@ -509,30 +509,31 @@ const EmployeeDashboard: React.FC = () => {
 const ManagerDashboard: React.FC = () => {
 	const { currentUser, role } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading } = useManagerDashboard();
+	const { data, isLoading, isError } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 	const bulkApproveMutation = useBulkApprove();
 	const hour = new Date().getHours();
 	const greeting =
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
-	if (isLoading || !data) { return <DashboardSkeleton />; }
+	if (isLoading) { return <DashboardSkeleton />; }
+	if (isError || !data) { return <div className="page-inner dashboard"><EmptyState icon="timesheets" title="Dashboard unavailable" subtitle="We couldn’t load your team dashboard. Try again shortly." /></div>; }
 
-	const monthlyHours = data.monthlyHours || [];
-	const deptUtilization = data.deptUtilization || [];
 	const employeeTable = data.employeeTable || [];
 	const myProjects = (data.projects || []).slice(0, 3);
 	const teamHoursThisWeek = employeeTable.reduce(
 		(total: number, row: { weekHours?: number }) => total + Number(row.weekHours || 0),
 		0,
 	);
-	const teamNotStarted = employeeTable.filter(
-		(row: { timesheetStatus?: string }) => row.timesheetStatus === "Not Started",
-	).length;
+	const weekLabel = data.weekStart && data.weekEnd
+		? `${formatDisplayDate(data.weekStart)} – ${formatDisplayDate(data.weekEnd)}`
+		: "this week";
+	const approvalCount = Number(data.pendingApprovals) || 0;
+	const statusCounts = data.teamStatusCounts || {};
 
 	const handleBulkApproveAll = () => {
 		const pendingIds = approvals
-			.filter((a: { status: string; id: string }) => a.status === "Pending")
+			.filter((a: { status: string; id: string; weekStart?: string }) => a.status === "Pending" && (!data.weekStart || a.weekStart === data.weekStart))
 			.map((a: { id: string }) => a.id);
 		if (
 			pendingIds.length > 0 &&
@@ -567,7 +568,7 @@ const ManagerDashboard: React.FC = () => {
 							className="btn btn--primary"
 							onClick={() => navigate("/approvals")}
 						>
-							✓ Review ({data.pendingApprovals || 0})
+							Review approvals ({approvalCount})
 						</button>
 					)}
 				</div>
@@ -580,14 +581,14 @@ const ManagerDashboard: React.FC = () => {
 					<p>Track logged time, review submissions, and spot gaps across your team.</p>
 				</div>
 				<dl className="dashboard__manager-metrics">
-					<div><dt>Hours logged</dt><dd>{teamHoursThisWeek}h</dd></div>
-					<div><dt>Team members</dt><dd>{employeeTable.length}</dd></div>
-					<div><dt>Not started</dt><dd>{teamNotStarted}</dd></div>
+				<div><dt>Hours logged · {weekLabel}</dt><dd>{data.teamHours ?? teamHoursThisWeek}h</dd></div>
+							<div><dt>Team members</dt><dd>{employeeTable.length}</dd></div>
+									<div><dt>Awaiting approval</dt><dd>{approvalCount}</dd></div>
 				</dl>
 			</section>
 
 			{/* Approval Banner with HR Reminder */}
-			{role !== "admin" && data.pendingApprovals > 0 && (
+			{role !== "admin" && approvalCount > 0 && (
 				<div
 					className="dashboard__banner"
 					style={{
@@ -616,8 +617,8 @@ const ManagerDashboard: React.FC = () => {
 							</strong>{" "}
 							You have{" "}
 							<strong>
-								{data.pendingApprovals} timesheet
-								{data.pendingApprovals > 1 ? "s" : ""}
+								{approvalCount} submission
+								{approvalCount > 1 ? "s" : ""}
 							</strong>{" "}
 							awaiting your review and approval.
 						</div>
@@ -638,7 +639,7 @@ const ManagerDashboard: React.FC = () => {
 								cursor: "pointer",
 							}}
 						>
-							✓ Approve All ({data.pendingApprovals})
+							✓ Approve All ({approvalCount})
 						</button>
 						<button type="button"
 							className="dashboard__banner-link"
@@ -656,8 +657,8 @@ const ManagerDashboard: React.FC = () => {
 				{[
 					{
 						label: "Total Employees",
-						value: `${data.totalEmployees || 0}`,
-						sub: "Active personnel",
+						value: `${data.totalEmployees ?? 0}`,
+						sub: "Active organization employees",
 						subCls: "green",
 						iconCls: "dashboard__stat-card-icon--blue",
 						icon: (
@@ -676,8 +677,8 @@ const ManagerDashboard: React.FC = () => {
 					},
 					{
 						label: "Active Projects",
-						value: `${data.activeProjects || 0}`,
-						sub: "In progress",
+						value: `${data.activeProjects ?? 0}`,
+						sub: "Team active projects",
 						subCls: "blue",
 						iconCls: "dashboard__stat-card-icon--green",
 						icon: (
@@ -694,7 +695,7 @@ const ManagerDashboard: React.FC = () => {
 					role === "admin"
 						? {
 								label: "Departments",
-								value: `${deptUtilization.length || 5}`,
+									value: `${data.totalDepartments ?? (data.deptUtilization || []).length}`,
 								sub: "Active departments",
 								subCls: "green",
 								iconCls: "dashboard__stat-card-icon--purple",
@@ -712,8 +713,8 @@ const ManagerDashboard: React.FC = () => {
 								),
 							}
 						: {
-								label: "Pending Approvals",
-								value: `${data.pendingApprovals || 0}`,
+								label: "Awaiting Approval",
+								value: `${approvalCount}`,
 								sub: "Needs action",
 								subCls: data.pendingApprovals > 0 ? "red" : "green",
 								iconCls: "dashboard__stat-card-icon--amber",
@@ -731,10 +732,8 @@ const ManagerDashboard: React.FC = () => {
 							},
 					{
 						label: "Avg Utilization",
-						value: deptUtilization.length
-							? `${Math.round(deptUtilization.reduce((acc: number, d: { utilization: number }) => acc + d.utilization, 0) / deptUtilization.length)}%`
-							: "0%",
-						sub: "Across departments",
+						value: data.teamUtilization == null ? "—" : `${data.teamUtilization}%`,
+						sub: `Team average · 85–100% target · ${weekLabel}`,
 						subCls: "blue",
 						iconCls: "dashboard__stat-card-icon--indigo",
 						icon: (
@@ -777,13 +776,13 @@ const ManagerDashboard: React.FC = () => {
 							style={{ padding: "1.25rem 1.5rem", marginBottom: '0rem'}}
 						>
 							<h2 className="dashboard__section-title">
-								Assigned Projects
+								{role === "admin" ? "Organization active projects" : "My assigned projects"}
 							</h2>
 							<button type="button"
 								className="dashboard__section-link"
 								onClick={() => navigate("/projects")}
 							>
-								View all{" "}
+								{role === "admin" ? "View all projects" : "View my projects"}{" "}
 								<svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
 									<path d="M6 3l5 5-5 5" />
 								</svg>
@@ -795,7 +794,7 @@ const ManagerDashboard: React.FC = () => {
 								<EmptyState
 									icon="projects"
 									title="No Assigned Projects"
-									subtitle="No active project assignments found for your account."
+										subtitle={role === "admin" ? "No active projects are available." : "No active project assignments found for your account."}
 									compact
 								/>
 							) : (
@@ -812,13 +811,13 @@ const ManagerDashboard: React.FC = () => {
 
 					{/* Team Status */}
 					<div className="dashboard__section">
-						<div className="dashboard__section-header">
-							<h2 className="dashboard__section-title">Team Timesheets Overview</h2>
+													<div className="dashboard__section-header">
+													<h2 className="dashboard__section-title">Team timesheet preview · {weekLabel}</h2>
 							<button type="button"
 								className="dashboard__section-link"
 								onClick={() => navigate("/approvals")}
 							>
-								Full Listing →
+								All timesheets →
 							</button>
 						</div>
 						{employeeTable.length === 0 ? (
@@ -883,7 +882,7 @@ const ManagerDashboard: React.FC = () => {
 												</td>
 												<td>
 													<Badge variant={statusVariant(row.timesheetStatus)}>
-														{row.timesheetStatus}
+														{row.timesheetStatus === "Pending" || row.timesheetStatus === "Submitted" ? "Awaiting approval" : row.timesheetStatus === "Not Started" ? "Not started" : row.timesheetStatus}
 													</Badge>
 												</td>
 											</tr>
@@ -899,34 +898,34 @@ const ManagerDashboard: React.FC = () => {
 					{/* Timesheet Summary */}
 					<div className="dashboard__section">
 						<div className="dashboard__section-header">
-											<h2 className="dashboard__section-title">Timesheet Status</h2>
+										<h2 className="dashboard__section-title">Team status · {weekLabel}</h2>
 						</div>
 						<div className="dashboard__timesheet-status">
 							<div className="dashboard__timesheet-status-item">
 								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--pending" aria-hidden="true">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 								</span>
-								<strong className="dashboard__timesheet-status-count">{employeeTable.filter((e: any) => e.timesheetStatus === "Pending").length}</strong>
-								<span className="dashboard__timesheet-status-label">Pending</span>
+								<strong className="dashboard__timesheet-status-count">{statusCounts["Awaiting submission"] || 0}</strong>
+								<span className="dashboard__timesheet-status-label">Awaiting submission</span>
 							</div>
 							<div className="dashboard__timesheet-status-item">
 								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--submitted" aria-hidden="true">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></svg>
 								</span>
-								<strong className="dashboard__timesheet-status-count">{employeeTable.filter((e: any) => e.timesheetStatus === "Submitted").length}</strong>
-								<span className="dashboard__timesheet-status-label">Submitted</span>
+								<strong className="dashboard__timesheet-status-count">{statusCounts["Awaiting approval"] || 0}</strong>
+								<span className="dashboard__timesheet-status-label">Awaiting approval</span>
 							</div>
 							<div className="dashboard__timesheet-status-item">
 								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--upcoming" aria-hidden="true">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4m8-4v4M4 10h16" /></svg>
 								</span>
-								<strong className="dashboard__timesheet-status-count">{employeeTable.filter((e: any) => e.timesheetStatus === "Not Started").length}</strong>
-								<span className="dashboard__timesheet-status-label">Not Started</span>
+								<strong className="dashboard__timesheet-status-count">{statusCounts["Approved"] || 0}</strong>
+								<span className="dashboard__timesheet-status-label">Approved</span>
 							</div>
 						</div>
 					</div>
 
-					<DashboardQuickActions pendingCount={data.pendingApprovals || 0} />
+					<DashboardQuickActions pendingCount={approvalCount} />
 				</div>
 			</div>
 		</div>
@@ -937,18 +936,19 @@ const ManagerDashboard: React.FC = () => {
 const CEODashboard: React.FC = () => {
 	const { currentUser } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading } = useManagerDashboard();
+	const { data, isLoading, isError } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 
-	if (isLoading || !data) { return <DashboardSkeleton />; }
+	if (isLoading) { return <DashboardSkeleton />; }
+	if (isError || !data) { return <div className="page-inner dashboard"><EmptyState icon="timesheets" title="Dashboard unavailable" subtitle="We couldn’t load the executive dashboard. Try again shortly." /></div>; }
 
-	const deptUtilization = data.deptUtilization || [];
 	const employeeTable = data.employeeTable || [];
 	const myProjects = (data.projects || []).slice(0, 3);
 	const totalTimesheets = approvals.length;
-	const pendingTimesheets = approvals.filter(
+	const pendingTimesheets = Number(data.pendingApprovals) || approvals.filter(
 		(a: any) => a.status === "Pending",
 	).length;
+	const currentWeekApprovals = approvals.filter((a: { weekStart?: string }) => !data.weekStart || a.weekStart === data.weekStart);
 	const approvedTimesheets = approvals.filter(
 		(a: any) => a.status === "Approved",
 	).length;
@@ -982,7 +982,7 @@ const CEODashboard: React.FC = () => {
 						className="btn btn--primary"
 						onClick={() => navigate("/approvals")}
 					>
-						All Timesheets ({approvals.length})
+						Approval history ({approvals.length})
 					</button>
 				</div>
 			</div>
@@ -1049,7 +1049,7 @@ const CEODashboard: React.FC = () => {
 				{[
 					{
 						label: "Total Staff",
-						value: `${employeeTable.length || 9}`,
+						value: `${data.totalEmployees ?? employeeTable.length}`,
 						sub: "HR, Managers & Engineers",
 						subCls: "blue",
 						iconCls: "dashboard__stat-card-icon--blue",
@@ -1067,8 +1067,8 @@ const CEODashboard: React.FC = () => {
 					},
 					{
 						label: "Active Projects",
-						value: `${myProjects.length || 5}`,
-						sub: "Ongoing organization projects",
+						value: `${data.activeProjects ?? 0}`,
+						sub: "Organization-wide",
 						subCls: "green",
 						iconCls: "dashboard__stat-card-icon--green",
 						icon: (
@@ -1083,8 +1083,8 @@ const CEODashboard: React.FC = () => {
 						),
 					},
 					{
-						label: "All Timesheets",
-						value: `${totalTimesheets || approvals.length}`,
+						label: "Approval History",
+						value: `${totalTimesheets}`,
 						sub: `${pendingTimesheets} pending review`,
 						subCls: pendingTimesheets > 0 ? "orange" : "green",
 						iconCls: "dashboard__stat-card-icon--amber",
@@ -1102,10 +1102,8 @@ const CEODashboard: React.FC = () => {
 					},
 					{
 						label: "Org Utilization",
-						value: deptUtilization.length
-							? `${Math.round(deptUtilization.reduce((acc: number, d: { utilization: number }) => acc + d.utilization, 0) / deptUtilization.length)}%`
-							: "85%",
-						sub: "Across all departments",
+						value: data.teamUtilization == null ? "—" : `${data.teamUtilization}%`,
+						sub: `Team average · target 85–100% · ${data.weekStart} – ${data.weekEnd}`,
 						subCls: "green",
 						iconCls: "dashboard__stat-card-icon--purple",
 						icon: (
@@ -1147,7 +1145,7 @@ const CEODashboard: React.FC = () => {
 							style={{ padding: "1.25rem 1.5rem", marginBottom: '0rem'}}
 						>
 								<h2 className="dashboard__section-title">
-								Organization Projects Progress
+								Organization active projects
 								</h2>
 							<button type="button" className="dashboard__section-link" onClick={() => navigate("/projects")}>
 								All Projects{" "}
@@ -1233,10 +1231,10 @@ const CEODashboard: React.FC = () => {
 					<div className="dashboard__section">
 						<div className="dashboard__section-header">
 							<h2 className="dashboard__section-title">
-								All Personnel Timesheets (HR, Managers & Staff)
+								All personnel · this week (first 5)
 							</h2>
 							<button type="button" className="dashboard__section-link" onClick={() => navigate("/approvals")}>
-								Full Listing →
+								All timesheets →
 							</button>
 						</div>
 						{employeeTable.length === 0 ? (
@@ -1248,7 +1246,7 @@ const CEODashboard: React.FC = () => {
 						) : (
 			<div className="table-responsive">
 							<table className="data-table">
-								<caption className="sr-only">All personnel timesheets for this week</caption>
+								<caption className="sr-only">First five personnel timesheet statuses for this week</caption>
 								<thead>
 									<tr>
 										<th scope="col">Person</th>
@@ -1304,8 +1302,8 @@ const CEODashboard: React.FC = () => {
 												<UtilBar value={row.utilization} />
 											</td>
 											<td>
-												<Badge variant={statusVariant(row.timesheetStatus)}>
-													{row.timesheetStatus}
+															<Badge variant={statusVariant(row.timesheetStatus)}>
+																{row.timesheetStatus === "Pending" || row.timesheetStatus === "Submitted" ? "Awaiting approval" : row.timesheetStatus === "Not Started" ? "Not started" : row.timesheetStatus}
 												</Badge>
 											</td>
 										</tr>
@@ -1344,10 +1342,10 @@ const CEODashboard: React.FC = () => {
 								<div
 									style={{ fontSize: '1.375rem', fontWeight: 700, color: "#1e293b" }}
 								>
-									{totalTimesheets}
+									{currentWeekApprovals.length}
 								</div>
-								<div style={{ fontSize: '0.6875rem', color: "#64748b", marginTop: '0.25rem'}}>
-									Total Submissions
+								<div style={{ fontSize: '0.75rem', color: "#475569", marginTop: '0.25rem'}}>
+									Current week submissions
 								</div>
 							</div>
 							<div
@@ -1364,8 +1362,8 @@ const CEODashboard: React.FC = () => {
 								>
 									{pendingTimesheets}
 								</div>
-								<div style={{ fontSize: '0.6875rem', color: "#854d0e", marginTop: '0.25rem'}}>
-									Pending Approvals
+								<div style={{ fontSize: '0.75rem', color: "#854d0e", marginTop: '0.25rem' }}>
+									Awaiting approval
 								</div>
 							</div>
 							<div
@@ -1448,7 +1446,7 @@ const HRDashboard: React.FC = () => {
 				{[
 					{
 						label: "Total Employees",
-						value: `${employeeTable.length || 9}`,
+						value: `${data.totalEmployees ?? employeeTable.length}`,
 						sub: "Active headcount",
 						subCls: "blue",
 						iconCls: "dashboard__stat-card-icon--blue",
@@ -1503,10 +1501,8 @@ const HRDashboard: React.FC = () => {
 					},
 					{
 						label: "Avg Resource Util",
-						value: deptUtilization.length
-							? `${Math.round(deptUtilization.reduce((acc: number, d: { utilization: number }) => acc + d.utilization, 0) / deptUtilization.length)}%`
-							: "85%",
-						sub: "Workforce allocation",
+						value: data.teamUtilization == null ? "—" : `${data.teamUtilization}%`,
+						sub: `Team average · target 85–100% · ${data.weekStart} – ${data.weekEnd}`,
 						subCls: "blue",
 						iconCls: "dashboard__stat-card-icon--indigo",
 						icon: (
@@ -1678,7 +1674,6 @@ const AdminDashboard: React.FC = () => {
 	}
 
 	const employeeTable = data.employeeTable || [];
-	const myProjects = (data.projects || []).slice(0, 3);
 	const totalTimesheets = approvals.length;
 
 	const systemAuditLogs = [
@@ -1805,7 +1800,7 @@ const AdminDashboard: React.FC = () => {
 					},
 					{
 						label: "Registered Accounts",
-						value: `${employeeTable.length || 13}`,
+						value: `${employeeTable.length}`,
 						sub: "Admin, HR, Manager & Staff",
 						subCls: "blue",
 						iconCls: "dashboard__stat-card-icon--blue",
@@ -1823,7 +1818,7 @@ const AdminDashboard: React.FC = () => {
 					},
 					{
 						label: "Active Projects",
-						value: `${myProjects.length || 6}`,
+						value: `${data.activeProjects ?? 0}`,
 						sub: "Organization Resource Pool",
 						subCls: "green",
 						iconCls: "dashboard__stat-card-icon--cyan",

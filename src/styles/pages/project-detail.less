@@ -195,7 +195,7 @@
 	// ── Overview Grid ─────────────────────────────────────────────────────────
 	&__overview-grid {
 		display: grid;
-		grid-template-columns: 1fr 1fr;
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 		gap: @space-4;
 	}
 
@@ -271,7 +271,7 @@
 	// ── Team Grid ─────────────────────────────────────────────────────────────
 	&__team-grid {
 		display: grid;
-		grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+		grid-template-columns: repeat(auto-fill, minmax(min(10rem, 100%), 1fr));
 		gap: @space-4;
 	}
 
@@ -506,7 +506,7 @@
 		padding: 0;
 		background: transparent;
 		font: inherit;
-		text-align: left;
+		text-align: start;
 		cursor: pointer;
 	}
 
@@ -610,7 +610,7 @@
 			display: none;
 		}
 		&__overview-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 		&__tabs {
 			overflow-x: auto;

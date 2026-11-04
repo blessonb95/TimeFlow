@@ -2,59 +2,59 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 1rem;
 }
 .employees__search {
   display: flex;
   align-items: center;
-  gap: 8px;
-  height: 36px;
-  padding: 0 12px;
+  gap: 0.5rem;
+  height: 2.25rem;
+  padding: 0 0.75rem;
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  width: 240px;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.5rem;
+  width: 15rem;
 }
 .employees__search:focus-within {
   border-color: #2563eb;
 }
 .employees__search svg {
-  width: 14px;
-  height: 14px;
-  color: #9ca3af;
+  width: 0.875rem;
+  height: 0.875rem;
+  color: #6b7280;
   flex-shrink: 0;
 }
 .employees__search input {
   border: none;
   outline: none;
-  font-size: 13px;
+  font-size: 0.875rem;
   width: 100%;
 }
 .employees__toolbar-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 .employees__dept-tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 16px;
+  gap: 0.25rem;
+  margin-bottom: 1rem;
 }
 .employees__dept-tab {
-  padding: 5px 14px;
-  border-radius: 9999px;
-  font-size: 12px;
+  padding: 0.3125rem 0.875rem;
+  border-radius: 624.9375rem;
+  font-size: 0.8125rem;
   font-weight: 500;
   cursor: pointer;
-  border: 1px solid #e5e7eb;
+  border: 0.0625rem solid #e5e7eb;
   background: #ffffff;
-  color: #6b7280;
+  color: #4b5563;
   transition: all 0.12s ease;
 }
 .employees__dept-tab:hover:not(.employees__dept-tab--active) {
   background: #f9fafb;
-  color: #6b7280;
+  color: #4b5563;
 }
 .employees__dept-tab--active {
   background: #111827;
@@ -68,20 +68,20 @@
 .employees__view-toggle {
   display: flex;
   align-items: center;
-  gap: 4px;
-  margin-left: auto;
+  gap: 0.25rem;
+  margin-inline-start: auto;
 }
 .employees__view-btn {
-  width: 32px;
-  height: 32px;
+  width: 2rem;
+  height: 2rem;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 6px;
+  border-radius: 0.375rem;
   cursor: pointer;
-  border: 1px solid #e5e7eb;
+  border: 0.0625rem solid #e5e7eb;
   background: #ffffff;
-  color: #9ca3af;
+  color: #6b7280;
   transition: all 0.12s ease;
 }
 .employees__view-btn:hover:not(.employees__view-btn--active) {
@@ -97,73 +97,73 @@
   color: #ffffff;
 }
 .employees__view-btn svg {
-  width: 15px;
-  height: 15px;
+  width: 0.9375rem;
+  height: 0.9375rem;
 }
 .employees__employee-cell {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 0.75rem;
 }
 .employees__employee-name {
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .employees__employee-email {
-  font-size: 10px;
-  color: #9ca3af;
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 .employees__dept-cell-role {
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 500;
 }
 .employees__dept-cell-dept {
-  font-size: 10px;
-  color: #9ca3af;
+  font-size: 0.75rem;
+  color: #6b7280;
 }
 .employees__card-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(13.75rem, 100%), 1fr));
+  gap: 1rem;
 }
 .employees__card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-  padding: 20px;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
+  padding: 1.25rem;
   text-align: center;
   transition: box-shadow 0.18s;
 }
 .employees__card:hover {
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.05), 0 0.125rem 0.25rem rgba(0, 0, 0, 0.04);
 }
 .employees__card-name {
-  font-size: 13px;
+  font-size: 0.875rem;
   font-weight: 600;
-  margin-top: 12px;
-  margin-bottom: 2px;
+  margin-top: 0.75rem;
+  margin-bottom: 0.125rem;
 }
 .employees__card-role {
-  font-size: 12px;
-  color: #6b7280;
-  margin-bottom: 4px;
+  font-size: 0.8125rem;
+  color: #4b5563;
+  margin-bottom: 0.25rem;
 }
 .employees__card-email {
-  font-size: 10px;
-  color: #9ca3af;
-  margin-bottom: 16px;
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin-bottom: 1rem;
 }
 .employees__card-stat {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #e5e7eb;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 0.0625rem solid #e5e7eb;
 }
-@media (max-width: 768px) {
+@media (max-width: 48rem) {
   .employees__toolbar {
     flex-direction: column;
     align-items: stretch;
-    gap: 12px;
+    gap: 0.75rem;
   }
   .employees__search {
     width: 100%;
@@ -176,6 +176,6 @@
     white-space: nowrap;
   }
   .employees__card-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
 }

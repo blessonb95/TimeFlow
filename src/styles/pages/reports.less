@@ -89,7 +89,7 @@
 	// ── Metric Cards ────────────────────────────────────────────────────────────
 	&__metrics {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: @space-4;
 		margin-bottom: @space-4;
 	}
@@ -185,7 +185,7 @@
 
 		th {
 			padding: 0.625rem 1.25rem;
-			text-align: left;
+			text-align: start;
 			font-size: 0.625rem;
 			font-weight: 600;
 			color: @color-text-muted;
@@ -263,7 +263,7 @@
 	// ── Export Grid ─────────────────────────────────────────────────────────────
 	&__export-grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 		gap: @space-4;
 	}
 	&__export-card {
@@ -349,7 +349,7 @@
 		font-size: 0.75rem;
 		font-weight: 700;
 		min-width: 2.125rem;
-		text-align: right;
+		text-align: end;
 	}
 
 	// ── Export center ─────────────────────────────────────────────────────────
@@ -600,7 +600,7 @@
 		color: #4338ca;
 		font-size: 0.6875rem;
 		font-weight: 600;
-		margin-left: 0.375rem;
+		margin-inline-start: 0.375rem;
 
 		&--zero {
 			background: @gray-100;
@@ -620,7 +620,7 @@
 	// ── Summary grid ─────────────────────────────────────────────────────────
 	&__preview-summary-grid {
 		display: grid;
-		grid-template-columns: repeat(4, 1fr);
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 		gap: @space-4;
 		margin-bottom: @space-5;
 	}
@@ -676,7 +676,7 @@
 
 		th {
 			padding: 0.5625rem 1rem;
-			text-align: left;
+			text-align: start;
 			font-size: 0.625rem;
 			font-weight: 600;
 			color: @color-text-muted;
@@ -833,7 +833,7 @@
 @media (max-width: 64rem) {
 	.reports {
 		&__metrics {
-			grid-template-columns: repeat(2, 1fr);
+			grid-template-columns: repeat(2, minmax(0, 1fr));
 		}
 		&__util-charts {
 			flex-direction: column;
@@ -844,10 +844,10 @@
 @media (max-width: 48rem) {
 	.reports {
 		&__metrics {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 		&__export-grid {
-			grid-template-columns: 1fr;
+			grid-template-columns: minmax(0, 1fr);
 		}
 		&__tabs {
 			overflow-x: auto;
@@ -870,6 +870,9 @@
 		&__preview-modal-body {
 			padding: 1rem;
 			-webkit-overflow-scrolling: touch;
+		}
+		&__preview-modal {
+			max-height: calc(100dvh - 2rem);
 		}
 		&__table-card {
 			min-width: 0;

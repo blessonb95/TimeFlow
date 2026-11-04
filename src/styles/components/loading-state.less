@@ -55,7 +55,7 @@
 
 .skeleton-grid {
 	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(19rem, 1fr));
+	grid-template-columns: repeat(auto-fill, minmax(min(19rem, 100%), 1fr));
 	gap: 1.25rem;
 	width: 100%;
 }
@@ -83,7 +83,7 @@
 
 .skeleton-table-head {
 	display: grid;
-	grid-template-columns: 2fr repeat(4, 1fr);
+	grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr));
 	gap: 1rem;
 	padding: 0.875rem 1.25rem;
 	background: #f8fafc;
@@ -92,7 +92,7 @@
 
 .skeleton-table-row {
 	display: grid;
-	grid-template-columns: 2fr repeat(4, 1fr);
+	grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr));
 	gap: 1rem;
 	align-items: center;
 	padding: 1rem 1.25rem;

@@ -1,12 +1,12 @@
 .progress {
-  height: 5px;
+  height: 0.3125rem;
   background: #e5e7eb;
-  border-radius: 9999px;
+  border-radius: 624.9375rem;
   overflow: hidden;
 }
 .progress__fill {
   height: 100%;
-  border-radius: 9999px;
+  border-radius: 624.9375rem;
   transition: width 0.4s ease;
 }
 .progress__fill--blue {
@@ -25,30 +25,30 @@
   background: #9333ea;
 }
 .progress--thin {
-  height: 3px;
+  height: 0.1875rem;
 }
 .progress--thick {
-  height: 8px;
+  height: 0.5rem;
 }
 .util-bar {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
 }
 .util-bar__track {
   flex: 1;
-  height: 5px;
+  height: 0.3125rem;
   background: #e5e7eb;
-  border-radius: 9999px;
+  border-radius: 624.9375rem;
   overflow: hidden;
 }
 .util-bar__fill {
   height: 100%;
-  border-radius: 9999px;
+  border-radius: 624.9375rem;
 }
 .util-bar__label {
-  font-size: 12px;
+  font-size: 0.8125rem;
   font-weight: 600;
-  min-width: 34px;
-  text-align: right;
+  min-width: 2.125rem;
+  text-align: end;
 }
