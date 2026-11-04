@@ -1,6 +1,18 @@
 import dotenv from "dotenv";
 dotenv.config();
 
+if (process.env.NODE_ENV === "production") {
+	if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "fallback_secret_change_me" || process.env.JWT_SECRET === "your_super_secret_jwt_key_here_change_in_production") {
+		throw new Error("JWT_SECRET must be explicitly configured in production.");
+	}
+	if (!process.env.ENCRYPTION_KEY || process.env.ENCRYPTION_KEY === "supersecret_aes_key_2026") {
+		throw new Error("ENCRYPTION_KEY must be explicitly configured in production.");
+	}
+	if (!process.env.CLIENT_URL || process.env.CLIENT_URL.trim() === "*") {
+		throw new Error("CLIENT_URL must contain the allowed frontend origin(s) in production.");
+	}
+}
+
 export const env = {
 	port: parseInt(process.env.PORT || "4000", 10),
 	nodeEnv: process.env.NODE_ENV || "development",

@@ -51,6 +51,18 @@ const healthBadge = (h: string) => {
 	return { bg: "#f3f4f6", color: "#6b7280", border: "#d1d5db" };
 };
 
+const escapeHtml = (value: unknown) =>
+	String(value ?? "").replace(/[&<>"']/g, (char) => {
+		const entities: Record<string, string> = {
+			"&": "&amp;",
+			"<": "&lt;",
+			">": "&gt;",
+			'"': "&quot;",
+			"'": "&#39;",
+		};
+		return entities[char];
+	});
+
 export const Reports: React.FC = () => {
 	const { role, currentUser } = useAppStore();
 
@@ -429,7 +441,7 @@ export const Reports: React.FC = () => {
 					util >= 85 ? "#16a34a" : util >= 60 ? "#ea580c" : "#dc2626";
 				const hoursRounded = Math.round((r.totalHours || 0) * 100) / 100;
 				return `<tr>
-          <td>${r.name}</td><td>${r.department || "–"}</td><td>${r.designation || "–"}</td>
+          <td>${escapeHtml(r.name)}</td><td>${escapeHtml(r.department || "–")}</td><td>${escapeHtml(r.designation || "–")}</td>
           <td style="text-align:center">${hoursRounded}h</td>
           <td style="text-align:center">${r.projects}</td>
           <td style="text-align:center;color:${utilColor};font-weight:700">${util}%</td>
@@ -452,11 +464,11 @@ export const Reports: React.FC = () => {
 							? "#ea580c"
 							: "#dc2626";
 				return `<tr>
-          <td>${p.name}</td>
+          <td>${escapeHtml(p.name)}</td>
           <td style="text-align:center">${p.budgeted || 0}h</td>
           <td style="text-align:center;color:#4f46e5;font-weight:700">${p.logged || 0}h</td>
           <td style="text-align:center">${Math.max(0, (p.budgeted || 0) - (p.logged || 0))}h</td>
-          <td style="text-align:center;color:${hc};font-weight:700">${health}</td>
+          <td style="text-align:center;color:${hc};font-weight:700">${escapeHtml(health)}</td>
         </tr>`;
 			})
 			.join("");
@@ -485,9 +497,9 @@ export const Reports: React.FC = () => {
 					.map(
 						(e) =>
 							`<tr>
-            <td>${fmtDate(e.date)}</td>
-            <td>${e.projectName}</td>
-            <td style="max-width:260px;word-break:break-word">${e.taskName}</td>
+            <td>${escapeHtml(fmtDate(e.date))}</td>
+            <td>${escapeHtml(e.projectName)}</td>
+            <td style="max-width:260px;word-break:break-word">${escapeHtml(e.taskName)}</td>
             <td style="text-align:center;font-weight:600">${e.hours}h</td>
             <td style="text-align:center">
               <span style="padding: 0.125rem 0.5rem;border-radius:0.25rem;font-size:0.625rem;font-weight:700;background:${
@@ -502,7 +514,7 @@ export const Reports: React.FC = () => {
 									: e.status === "Rejected"
 										? "#dc2626"
 										: "#6b7280"
-							}">${e.status || "Pending"}</span>
+            }">${escapeHtml(e.status || "Pending")}</span>
             </td>
           </tr>`,
 					)
@@ -510,7 +522,7 @@ export const Reports: React.FC = () => {
 				return `
           <div style="margin-bottom:28px">
             <div style="display:flex;align-items:center;justify-content:space-between;background:#f3f4f6;border-radius:8px;padding: 0.625rem 0.875rem;margin-bottom:0.625rem">
-              <span style="font-size:13px;font-weight:700;color:#111827">${empName}</span>
+              <span style="font-size:13px;font-weight:700;color:#111827">${escapeHtml(empName)}</span>
               <span style="font-size:12px;font-weight:600;color:#6366f1">Total: ${Math.round(empTotal * 100) / 100}h</span>
             </div>
             <table>
@@ -527,23 +539,23 @@ export const Reports: React.FC = () => {
 
 		const sharedStyles = `
         * { margin: 0; padding: 0; box-sizing: border-box;}
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; font-size: 13px; padding: '2rem' 2.5rem;}
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111827; font-size: 13px; padding: 2rem 2.5rem;}
         .header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; padding-bottom: 16px; border-bottom: 2px solid #e5e7eb; }
         .logo { font-size: 20px; font-weight: 800; color: #6366f1; letter-spacing: -0.5px; }
         .logo span { color: #111827; }
         .meta { font-size: 11px; color: #6b7280; text-align: right; line-height: 1.6; }
-        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: '1rem'; margin-bottom: 1.75rem;}
-        .summary-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: '0.875rem' 1rem;}
+        .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 1.75rem;}
+        .summary-card { background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 10px; padding: 0.875rem 1rem;}
         .summary-card .label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; margin-bottom: 6px; }
         .summary-card .value { font-size: 22px; font-weight: 800; color: #111827; }
-        .section-title { font-size: 14px; font-weight: 700; color: #111827; margin: '1.5rem' 0 0.75rem; padding-bottom: 0.375rem; border-bottom: 0.0625rem solid #e5e7eb;}
+        .section-title { font-size: 14px; font-weight: 700; color: #111827; margin: 1.5rem 0 0.75rem; padding-bottom: 0.375rem; border-bottom: 0.0625rem solid #e5e7eb;}
         table { width: 100%; border-collapse: collapse; font-size: 12px; margin-bottom: 16px; }
-        th { background: #f3f4f6; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; padding: '0.5625rem' 0.75rem; text-align: left; border-bottom: 0.0625rem solid #e5e7eb;}
-        td { padding: '0.625rem' 0.75rem; border-bottom: 0.0625rem solid #f9fafb; color: #374151; vertical-align: middle;}
+        th { background: #f3f4f6; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; padding: 0.5625rem 0.75rem; text-align: left; border-bottom: 0.0625rem solid #e5e7eb;}
+        td { padding: 0.625rem 0.75rem; border-bottom: 0.0625rem solid #f9fafb; color: #374151; vertical-align: middle;}
         tr:last-child td { border-bottom: none; }
         .footer { margin-top: 36px; padding-top: 14px; border-top: 1px solid #e5e7eb; font-size: 11px; color: #6b7280; display: flex; justify-content: space-between; }
         .page-break { page-break-before: always; padding-top: 32px; }
-        @media print { body { padding: '1.25rem';} @page { margin: 1cm; size: A4;} }`;
+        @media print { body { padding: 1.25rem;} @page { margin: 1cm; size: A4;} }`;
 
 		const html = `<!DOCTYPE html><html lang="en"><head>
       <meta charset="UTF-8" />

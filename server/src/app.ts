@@ -24,10 +24,10 @@ app.use(morgan(env.nodeEnv === 'development' ? 'dev' : 'combined'));
 const allowedOrigins = env.clientUrl.split(',').map((url) => url.trim());
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin || allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(null, origin); // fallback to echo origin in dev/testing or log
+      callback(null, false);
     }
   },
   credentials: true,

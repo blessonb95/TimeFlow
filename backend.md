@@ -46,7 +46,7 @@ DB_NAME=defaultdb
 DB_SSL=true
 
 # JWT & CORS
-JWT_SECRET=supersecret_meridian_timesheet_key_2026
+JWT_SECRET=generate_a_unique_random_secret_for_this_environment
 JWT_EXPIRES_IN=7d
 CLIENT_URL=http://localhost:5173
 ```
@@ -105,8 +105,9 @@ Under the **Environment** tab on Render, click **Add Environment Variable** and 
 | `DB_PASSWORD` | `your_secure_password` |
 | `DB_NAME` | `defaultdb` |
 | `DB_SSL` | `true` |
-| `JWT_SECRET` | `supersecret_meridian_timesheet_key_2026` |
-| `CLIENT_URL` | `*` *(or your exact frontend URL when deployed)* |
+| `JWT_SECRET` | A unique random secret stored in Render's environment variables |
+| `ENCRYPTION_KEY` | A unique secret matching `VITE_ENCRYPTION_KEY` used for the frontend build |
+| `CLIENT_URL` | `https://blesson-eglobe.github.io` (add local URLs only for development) |
 
 > [!NOTE]
 > **Why we enter them here instead of `.env`:** Render securely stores these variables inside its vault and automatically injects them into `process.env.*` when your server boots up. This is the industry-standard way to manage credentials without uploading `.env` files to Git.

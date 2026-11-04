@@ -6,6 +6,7 @@ import { useApprovalDetails, useApproveTimesheet, useRejectTimesheet } from '../
 import { useAppStore } from '../../store/useAppStore';
 import type { ApprovalStatus } from '../../types';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
+import { sanitizeRichText } from '../../utils/sanitizeRichText';
 
 interface TimesheetReviewModalProps {
   approvalId: string | null;
@@ -219,7 +220,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
                               {log.taskDescription && log.taskDescription.trim() && log.taskDescription !== '<p></p>' && (
                                 <div
                                   className="rich-text-content review-modal__task-desc"
-                                  dangerouslySetInnerHTML={{ __html: log.taskDescription }}
+                                  dangerouslySetInnerHTML={{ __html: sanitizeRichText(log.taskDescription) }}
                                 />
                               )}
                             </td>

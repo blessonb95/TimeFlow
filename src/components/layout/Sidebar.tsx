@@ -119,7 +119,7 @@ export const Sidebar: React.FC = () => {
       </div>
 
       {/* Nav — takes all available space and scrolls */}
-      <nav className="sidebar__nav" aria-label="Primary navigation">
+      <nav id="primary-navigation" className="sidebar__nav" aria-label="Primary navigation">
         <div className="sidebar__section-label">Main</div>
         {mainNav.map(item => (
           <NavLink

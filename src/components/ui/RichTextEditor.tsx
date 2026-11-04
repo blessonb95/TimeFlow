@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from "react";
+import { sanitizeRichText } from "../../utils/sanitizeRichText";
 
 interface RichTextEditorProps {
 	id?: string;
@@ -22,8 +23,9 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 	const editorRef = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		if (editorRef.current && editorRef.current.innerHTML !== (value || "")) {
-			editorRef.current.innerHTML = value || "";
+		const safeValue = sanitizeRichText(value || "");
+		if (editorRef.current && editorRef.current.innerHTML !== safeValue) {
+			editorRef.current.innerHTML = safeValue;
 		}
 	}, [value]);
 
@@ -51,7 +53,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 		return (
 			<div
 				className="rich-text-content rich-text-editor__readonly-content"
-				dangerouslySetInnerHTML={{ __html: value }}
+				dangerouslySetInnerHTML={{ __html: sanitizeRichText(value) }}
 			/>
 		);
 	}
