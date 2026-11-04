@@ -61,7 +61,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 	return (
 		<div className="rich-text-editor">
 			{/* Toolbar */}
-			<div className="rich-text-editor__toolbar">
+			<div className="rich-text-editor__toolbar" role="group" aria-label="Text formatting">
 				<button
 					type="button"
 					onClick={() => exec("bold")}
@@ -80,7 +80,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 				>
 					<i>I</i>
 				</button>
-				<div className="rich-text-editor__divider" />
+				<div className="rich-text-editor__divider" aria-hidden="true" />
 				<button
 					type="button"
 					onClick={() => exec("insertUnorderedList")}
@@ -88,7 +88,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 					aria-label="Bulleted list"
 					className="rich-text-editor__btn"
 				>
-					<svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+					<svg aria-hidden="true" width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
 						<circle cx="3" cy="4" r="1.8" />
 						<circle cx="3" cy="8" r="1.8" />
 						<circle cx="3" cy="12" r="1.8" />
@@ -109,7 +109,7 @@ export const RichTextEditor: React.FC<RichTextEditorProps> = ({
 				>
 					<span className="rich-text-editor__num-icon">1.</span>
 				</button>
-				<div className="rich-text-editor__divider" />
+				<div className="rich-text-editor__divider" aria-hidden="true" />
 				<button
 					type="button"
 					onClick={() => exec("removeFormat")}

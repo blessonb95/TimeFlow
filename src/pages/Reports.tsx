@@ -827,11 +827,11 @@ export const Reports: React.FC = () => {
 			</div>
 
 			{/* Tabs */}
-			<div className="reports__tabs">
+			<div className="reports__tabs" role="group" aria-label="Report views">
 				{tabs.map((t) => (
 					<button
-						type="button"
 						key={t.key}
+						type="button"
 						aria-pressed={tab === t.key}
 						className={`reports__tab${tab === t.key ? " reports__tab--active" : ""}`}
 						onClick={() => setTab(t.key)}

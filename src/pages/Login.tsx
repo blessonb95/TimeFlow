@@ -297,6 +297,7 @@ export const Login: React.FC = () => {
 										<p
 											className="auth-page__feedback auth-page__feedback--error"
 											role="alert"
+										aria-live="assertive"
 										>
 											{loginError}
 										</p>

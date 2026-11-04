@@ -205,6 +205,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 		if (!message) return null;
 		return (
 			<div
+				role="alert"
+				aria-live="polite"
 				style={{
 					fontSize: '0.75rem',
 					color: "#ef4444",
@@ -236,11 +238,12 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 
 	return createPortal((
 		<div className="drawer-overlay">
-			<section ref={dialogRef} className="drawer" role="dialog" aria-modal="true" aria-labelledby="log-task-title" tabIndex={-1}>
+			<section ref={dialogRef} className="drawer" role="dialog" aria-modal="true" aria-labelledby="log-task-title" aria-describedby="log-task-help" tabIndex={-1}>
 				<div className="drawer__header">
 					<h2 id="log-task-title" className="drawer__header-title">
 						{isReadOnly ? "Task View" : editingLog ? "Edit Task Log" : "Log Task"}
 					</h2>
+					<span id="log-task-help" className="sr-only">Enter task details and time spent, then save the entry.</span>
 					<button type="button" className="drawer__header-close" onClick={onClose} aria-label="Close task drawer">
 						<svg
 							viewBox="0 0 16 16"
@@ -299,6 +302,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 						<select
 							className="form-group__select"
 							id="log-project"
+							aria-invalid={shouldShowFieldError("project") && !!fieldErrors.project}
+							aria-describedby={shouldShowFieldError("project") && fieldErrors.project ? "log-project-error" : undefined}
 							name="project"
 							required
 							value={project}
@@ -325,7 +330,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 									</option>
 								))}
 						</select>
-						{shouldShowFieldError("project") && renderFieldError(fieldErrors.project)}
+						{shouldShowFieldError("project") && <div id="log-project-error">{renderFieldError(fieldErrors.project)}</div>}
 					</div>
 
 					<div className="form-group">
@@ -335,6 +340,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 						<input
 							className="form-group__input"
 							id="log-task-name"
+							aria-invalid={shouldShowFieldError("task") && !!fieldErrors.task}
+							aria-describedby={shouldShowFieldError("task") && fieldErrors.task ? "log-task-name-error" : undefined}
 							name="task"
 							required
 							placeholder="What did you work on?"
@@ -347,7 +354,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 									shouldShowFieldError("task") && fieldErrors.task ? "#ef4444" : undefined,
 							}}
 						/>
-						{shouldShowFieldError("task") && renderFieldError(fieldErrors.task)}
+						{shouldShowFieldError("task") && <div id="log-task-name-error">{renderFieldError(fieldErrors.task)}</div>}
 					</div>
 
 					<div className="form-group">
@@ -427,7 +434,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										className="form-group__input"
 										type="number"
 										aria-label="Hours spent"
-										aria-describedby="time-spent-label"
+										aria-invalid={shouldShowFieldError("time") && !!fieldErrors.time}
+										aria-describedby={shouldShowFieldError("time") && fieldErrors.time ? "log-time-error" : "time-spent-label"}
 										min="0"
 										max="24"
 										step="1"
@@ -450,7 +458,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										className="form-group__input"
 										type="number"
 										aria-label="Minutes spent"
-										aria-describedby="time-spent-label"
+										aria-invalid={shouldShowFieldError("time") && !!fieldErrors.time}
+										aria-describedby={shouldShowFieldError("time") && fieldErrors.time ? "log-time-error" : "time-spent-label"}
 										min="0"
 										max="59"
 										step="1"
@@ -469,7 +478,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 									<span style={{ fontSize: '0.8125rem', color: "#6b7280" }}>m</span>
 								</div>
 							</div>
-							{shouldShowFieldError("time") && renderFieldError(fieldErrors.time)}
+							{shouldShowFieldError("time") && <div id="log-time-error">{renderFieldError(fieldErrors.time)}</div>}
 						</div>
 						<div className="form-group">
 							<label className="form-group__label" htmlFor="log-date">
@@ -478,6 +487,8 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 							<input
 								className="form-group__input"
 								id="log-date"
+								aria-invalid={shouldShowFieldError("date") && !!fieldErrors.date}
+								aria-describedby={shouldShowFieldError("date") && fieldErrors.date ? "log-date-error" : undefined}
 								name="date"
 								required
 								type="date"
@@ -491,7 +502,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 									shouldShowFieldError("date") && fieldErrors.date ? "#ef4444" : undefined,
 								}}
 							/>
-						{shouldShowFieldError("date") && renderFieldError(fieldErrors.date)}
+						{shouldShowFieldError("date") && <div id="log-date-error">{renderFieldError(fieldErrors.date)}</div>}
 						</div>
 					</div>
 

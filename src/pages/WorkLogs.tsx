@@ -264,7 +264,7 @@ export const WorkLogs: React.FC = () => {
                     className="worklogs__week-btn"
                     onClick={() => setSelectedDate(prev => addDaysToDateString(prev, dateMode === 'day' ? -1 : -7))}
                     title={dateMode === 'day' ? 'Previous day' : 'Previous week'}
-                    aria-label="Previous"
+                    aria-label={dateMode === 'day' ? 'Previous day' : 'Previous week'}
                   >
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M10 12l-4-4 4-4"/></svg>
                   </button>
@@ -290,7 +290,7 @@ export const WorkLogs: React.FC = () => {
                     className="worklogs__week-btn"
                     onClick={() => setSelectedDate(prev => addDaysToDateString(prev, dateMode === 'day' ? 1 : 7))}
                     title={dateMode === 'day' ? 'Next day' : 'Next week'}
-                    aria-label="Next"
+                    aria-label={dateMode === 'day' ? 'Next day' : 'Next week'}
                   >
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M6 12l4-4-4-4"/></svg>
                   </button>
@@ -299,10 +299,10 @@ export const WorkLogs: React.FC = () => {
 
               {/* Date Title & Count */}
               <div className="worklogs__hero-period">
-                <div className="worklogs__hero-title">
+                <div className="worklogs__hero-title" aria-live="polite" aria-atomic="true">
                   {period}
                 </div>
-                <div className="worklogs__hero-subtitle">
+                <div className="worklogs__hero-subtitle" aria-live="polite" aria-atomic="true">
                   {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'} logged
                 </div>
                 <button
@@ -378,12 +378,12 @@ export const WorkLogs: React.FC = () => {
           <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5L14 14"/>
           </svg>
-          <input aria-label="Search tasks and tickets" placeholder="Search tasks, tickets..." value={search} onChange={e => setSearch(e.target.value)} />
+          <input aria-label="Search tasks and tickets" type="search" placeholder="Search tasks, tickets..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
 
         {/* Views & Actions on Right */}
         <div className="worklogs__toolbar-right">
-          <div className="worklogs__view-toggle">
+          <div className="worklogs__view-toggle" role="group" aria-label="Work log view">
             <button
               type="button"
               aria-pressed={view === 'list'}

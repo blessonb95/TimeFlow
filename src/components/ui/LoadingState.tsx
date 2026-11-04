@@ -98,7 +98,7 @@ export const CardGridSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) =>
 
 // ─── Dashboard Full Page Skeleton ─────────────────────────────────────────────
 export const DashboardSkeleton: React.FC = () => (
-  <div className="page-inner" style={{ animation: 'fadeIn 0.25s ease' }}>
+  <div className="page-inner" style={{ animation: 'fadeIn 0.25s ease' }} role="status" aria-label="Loading dashboard" aria-busy="true">
     {/* Page Header */}
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
       <div>

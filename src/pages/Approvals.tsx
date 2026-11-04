@@ -374,7 +374,7 @@ export const Approvals: React.FC = () => {
       )}
 
       {/* Summary Cards */}
-      <div className="approvals__summary">
+      <div className="approvals__summary" role="group" aria-label="Timesheet approval totals">
         <div className="approvals__summary-card approvals__summary-card--pending">
           <span className="approvals__summary-card-count approvals__summary-card-count--pending">{pending}</span>
           <div>
@@ -428,7 +428,7 @@ export const Approvals: React.FC = () => {
             <circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/>
           </svg>
           <input
-            type="text"
+            type="search"
             aria-label="Search employee by name"
             placeholder="Search employee by name…"
             value={searchName}
@@ -525,10 +525,12 @@ export const Approvals: React.FC = () => {
 
       {/* Filters + Bulk */}
       <div className="approvals__filters">
-        <div className="approvals__filter-tabs">
+      <div className="approvals__filter-tabs" role="group" aria-label="Filter approvals by status">
           {(['All', 'Pending', 'Approved', 'Rejected'] as FilterTab[]).map(f => (
             <button
               key={f}
+              type="button"
+              aria-pressed={filter === f}
               className={`approvals__filter-tab${filter === f ? ' approvals__filter-tab--active' : ''}`}
               onClick={() => { setFilter(f); setPage(1); }}
             >{f}</button>
@@ -589,11 +591,11 @@ export const Approvals: React.FC = () => {
                 </button>
               ) : selected.length > 0 ? (
                 <>
-                  <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveSelected} disabled={bulkApproveMutation.isPending}>
+                  <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveSelected} disabled={bulkApproveMutation.isPending} aria-label={`Approve ${selected.length} selected timesheets`}>
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4L6 12l-4-4"/></svg>
                     <span>Approve ({selected.length})</span>
                   </button>
-                  <button type="button" className="btn btn--danger btn--sm" onClick={bulkRejectSelected} disabled={bulkRejectMutation.isPending}>
+                  <button type="button" className="btn btn--danger btn--sm" onClick={bulkRejectSelected} disabled={bulkRejectMutation.isPending} aria-label={`Reject ${selected.length} selected timesheets`}>
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
                     <span>Reject ({selected.length})</span>
                   </button>
@@ -602,7 +604,7 @@ export const Approvals: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveAllPending} disabled={bulkApproveMutation.isPending}>
+                <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveAllPending} disabled={bulkApproveMutation.isPending} aria-label={`Approve all ${pending} pending timesheets`}>
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4L6 12l-4-4"/></svg>
                   <span>Approve All Pending ({pending})</span>
                 </button>
@@ -723,18 +725,18 @@ export const Approvals: React.FC = () => {
                   ) : (
                     <div className="approvals__actions">
                       {/* View button — always visible */}
-                      <button type="button" className="approvals__review-btn" onClick={() => setReviewModalId(a.id)} title="View timesheet details">
+                      <button type="button" className="approvals__review-btn" onClick={() => setReviewModalId(a.id)} title="View timesheet details" aria-label={`View timesheet details for ${a.user?.name || a.employeeName || 'employee'}`}>
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 16, height: 16 }}><path d="M1.5 8c2.5-4 5.5-5.5 6.5-5.5s4 1.5 6.5 5.5c-2.5 4-5.5 5.5-6.5 5.5S4 12 1.5 8z"/><circle cx="8" cy="8" r="2.5"/></svg>
                       </button>
                       {/* Approve — shown for Pending or Rejected (re-approve a rejected timesheet) */}
                       {(a.status === 'Pending' || a.status === 'Rejected') && (
-                        <button type="button" className="approvals__action-btn approvals__action-btn--approve" onClick={() => updateStatus(a.id, 'Approved' as any)} disabled={approveMutation.isPending} title={a.status === 'Rejected' ? 'Approve this previously rejected timesheet' : 'Approve timesheet'}>
+                        <button type="button" className="approvals__action-btn approvals__action-btn--approve" onClick={() => updateStatus(a.id, 'Approved' as any)} disabled={approveMutation.isPending} title={a.status === 'Rejected' ? 'Approve this previously rejected timesheet' : 'Approve timesheet'} aria-label={`${a.status === 'Rejected' ? 'Approve previously rejected' : 'Approve'} timesheet for ${a.user?.name || a.employeeName || 'employee'}`}>
                           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}><path d="M3 8l3 3 7-7"/></svg>
                         </button>
                       )}
                       {/* Reject — shown for Pending or Approved (retract an approval) */}
                       {(a.status === 'Pending' || a.status === 'Approved') && (
-                        <button type="button" className="approvals__action-btn approvals__action-btn--reject" onClick={() => updateStatus(a.id, 'Rejected' as any)} disabled={rejectMutation.isPending} title={a.status === 'Approved' ? 'Retract approval and reject timesheet' : 'Reject timesheet'}>
+                        <button type="button" className="approvals__action-btn approvals__action-btn--reject" onClick={() => updateStatus(a.id, 'Rejected' as any)} disabled={rejectMutation.isPending} title={a.status === 'Approved' ? 'Retract approval and reject timesheet' : 'Reject timesheet'} aria-label={`${a.status === 'Approved' ? 'Retract approval and reject' : 'Reject'} timesheet for ${a.user?.name || a.employeeName || 'employee'}`}>
                           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}><path d="M4 4l8 8M12 4l-8 8"/></svg>
                         </button>
                       )}

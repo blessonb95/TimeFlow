@@ -368,10 +368,10 @@ export const Employees: React.FC = () => {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="6.5" cy="6.5" r="4.5"/><path d="M10.5 10.5L14 14"/>
           </svg>
-          <input aria-label="Search employees" placeholder="Search employees…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
+          <input aria-label="Search employees" type="search" placeholder="Search employees…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} />
         </div>
         <div className="employees__toolbar-right">
-          <div className="employees__view-toggle">
+          <div className="employees__view-toggle" role="group" aria-label="Employee display mode">
             <button type="button" aria-label="List view" aria-pressed={viewMode === 'list'} className={`employees__view-btn${viewMode === 'list' ? ' employees__view-btn--active' : ''}`} onClick={() => setViewMode('list')} title="List View">
               <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M1.5 4h13M1.5 8h13M1.5 12h13"/></svg>
             </button>
@@ -382,7 +382,7 @@ export const Employees: React.FC = () => {
         </div>
       </div>
 
-      <div className="employees__dept-tabs">
+      <div className="employees__dept-tabs" role="group" aria-label="Filter employees by department">
         {deptTabs.map(d => (
           <button
             type="button"

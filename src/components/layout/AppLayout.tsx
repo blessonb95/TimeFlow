@@ -28,18 +28,19 @@ export const AppLayout: React.FC = () => {
       <EasterEgg />
       <a className="skip-link" href="#main-content">Skip to main content</a>
       <Sidebar />
-      {!isSidebarCollapsed && (
+      {!isSidebarCollapsed && window.matchMedia('(max-width: 64rem)').matches && (
         <button
           type="button"
           className="sidebar-mobile-backdrop"
           onClick={toggleSidebar}
-          aria-label="Close navigation overlay"
+          aria-hidden="true"
+          tabIndex={-1}
         />
       )}
       <div className="main-area" style={{ position: 'relative' }}>
         <GuestBanner />
         <Topbar />
-        <main className="page-content" id="main-content" tabIndex={-1}>
+        <main className="page-content" id="main-content" aria-label="Main content" tabIndex={-1}>
           <Outlet />
         </main>
       </div>

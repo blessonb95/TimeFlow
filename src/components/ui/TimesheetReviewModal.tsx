@@ -114,6 +114,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
         role="dialog"
         aria-modal="true"
         aria-labelledby="timesheet-review-title"
+        aria-describedby="timesheet-review-description"
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
       >
@@ -121,7 +122,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
         <div className="review-modal__header">
           <div>
             <h2 id="timesheet-review-title" className="review-modal__title">Timesheet Review & Task Audit</h2>
-            <div className="review-modal__subtitle">Examine daily distribution and individual work logs before acting</div>
+            <div id="timesheet-review-description" className="review-modal__subtitle">Examine daily distribution and individual work logs before acting</div>
           </div>
           <button
             type="button"

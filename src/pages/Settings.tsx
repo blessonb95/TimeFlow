@@ -159,6 +159,8 @@ export const Settings: React.FC = () => {
 							{uploadMessage && (
 								<div
 									className={`settings__upload-msg settings__upload-msg--${uploadMessage.type}`}
+									role={uploadMessage.type === "error" ? "alert" : "status"}
+									aria-live={uploadMessage.type === "error" ? "assertive" : "polite"}
 								>
 									{uploadMessage.text}
 								</div>

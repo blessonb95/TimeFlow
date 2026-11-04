@@ -121,9 +121,12 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
 
   return ReactDOM.createPortal(
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="create-project-title" tabIndex={-1}>
+      <section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="create-project-title" aria-describedby="create-project-description" tabIndex={-1}>
         <div className="modal__header">
-          <h2 id="create-project-title" className="modal__header-title">Create New Project</h2>
+          <div>
+            <h2 id="create-project-title" className="modal__header-title">Create New Project</h2>
+            <span id="create-project-description" className="sr-only">Add project details, ownership, and schedule.</span>
+          </div>
           <button type="button" className="modal__header-close" onClick={onClose} aria-label="Close create project dialog">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M3 3l10 10M13 3L3 13" />
@@ -132,7 +135,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="modal__body">
-            {error && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '0.625rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem', marginBottom: '1rem'}}>{error}</div>}
+            {error && <div role="alert" aria-live="assertive" style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '0.625rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem', marginBottom: '1rem'}}>{error}</div>}
             <div className="form-group">
               <label className="form-group__label" htmlFor="project-name">
                 Project Name <span style={{ color: '#ef4444' }}>*</span>

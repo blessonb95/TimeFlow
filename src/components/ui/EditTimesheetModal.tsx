@@ -151,9 +151,12 @@ export const EditTimesheetModal: React.FC<EditTimesheetModalProps> = ({
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="edit-timesheet-title" tabIndex={-1}>
+			<section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="edit-timesheet-title" aria-describedby="edit-timesheet-dialog-help" tabIndex={-1}>
 				<div className="modal__header">
-					<h2 id="edit-timesheet-title" className="modal__header-title">Edit Timesheet Submission</h2>
+					<div>
+						<h2 id="edit-timesheet-title" className="modal__header-title">Edit Timesheet Submission</h2>
+						<span id="edit-timesheet-dialog-help" className="sr-only">Update and save the selected timesheet details.</span>
+					</div>
 					<button
 						type="button"
 						className="modal__header-close"
