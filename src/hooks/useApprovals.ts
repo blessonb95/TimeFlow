@@ -21,10 +21,12 @@ export const useApproveTimesheet = () => {
     mutationFn: approvalsApi.approve,
     onMutate: async (id) => {
       await qc.cancelQueries({ queryKey: ['approvals'] });
+      const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
         return old.map(item => item.id === id ? { ...item, status: 'Approved' } : item);
       });
+      return { previousApprovals };
     },
     onSuccess: (updated, id) => {
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
@@ -33,6 +35,10 @@ export const useApproveTimesheet = () => {
       });
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (_error, _id, context) => {
+      context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
+      return qc.invalidateQueries({ queryKey: ['approvals'] });
     },
   });
 };
@@ -44,10 +50,12 @@ export const useRejectTimesheet = () => {
       approvalsApi.reject(id, comments),
     onMutate: async ({ id, comments }) => {
       await qc.cancelQueries({ queryKey: ['approvals'] });
+      const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
         return old.map(item => item.id === id ? { ...item, status: 'Rejected', comments: comments || item.comments } : item);
       });
+      return { previousApprovals };
     },
     onSuccess: (updated, { id }) => {
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
@@ -56,6 +64,10 @@ export const useRejectTimesheet = () => {
       });
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (_error, _variables, context) => {
+      context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
+      return qc.invalidateQueries({ queryKey: ['approvals'] });
     },
   });
 };
@@ -66,14 +78,20 @@ export const useBulkApprove = () => {
     mutationFn: approvalsApi.bulkApprove,
     onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ['approvals'] });
+      const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
         return old.map(item => ids.includes(item.id) ? { ...item, status: 'Approved' } : item);
       });
+      return { previousApprovals };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (_error, _ids, context) => {
+      context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
+      return qc.invalidateQueries({ queryKey: ['approvals'] });
     },
   });
 };
@@ -85,14 +103,20 @@ export const useBulkReject = () => {
       approvalsApi.bulkReject(ids, comments),
     onMutate: async ({ ids, comments }) => {
       await qc.cancelQueries({ queryKey: ['approvals'] });
+      const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
         return old.map(item => ids.includes(item.id) ? { ...item, status: 'Rejected', comments: comments || item.comments } : item);
       });
+      return { previousApprovals };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+    },
+    onError: (_error, _variables, context) => {
+      context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
+      return qc.invalidateQueries({ queryKey: ['approvals'] });
     },
   });
 };

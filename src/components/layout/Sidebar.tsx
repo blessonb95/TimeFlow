@@ -51,7 +51,7 @@ interface NavItemDef {
   badge?: number;
 }
 
-export const Sidebar: React.FC = () => {
+export const Sidebar: React.FC<{ inert?: boolean }> = ({ inert = false }) => {
   const { role, currentUser, isSidebarCollapsed, toggleSidebar } = useAppStore();
   const { data: approvals = [] } = useApprovals();
   const isElevatedRole = role === 'manager' || role === 'admin' || role === 'hr' || role === 'ceo';
@@ -82,7 +82,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   return (
-    <aside className={`sidebar${isSidebarCollapsed ? ' sidebar--collapsed' : ''}`}>
+    <aside className={`sidebar${isSidebarCollapsed ? ' sidebar--collapsed' : ''}`} inert={inert}>
       {/* Logo */}
       <div className="sidebar__logo">
         {isSidebarCollapsed ? (

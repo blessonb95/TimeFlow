@@ -5,8 +5,8 @@ import { Pagination } from '../components/ui/Pagination';
 import { TimesheetReviewModal } from '../components/ui/TimesheetReviewModal';
 import { EditTimesheetModal } from '../components/ui/EditTimesheetModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
 import { formatDisplayDate } from '../utils/date';
 import { useApprovals, useApproveTimesheet, useRejectTimesheet, useBulkApprove, useBulkReject } from '../hooks/useApprovals';
 import { useProjects } from '../hooks/useProjects';
@@ -32,13 +32,16 @@ export const Approvals: React.FC = () => {
   const [editModalItem, setEditModalItem] = useState<any | null>(null);
   const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; title: string; message: string; type: 'alert' | 'confirm' | 'prompt'; validatePrompt?: boolean; defaultValue?: string; placeholder?: string; onConfirm: (val?: string) => void } | null>(null);
 
-  const { data: approvals = [], isLoading } = useApprovals(filter === 'All' ? undefined : filter, searchName || undefined, searchDate || undefined);
+  const approvalsQuery = useApprovals(filter === 'All' ? undefined : filter, searchName || undefined, searchDate || undefined);
+  const approvals = Array.isArray(approvalsQuery.data) ? approvalsQuery.data : [];
+  const { isLoading, isFetching, isError, refetch } = approvalsQuery;
   const { data: projects = [] } = useProjects();
   const approveMutation = useApproveTimesheet();
   const rejectMutation = useRejectTimesheet();
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();
   const sendReminderMutation = useSendReminder();
+  const actionFailed = approveMutation.isError || rejectMutation.isError || bulkApproveMutation.isError || bulkRejectMutation.isError || sendReminderMutation.isError;
 
   const handleSendReminder = (a: any) => {
     const empName = a.employee?.name || 'the employee';
@@ -318,8 +321,34 @@ export const Approvals: React.FC = () => {
     );
   }
 
+  if (isError && approvals.length === 0) {
+    return (
+      <div className="page-inner">
+        <EmptyState
+          icon="timesheets"
+          title="Approvals unavailable"
+          subtitle="We couldn't load approvals. Check your connection and try again."
+          action={{ label: isFetching ? 'Retrying…' : 'Try again', onClick: () => void refetch() }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="page-inner">
+      {actionFailed && (
+        <div role="alert" style={{ marginBottom: '1rem', color: '#b91c1c' }}>
+          We couldn't confirm that action completed. Check the current item status before trying again.
+        </div>
+      )}
+      {isError && approvals.length > 0 && (
+        <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem', color: '#92400e' }}>
+          <span>Couldn't refresh approvals. The displayed results may be out of date.</span>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={() => void refetch()} disabled={isFetching}>
+            {isFetching ? 'Retrying…' : 'Retry'}
+          </button>
+        </div>
+      )}
       <div className="page-header">
         <div className="page-header__row">
           <div>
