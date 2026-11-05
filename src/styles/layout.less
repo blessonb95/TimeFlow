@@ -59,7 +59,8 @@ textarea {
 	z-index: 100;
 	transition:
 		width 0.2s ease,
-		min-width 0.2s ease;
+		min-width 0.2s ease,
+		transform 0.2s ease;
 
 	&__logo {
 		display: flex;
@@ -651,6 +652,7 @@ textarea {
 
 .topbar__search:focus-visible,
 .topbar__notif:focus-visible,
+.topbar__mobile-toggle:focus-visible,
 .topbar__notification-item:focus-visible,
 .search-modal__item:focus-visible {
 	outline: 0.1875rem solid @color-primary;
@@ -824,6 +826,12 @@ body {
 	}
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.sidebar {
+		transition: none;
+	}
+}
+
 @media (max-width: 48rem) {
 	.topbar {
 		min-height: 3.5rem;
@@ -887,11 +895,6 @@ body {
 
 [dir="rtl"] .sidebar--collapsed {
 	transform: translateX(100%);
-}
-
-[dir="rtl"] .sidebar-mobile-backdrop {
-	left: 0;
-	right: auto;
 }
 
 @media (max-width: 30rem) {

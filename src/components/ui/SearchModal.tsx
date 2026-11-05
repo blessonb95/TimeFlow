@@ -110,6 +110,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
               </svg>
               <input
                 ref={inputRef}
+                type="search"
                 aria-label="Search pages, projects, and people"
                 placeholder="Search pages, projects, people..."
                 value={query}

@@ -79,9 +79,12 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
 
   return ReactDOM.createPortal(
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="create-employee-title" tabIndex={-1}>
+      <section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="create-employee-title" aria-describedby="employee-modal-help" tabIndex={-1}>
         <div className="modal__header">
-          <h2 id="create-employee-title" className="modal__header-title">Add New Employee</h2>
+          <div>
+            <h2 id="create-employee-title" className="modal__header-title">Add New Employee</h2>
+            <span id="employee-modal-help" className="sr-only">Enter the employee profile and role details.</span>
+          </div>
           <button type="button" className="modal__header-close" onClick={onClose} aria-label="Close add employee dialog">
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M3 3l10 10M13 3L3 13" />
@@ -90,7 +93,7 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
         </div>
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
           <div className="modal__body">
-            {error && <div role="alert" style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '0.625rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem', marginBottom: '1rem'}}>{error}</div>}
+            {error && <div role="alert" aria-live="assertive" style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '0.625rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem', marginBottom: '1rem'}}>{error}</div>}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
               <div className="form-group">
                 <label className="form-group__label" htmlFor="employee-first-name">

@@ -1,9 +1,11 @@
 import apiClient from './client';
 import CryptoJS from 'crypto-js';
 
-const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY || 'supersecret_aes_key_2026';
+const ENCRYPTION_KEY = import.meta.env.VITE_ENCRYPTION_KEY;
 const encryptPassword = (password: string) =>
-  CryptoJS.AES.encrypt(password, ENCRYPTION_KEY).toString();
+  ENCRYPTION_KEY
+    ? CryptoJS.AES.encrypt(password, ENCRYPTION_KEY).toString()
+    : (() => { throw new Error('Password encryption is not configured. Set VITE_ENCRYPTION_KEY for this build.'); })();
 
 export interface InviteInfo {
   email: string;

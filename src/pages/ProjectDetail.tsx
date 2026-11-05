@@ -223,11 +223,12 @@ export const ProjectDetail: React.FC = () => {
       </div>
 
       {/* Sub-tabs */}
-      <div className="proj-detail__tabs">
+      <div className="proj-detail__tabs" role="group" aria-label="Project detail views">
         {tabs.map((t, i) => (
           <button
             type="button"
             key={t}
+            aria-label={`${t}${t === 'Tasks' ? `, ${tasks.length} tasks` : ''}`}
             aria-pressed={activeTab === tabKeys[i]}
             className={`proj-detail__tab${activeTab === tabKeys[i] ? ' proj-detail__tab--active' : ''}`}
             onClick={() => setActiveTab(tabKeys[i])}

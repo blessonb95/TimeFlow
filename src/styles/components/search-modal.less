@@ -40,12 +40,17 @@
 	padding: 1rem 1.25rem;
 	border-bottom: 0.0625rem solid #f3f4f6;
 
+	&:focus-within {
+		outline: 0.1875rem solid #2563eb;
+		outline-offset: -0.1875rem;
+	}
+
 	input {
 		flex: 1;
 		border: none;
 		outline: none;
 		font-size: 0.9375rem;
-	margin-inline-start: 0.75rem;
+		margin-inline-start: 0.75rem;
 		color: #111827;
 		background: transparent;
 

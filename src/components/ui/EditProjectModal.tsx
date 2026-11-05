@@ -185,9 +185,12 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="edit-project-title" tabIndex={-1}>
+			<section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="edit-project-title" aria-describedby="edit-project-dialog-help" tabIndex={-1}>
 				<div className="modal__header">
-					<h2 id="edit-project-title" className="modal__header-title">Edit Project Details</h2>
+					<div>
+						<h2 id="edit-project-title" className="modal__header-title">Edit Project Details</h2>
+						<span id="edit-project-dialog-help" className="sr-only">Update project details, ownership, and schedule.</span>
+					</div>
 					<button
 						type="button"
 						className="modal__header-close"

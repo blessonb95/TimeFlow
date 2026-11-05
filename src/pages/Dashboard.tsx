@@ -369,7 +369,7 @@ const EmployeeDashboard: React.FC = () => {
 			<div className="dashboard__header-row">
 				<div>
 				<h1 className="dashboard__greeting">
-						{greeting}, {currentUser.name.split(" ")[0]}
+						{greeting}, {currentUser.name?.trim().split(/\s+/)[0] || "there"}
 					</h1>
 					<p className="dashboard__meta">
 						{new Date().toLocaleDateString("en-US", {
@@ -509,32 +509,52 @@ const EmployeeDashboard: React.FC = () => {
 const ManagerDashboard: React.FC = () => {
 	const { currentUser, role } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading, isError } = useManagerDashboard();
-	const { data: approvals = [] } = useApprovals();
+	const { data, isLoading, isError, isFetching, refetch } = useManagerDashboard();
+	const approvalsQuery = useApprovals();
+	const approvals = Array.isArray(approvalsQuery.data) ? approvalsQuery.data : [];
 	const bulkApproveMutation = useBulkApprove();
 	const hour = new Date().getHours();
 	const greeting =
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 
 	if (isLoading) { return <DashboardSkeleton />; }
-	if (isError || !data) { return <div className="page-inner dashboard"><EmptyState icon="timesheets" title="Dashboard unavailable" subtitle="We couldn’t load your team dashboard. Try again shortly." /></div>; }
+	if (isError || !data) {
+		return (
+			<div className="page-inner dashboard">
+				<EmptyState
+					icon="timesheets"
+					title="Dashboard unavailable"
+					subtitle="We couldn’t load your team dashboard. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
+				/>
+			</div>
+		);
+	}
 
-	const employeeTable = data.employeeTable || [];
-	const myProjects = (data.projects || []).slice(0, 3);
+	const employeeTable = Array.isArray(data.employeeTable)
+		? data.employeeTable.filter((row: unknown) => row !== null && typeof row === "object")
+		: [];
+	const myProjects = (Array.isArray(data.projects) ? data.projects : [])
+		.filter((project: unknown) => project !== null && typeof project === "object")
+		.slice(0, 3);
 	const teamHoursThisWeek = employeeTable.reduce(
-		(total: number, row: { weekHours?: number }) => total + Number(row.weekHours || 0),
+		(total: number, row: { weekHours?: number }) => {
+			const hours = Number(row.weekHours || 0);
+			return total + (Number.isFinite(hours) && hours > 0 ? hours : 0);
+		},
 		0,
 	);
 	const weekLabel = data.weekStart && data.weekEnd
 		? `${formatDisplayDate(data.weekStart)} – ${formatDisplayDate(data.weekEnd)}`
 		: "this week";
-	const approvalCount = Number(data.pendingApprovals) || 0;
+	// Keep dashboard approval totals in sync with the sidebar, which counts the
+	// pending items returned by the approvals list.
+	const pendingApprovals = approvals.filter((a: any) => a?.status === "Pending" && typeof a.id === "string");
+	const approvalCount = Array.isArray(approvalsQuery.data) ? pendingApprovals.length : null;
 	const statusCounts = data.teamStatusCounts || {};
 
 	const handleBulkApproveAll = () => {
-		const pendingIds = approvals
-			.filter((a: { status: string; id: string; weekStart?: string }) => a.status === "Pending" && (!data.weekStart || a.weekStart === data.weekStart))
-			.map((a: { id: string }) => a.id);
+		const pendingIds = pendingApprovals.map((a: { id: string }) => a.id);
 		if (
 			pendingIds.length > 0 &&
 			window.confirm(
@@ -550,7 +570,7 @@ const ManagerDashboard: React.FC = () => {
 			<div className="dashboard__header-row">
 				<div>
 					<h1 className="dashboard__greeting">
-						{greeting}, {currentUser.name.split(" ")[0]}
+						{greeting}, {currentUser.name?.trim().split(/\s+/)[0] || "there"}
 					</h1>
 					<p className="dashboard__meta">
 						{new Date().toLocaleDateString("en-US", {
@@ -568,11 +588,26 @@ const ManagerDashboard: React.FC = () => {
 							className="btn btn--primary"
 							onClick={() => navigate("/approvals")}
 						>
-							Review approvals ({approvalCount})
+							Review approvals{approvalCount === null ? "" : ` (${approvalCount})`}
 						</button>
 					)}
 				</div>
 			</div>
+			{approvalsQuery.isError && (
+				<div role="alert" style={{ marginBottom: "1rem", color: "#92400e" }}>
+					{approvalsQuery.data
+						? "Couldn’t refresh approvals. The count may be out of date."
+						: "Couldn’t load approvals, so the pending count is unavailable."}{" "}
+					<button type="button" className="btn btn--secondary btn--sm" onClick={() => void approvalsQuery.refetch()} disabled={approvalsQuery.isFetching}>
+						{approvalsQuery.isFetching ? "Retrying…" : "Retry"}
+					</button>
+				</div>
+			)}
+			{bulkApproveMutation.isError && (
+				<div role="alert" style={{ marginBottom: "1rem", color: "#b91c1c" }}>
+					Bulk approval couldn't be confirmed. Refresh the pending list before trying again.
+				</div>
+			)}
 
 			<section className="dashboard__manager-hero" aria-labelledby="manager-overview-title">
 				<div className="dashboard__manager-hero-copy">
@@ -583,12 +618,12 @@ const ManagerDashboard: React.FC = () => {
 				<dl className="dashboard__manager-metrics">
 				<div><dt>Hours logged · {weekLabel}</dt><dd>{data.teamHours ?? teamHoursThisWeek}h</dd></div>
 							<div><dt>Team members</dt><dd>{employeeTable.length}</dd></div>
-									<div><dt>Awaiting approval</dt><dd>{approvalCount}</dd></div>
+				<div><dt>Awaiting approval</dt><dd>{approvalCount ?? "—"}</dd></div>
 				</dl>
 			</section>
 
 			{/* Approval Banner with HR Reminder */}
-			{role !== "admin" && approvalCount > 0 && (
+			{role !== "admin" && approvalCount !== null && approvalCount > 0 && (
 				<div
 					className="dashboard__banner"
 					style={{
@@ -657,8 +692,8 @@ const ManagerDashboard: React.FC = () => {
 				{[
 					{
 						label: "Total Employees",
-						value: `${data.totalEmployees ?? 0}`,
-						sub: "Active organization employees",
+						value: `${employeeTable.length}`,
+						sub: "Active team members",
 						subCls: "green",
 						iconCls: "dashboard__stat-card-icon--blue",
 						icon: (
@@ -714,9 +749,9 @@ const ManagerDashboard: React.FC = () => {
 							}
 						: {
 								label: "Awaiting Approval",
-								value: `${approvalCount}`,
+								value: approvalCount === null ? "—" : `${approvalCount}`,
 								sub: "Needs action",
-								subCls: data.pendingApprovals > 0 ? "red" : "green",
+								subCls: approvalCount !== null && approvalCount > 0 ? "red" : "green",
 								iconCls: "dashboard__stat-card-icon--amber",
 								icon: (
 									<svg
@@ -912,7 +947,7 @@ const ManagerDashboard: React.FC = () => {
 								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--submitted" aria-hidden="true">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="m8 12 2.5 2.5L16 9" /></svg>
 								</span>
-								<strong className="dashboard__timesheet-status-count">{statusCounts["Awaiting approval"] || 0}</strong>
+								<strong className="dashboard__timesheet-status-count">{approvalCount ?? "—"}</strong>
 								<span className="dashboard__timesheet-status-label">Awaiting approval</span>
 							</div>
 							<div className="dashboard__timesheet-status-item">
@@ -925,7 +960,7 @@ const ManagerDashboard: React.FC = () => {
 						</div>
 					</div>
 
-					<DashboardQuickActions pendingCount={approvalCount} />
+					<DashboardQuickActions pendingCount={approvalCount ?? 0} />
 				</div>
 			</div>
 		</div>

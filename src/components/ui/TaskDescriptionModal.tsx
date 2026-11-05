@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
+import { sanitizeRichText } from '../../utils/sanitizeRichText';
 
 interface TaskDescriptionModalProps {
   log: {
@@ -50,7 +51,7 @@ export const TaskDescriptionModal: React.FC<TaskDescriptionModalProps> = ({ log,
           {hasDescription ? (
             <div
               className="rich-text-content task-desc-modal__content"
-              dangerouslySetInnerHTML={{ __html: rawDescription }}
+              dangerouslySetInnerHTML={{ __html: sanitizeRichText(rawDescription) }}
             />
           ) : (
             <div className="task-desc-modal__empty">

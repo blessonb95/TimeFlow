@@ -37,8 +37,8 @@ export const Pagination: React.FC<PaginationProps> = ({
   };
 
   return (
-    <div className="pagination">
-      <div className="pagination__info">
+    <nav className="pagination" aria-label="Pagination">
+      <div className="pagination__info" aria-live="polite" aria-atomic="true">
         Showing <strong>{startItem}</strong> to{' '}
         <strong>{endItem}</strong> of{' '}
         <strong>{totalItems}</strong> items
@@ -49,6 +49,7 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === 1}
           onClick={() => onPageChange(currentPage - 1)}
           className="pagination__btn"
+          aria-label="Previous page"
         >
           Prev
         </button>
@@ -59,6 +60,8 @@ export const Pagination: React.FC<PaginationProps> = ({
               type="button"
               onClick={() => onPageChange(page)}
               className={`pagination__page-btn ${page === currentPage ? 'pagination__page-btn--active' : ''}`}
+              aria-label={`Page ${page}`}
+              aria-current={page === currentPage ? 'page' : undefined}
             >
               {page}
             </button>
@@ -71,10 +74,11 @@ export const Pagination: React.FC<PaginationProps> = ({
           disabled={currentPage === totalPages}
           onClick={() => onPageChange(currentPage + 1)}
           className="pagination__btn"
+          aria-label="Next page"
         >
           Next
         </button>
       </div>
-    </div>
+    </nav>
   );
 };

@@ -293,7 +293,7 @@ export const AcceptInvite: React.FC = () => {
                 autoComplete="username"
               />
               {username.length > 0 && username.length < 3 && (
-                <p style={{ fontSize: '0.75rem', color: '#f97316', marginTop: '0.25rem'}}>At least 3 characters</p>
+                <p role="status" aria-live="polite" style={{ fontSize: '0.75rem', color: '#f97316', marginTop: '0.25rem'}}>At least 3 characters</p>
               )}
             </div>
 
@@ -326,7 +326,7 @@ export const AcceptInvite: React.FC = () => {
                       }} />
                     ))}
                   </div>
-                  <p style={{ fontSize: '0.6875rem', color: strengthColor, marginTop: '0.1875rem', fontWeight: 600 }}>
+                  <p role="status" aria-live="polite" aria-atomic="true" style={{ fontSize: '0.6875rem', color: strengthColor, marginTop: '0.1875rem', fontWeight: 600 }}>
                     {strengthLabel}
                   </p>
                 </div>
@@ -351,7 +351,7 @@ export const AcceptInvite: React.FC = () => {
                 </button>
               </div>
               {confirm.length > 0 && confirm !== password && (
-                <p style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem'}}>Passwords don't match</p>
+                <p role="alert" aria-live="polite" style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem'}}>Passwords don't match</p>
               )}
             </div>
 

@@ -5,8 +5,8 @@ import { Pagination } from '../components/ui/Pagination';
 import { TimesheetReviewModal } from '../components/ui/TimesheetReviewModal';
 import { EditTimesheetModal } from '../components/ui/EditTimesheetModal';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
-import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
 import { formatDisplayDate } from '../utils/date';
 import { useApprovals, useApproveTimesheet, useRejectTimesheet, useBulkApprove, useBulkReject } from '../hooks/useApprovals';
 import { useProjects } from '../hooks/useProjects';
@@ -32,13 +32,16 @@ export const Approvals: React.FC = () => {
   const [editModalItem, setEditModalItem] = useState<any | null>(null);
   const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; title: string; message: string; type: 'alert' | 'confirm' | 'prompt'; validatePrompt?: boolean; defaultValue?: string; placeholder?: string; onConfirm: (val?: string) => void } | null>(null);
 
-  const { data: approvals = [], isLoading } = useApprovals(filter === 'All' ? undefined : filter, searchName || undefined, searchDate || undefined);
+  const approvalsQuery = useApprovals(filter === 'All' ? undefined : filter, searchName || undefined, searchDate || undefined);
+  const approvals = Array.isArray(approvalsQuery.data) ? approvalsQuery.data : [];
+  const { isLoading, isFetching, isError, refetch } = approvalsQuery;
   const { data: projects = [] } = useProjects();
   const approveMutation = useApproveTimesheet();
   const rejectMutation = useRejectTimesheet();
   const bulkApproveMutation = useBulkApprove();
   const bulkRejectMutation = useBulkReject();
   const sendReminderMutation = useSendReminder();
+  const actionFailed = approveMutation.isError || rejectMutation.isError || bulkApproveMutation.isError || bulkRejectMutation.isError || sendReminderMutation.isError;
 
   const handleSendReminder = (a: any) => {
     const empName = a.employee?.name || 'the employee';
@@ -318,8 +321,34 @@ export const Approvals: React.FC = () => {
     );
   }
 
+  if (isError && approvals.length === 0) {
+    return (
+      <div className="page-inner">
+        <EmptyState
+          icon="timesheets"
+          title="Approvals unavailable"
+          subtitle="We couldn't load approvals. Check your connection and try again."
+          action={{ label: isFetching ? 'Retrying…' : 'Try again', onClick: () => void refetch() }}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="page-inner">
+      {actionFailed && (
+        <div role="alert" style={{ marginBottom: '1rem', color: '#b91c1c' }}>
+          We couldn't confirm that action completed. Check the current item status before trying again.
+        </div>
+      )}
+      {isError && approvals.length > 0 && (
+        <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem', color: '#92400e' }}>
+          <span>Couldn't refresh approvals. The displayed results may be out of date.</span>
+          <button type="button" className="btn btn--secondary btn--sm" onClick={() => void refetch()} disabled={isFetching}>
+            {isFetching ? 'Retrying…' : 'Retry'}
+          </button>
+        </div>
+      )}
       <div className="page-header">
         <div className="page-header__row">
           <div>
@@ -374,7 +403,7 @@ export const Approvals: React.FC = () => {
       )}
 
       {/* Summary Cards */}
-      <div className="approvals__summary">
+      <div className="approvals__summary" role="group" aria-label="Timesheet approval totals">
         <div className="approvals__summary-card approvals__summary-card--pending">
           <span className="approvals__summary-card-count approvals__summary-card-count--pending">{pending}</span>
           <div>
@@ -428,7 +457,7 @@ export const Approvals: React.FC = () => {
             <circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/>
           </svg>
           <input
-            type="text"
+            type="search"
             aria-label="Search employee by name"
             placeholder="Search employee by name…"
             value={searchName}
@@ -525,10 +554,12 @@ export const Approvals: React.FC = () => {
 
       {/* Filters + Bulk */}
       <div className="approvals__filters">
-        <div className="approvals__filter-tabs">
+      <div className="approvals__filter-tabs" role="group" aria-label="Filter approvals by status">
           {(['All', 'Pending', 'Approved', 'Rejected'] as FilterTab[]).map(f => (
             <button
               key={f}
+              type="button"
+              aria-pressed={filter === f}
               className={`approvals__filter-tab${filter === f ? ' approvals__filter-tab--active' : ''}`}
               onClick={() => { setFilter(f); setPage(1); }}
             >{f}</button>
@@ -589,11 +620,11 @@ export const Approvals: React.FC = () => {
                 </button>
               ) : selected.length > 0 ? (
                 <>
-                  <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveSelected} disabled={bulkApproveMutation.isPending}>
+                  <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveSelected} disabled={bulkApproveMutation.isPending} aria-label={`Approve ${selected.length} selected timesheets`}>
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4L6 12l-4-4"/></svg>
                     <span>Approve ({selected.length})</span>
                   </button>
-                  <button type="button" className="btn btn--danger btn--sm" onClick={bulkRejectSelected} disabled={bulkRejectMutation.isPending}>
+                  <button type="button" className="btn btn--danger btn--sm" onClick={bulkRejectSelected} disabled={bulkRejectMutation.isPending} aria-label={`Reject ${selected.length} selected timesheets`}>
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M3 3l10 10M13 3L3 13"/></svg>
                     <span>Reject ({selected.length})</span>
                   </button>
@@ -602,7 +633,7 @@ export const Approvals: React.FC = () => {
                   </button>
                 </>
               ) : (
-                <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveAllPending} disabled={bulkApproveMutation.isPending}>
+                <button type="button" className="btn btn--primary btn--sm" onClick={bulkApproveAllPending} disabled={bulkApproveMutation.isPending} aria-label={`Approve all ${pending} pending timesheets`}>
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M14 4L6 12l-4-4"/></svg>
                   <span>Approve All Pending ({pending})</span>
                 </button>
@@ -723,18 +754,18 @@ export const Approvals: React.FC = () => {
                   ) : (
                     <div className="approvals__actions">
                       {/* View button — always visible */}
-                      <button type="button" className="approvals__review-btn" onClick={() => setReviewModalId(a.id)} title="View timesheet details">
+                      <button type="button" className="approvals__review-btn" onClick={() => setReviewModalId(a.id)} title="View timesheet details" aria-label={`View timesheet details for ${a.user?.name || a.employeeName || 'employee'}`}>
                         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 16, height: 16 }}><path d="M1.5 8c2.5-4 5.5-5.5 6.5-5.5s4 1.5 6.5 5.5c-2.5 4-5.5 5.5-6.5 5.5S4 12 1.5 8z"/><circle cx="8" cy="8" r="2.5"/></svg>
                       </button>
                       {/* Approve — shown for Pending or Rejected (re-approve a rejected timesheet) */}
                       {(a.status === 'Pending' || a.status === 'Rejected') && (
-                        <button type="button" className="approvals__action-btn approvals__action-btn--approve" onClick={() => updateStatus(a.id, 'Approved' as any)} disabled={approveMutation.isPending} title={a.status === 'Rejected' ? 'Approve this previously rejected timesheet' : 'Approve timesheet'}>
+                        <button type="button" className="approvals__action-btn approvals__action-btn--approve" onClick={() => updateStatus(a.id, 'Approved' as any)} disabled={approveMutation.isPending} title={a.status === 'Rejected' ? 'Approve this previously rejected timesheet' : 'Approve timesheet'} aria-label={`${a.status === 'Rejected' ? 'Approve previously rejected' : 'Approve'} timesheet for ${a.user?.name || a.employeeName || 'employee'}`}>
                           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}><path d="M3 8l3 3 7-7"/></svg>
                         </button>
                       )}
                       {/* Reject — shown for Pending or Approved (retract an approval) */}
                       {(a.status === 'Pending' || a.status === 'Approved') && (
-                        <button type="button" className="approvals__action-btn approvals__action-btn--reject" onClick={() => updateStatus(a.id, 'Rejected' as any)} disabled={rejectMutation.isPending} title={a.status === 'Approved' ? 'Retract approval and reject timesheet' : 'Reject timesheet'}>
+                        <button type="button" className="approvals__action-btn approvals__action-btn--reject" onClick={() => updateStatus(a.id, 'Rejected' as any)} disabled={rejectMutation.isPending} title={a.status === 'Approved' ? 'Retract approval and reject timesheet' : 'Reject timesheet'} aria-label={`${a.status === 'Approved' ? 'Retract approval and reject' : 'Reject'} timesheet for ${a.user?.name || a.employeeName || 'employee'}`}>
                           <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}><path d="M4 4l8 8M12 4l-8 8"/></svg>
                         </button>
                       )}

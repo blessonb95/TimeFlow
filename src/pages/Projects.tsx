@@ -137,6 +137,7 @@ export const Projects: React.FC = () => {
 						</svg>
 						<input
 							aria-label="Search projects"
+							type="search"
 							placeholder="Search projects..."
 							value={search}
 							onChange={(e) => {
@@ -145,7 +146,7 @@ export const Projects: React.FC = () => {
 							}}
 						/>
 					</div>
-					<div className="projects__tabs">
+					<div className="projects__tabs" role="group" aria-label="Filter projects by status">
 						{["All", "Not Started", "Ongoing", "Completed"].map((f) => (
 							<button
 								type="button"
@@ -163,7 +164,7 @@ export const Projects: React.FC = () => {
 					</div>
 				</div>
 				<div className="projects__toolbar-right">
-					<div className="worklogs__view-toggle">
+					<div className="worklogs__view-toggle" role="group" aria-label="Project view">
 						<button
 							type="button"
 							aria-label="Grid view"

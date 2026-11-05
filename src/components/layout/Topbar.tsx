@@ -24,12 +24,14 @@ export const Topbar: React.FC = () => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (showSearch) return;
 			const activeEl = document.activeElement;
-			const isInputActive =
-				activeEl && ["INPUT", "TEXTAREA", "SELECT"].includes(activeEl.tagName);
+			const isTextEntryActive = activeEl instanceof HTMLElement && (
+				["INPUT", "TEXTAREA", "SELECT"].includes(activeEl.tagName) ||
+				activeEl.isContentEditable
+			);
 
 			if (
 				((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") ||
-				(!isInputActive && e.key === "/")
+				(!isTextEntryActive && e.key === "/")
 			) {
 				e.preventDefault();
 				setShowSearch((prev) => !prev);
@@ -67,7 +69,9 @@ export const Topbar: React.FC = () => {
 					className="topbar__mobile-toggle"
 					onClick={toggleSidebar}
 					title="Toggle Navigation Menu"
-					aria-label="Toggle Navigation Menu"
+					aria-label={isSidebarCollapsed ? "Open navigation menu" : "Close navigation menu"}
+					aria-expanded={!isSidebarCollapsed}
+					aria-controls="primary-navigation"
 				>
 					<svg
 						viewBox="0 0 24 24"
@@ -177,7 +181,7 @@ export const Topbar: React.FC = () => {
 											className="topbar__notification-item"
 											onClick={() => !n.read && markReadMutation.mutate(n.id)}
 											aria-label={`${n.message}${n.read ? ', read' : ', mark as read'}`}
-											aria-disabled={n.read || undefined}
+							disabled={n.read}
 											style={{
 												padding: "0.625rem 1rem",
 												borderBottom: "1px solid #f9fafb",

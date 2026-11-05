@@ -47,7 +47,7 @@ textarea {
   overflow: hidden;
   flex-shrink: 0;
   z-index: 100;
-  transition: width 0.2s ease, min-width 0.2s ease;
+  transition: width 0.2s ease, min-width 0.2s ease, transform 0.2s ease;
 }
 .sidebar__logo {
   display: flex;
@@ -623,6 +623,7 @@ textarea {
 }
 .topbar__search:focus-visible,
 .topbar__notif:focus-visible,
+.topbar__mobile-toggle:focus-visible,
 .topbar__notification-item:focus-visible,
 .search-modal__item:focus-visible {
   outline: 0.1875rem solid #2563eb;
@@ -632,9 +633,9 @@ textarea {
   width: 100%;
   border: 0;
   font: inherit;
-  text-align: left;
+  text-align: start;
 }
-.topbar__notification-item:disabled {
+.topbar__notification-item[aria-disabled="true"] {
   cursor: default;
 }
 .skip-link {
@@ -726,7 +727,7 @@ body {
     display: block;
     position: fixed;
     top: 0;
-    inset-inline-start: 0;
+    left: 0;
     right: 0;
     bottom: 0;
     background: rgba(15, 23, 42, 0.4);
@@ -761,6 +762,7 @@ body {
     position: fixed;
     top: 0;
     inset-inline-start: 0;
+    left: 0;
     bottom: 0;
     z-index: 1000;
     box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.15);
@@ -772,6 +774,11 @@ body {
   }
   .sidebar__nav-item {
     min-height: 2.75rem;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sidebar {
+    transition: none;
   }
 }
 @media (max-width: 48rem) {
@@ -852,11 +859,7 @@ body {
   #topbar-notifications {
     position: fixed !important;
     top: 3.75rem !important;
-    right: 0.5rem !important;
+    inset-inline-end: 0.5rem !important;
     width: 20rem !important;
   }
-}
-[dir="rtl"] #topbar-notifications {
-  right: auto !important;
-  left: 0.5rem !important;
 }

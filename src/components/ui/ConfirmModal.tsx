@@ -77,7 +77,7 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
                 style={{ resize: 'vertical' }}
               />
               {touched && validationError && (
-                <div id="confirm-modal-reason-error" className="confirm-modal__prompt-error" role="alert">
+                <div id="confirm-modal-reason-error" className="confirm-modal__prompt-error" role="alert" aria-live="polite">
                   <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 13, height: 13, flexShrink: 0 }}>
                     <circle cx="8" cy="8" r="6.25" />
                     <path d="M8 5v3M8 10.5h.01" strokeLinecap="round" strokeLinejoin="round" />
