@@ -6,6 +6,8 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overscroll-behavior: contain;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   animation: fadeIn 0.15s ease;
 }
 .modal {
@@ -54,6 +56,8 @@
 .modal__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1.25rem 1.5rem;
 }
 .modal__body::-webkit-scrollbar {
@@ -239,6 +243,8 @@
 .review-modal__body {
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 1.5rem;
   display: flex;
   flex-direction: column;
@@ -353,7 +359,11 @@
 .review-modal__table-wrapper {
   border-radius: 0.625rem;
   border: 0.0625rem solid #e2e8f0;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
 }
 .review-modal__table {
   width: 100%;
@@ -422,7 +432,7 @@
   margin-bottom: 0 !important;
 }
 .review-modal__footer {
-  padding: 1.125rem 1.5rem;
+  padding: 1.125rem 1.5rem calc(1.125rem + env(safe-area-inset-bottom, 0px));
   border-top: 0.0625rem solid #e5e7eb;
   background-color: #f8fafc;
   display: flex;

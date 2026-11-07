@@ -28,6 +28,7 @@
   width: 16rem;
   min-width: 16rem;
   height: 100vh;
+  height: 100dvh;
   background: #ffffff;
   border-right: 0.0625rem solid #e5e7eb;
   display: flex;
@@ -129,6 +130,8 @@
   flex: 1;
   padding: 1rem 0.75rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 .sidebar__nav::-webkit-scrollbar {
   width: 0.25rem;
@@ -169,17 +172,21 @@
   position: relative;
   user-select: none;
 }
-.sidebar__nav-item:hover {
-  background: #f3f4f6;
-  color: #111827;
+@media (hover: hover) and (pointer: fine) {
+  .sidebar__nav-item:hover {
+    background: #f3f4f6;
+    color: #111827;
+  }
 }
 .sidebar__nav-item--active {
   background: #111827;
   color: #ffffff;
 }
-.sidebar__nav-item--active:hover {
-  background: #1f2937;
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .sidebar__nav-item--active:hover {
+    background: #1f2937;
+    color: #ffffff;
+  }
 }
 .sidebar__nav-item-icon {
   width: 1.125rem;
@@ -260,7 +267,7 @@
 }
 .sidebar__footer {
   border-top: 0.0625rem solid #e5e7eb;
-  padding: 0.5rem 0.5rem;
+  padding: 0.5rem 0.5rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
 }
 .sidebar__user {
   display: flex;
@@ -447,7 +454,7 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 1.5rem;
+  padding: 0 1.5rem 0 1.5rem;
   position: sticky;
   top: 0;
   z-index: 50;
@@ -582,6 +589,7 @@
   box-shadow: 0 0.625rem 1.5rem rgba(0, 0, 0, 0.08);
   z-index: 200;
   overflow: hidden;
+  overscroll-behavior: contain;
 }
 .topbar__notif-header {
   padding: 0.875rem 1rem;
@@ -643,7 +651,10 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 .page-content::-webkit-scrollbar {
   width: 0.25rem;
@@ -661,9 +672,11 @@
   font: inherit;
   transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
-.topbar__search:hover,
-.topbar__notif:hover:not(:disabled) {
-  transform: translateY(-0.0625rem);
+@media (hover: hover) and (pointer: fine) {
+  .topbar__search:hover,
+  .topbar__notif:hover:not(:disabled) {
+    transform: translateY(-0.0625rem);
+  }
 }
 .topbar__notif {
   border: 0;
@@ -846,7 +859,7 @@ body {
   .topbar {
     min-height: 3.5rem;
     height: auto;
-    padding: 0 0.75rem;
+    padding: env(safe-area-inset-top, 0px) 0.75rem 0 0.75rem;
     gap: 0.5rem;
   }
   .topbar__left {

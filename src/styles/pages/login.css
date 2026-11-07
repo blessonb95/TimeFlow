@@ -1,6 +1,7 @@
 .auth-page {
   display: flex;
   min-height: 100vh;
+  min-height: 100svh;
 }
 .auth-page__left {
   flex: 0 0 50%;
@@ -732,7 +733,7 @@
 @media (max-width: 48rem) {
   .auth-page {
     min-height: 100vh;
-    min-height: 100dvh;
+    min-height: 100svh;
   }
   .auth-page__left {
     display: none;
@@ -740,7 +741,7 @@
   .auth-page__right {
     width: 100%;
     min-width: 0;
-    padding: 2rem 1rem;
+    padding: calc(2rem + env(safe-area-inset-top, 0px)) 1rem calc(2rem + env(safe-area-inset-bottom, 0px)) 1rem;
     align-items: center;
     background: #f1f5f9;
   }

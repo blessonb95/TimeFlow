@@ -20,6 +20,7 @@
 		max-width: 53.75rem;
 		min-height: 30rem;
 		max-height: 90vh;
+		max-height: 90dvh;
 		background: @white;
 		border-radius: 1.25rem;
 		box-shadow:
@@ -51,7 +52,7 @@
 		display: flex;
 		align-items: center;
 		justify-content: space-between;
-		padding: 1rem 2rem 1.5rem;
+		padding: 1rem 2rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
 		border-top: 0.0625rem solid @gray-100;
 
 		&-left {

@@ -618,6 +618,7 @@ export const Approvals: React.FC = () => {
 
       {/* Table */}
       <div className="data-table--card">
+        <div className="table-responsive">
         <table className="data-table">
           <caption className="sr-only">Timesheets awaiting review</caption>
           <thead>
@@ -734,6 +735,7 @@ export const Approvals: React.FC = () => {
             )}
           </tbody>
         </table>
+        </div>
         <Pagination
           currentPage={page}
           totalItems={filtered.length}

@@ -152,6 +152,9 @@
   -webkit-overflow-scrolling: touch;
   margin-bottom: 1rem;
 }
+.reports__table-card > .table-responsive {
+  margin-bottom: 0;
+}
 .reports__table-header {
   padding: 1rem 1.25rem;
   border-bottom: 0.0625rem solid #e5e7eb;
@@ -307,6 +310,7 @@
 }
 .reports__util-bar-track {
   flex: 1;
+  min-width: 5rem;
   height: 0.5rem;
   background: #f3f4f6;
   border-radius: 624.9375rem;
@@ -765,6 +769,95 @@
   color: #4b5563;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+}
+.reports__chart-loading {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+.reports__dot--budgeted {
+  background: #cbd5e1;
+}
+.reports__dot--logged {
+  background: #1e293b;
+}
+.reports__export-accent {
+  color: #2563eb;
+}
+.reports__export-controls {
+  display: flex;
+  gap: 1.25rem;
+  margin-bottom: 1.5rem;
+  padding: 1.25rem 1.5rem;
+  background: #ffffff;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+.reports__date-input {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: 0.875rem;
+  height: 38px;
+}
+.reports__th-center {
+  text-align: center;
+}
+.reports__td-muted {
+  color: #6b7280;
+}
+.reports__td-center {
+  text-align: center;
+}
+.reports__td-center-semibold {
+  text-align: center;
+  font-weight: 600;
+}
+.reports__td-center-bold {
+  text-align: center;
+  font-weight: 700;
+}
+.reports__td-medium {
+  font-weight: 500;
+}
+.reports__td-logged {
+  text-align: center;
+  color: #2563eb;
+  font-weight: 600;
+}
+.reports__preview-empty--lg {
+  padding: 3.75rem 1.5rem;
+}
+.reports__preview-emp-name {
+  font-weight: 700;
+  font-size: 0.8125rem;
+}
+.reports__preview-emp-meta {
+  font-size: 0.6875rem;
+  color: #6b7280;
+}
+.reports__td-nowrap {
+  white-space: nowrap;
+}
+.reports__td-project {
+  color: #2563eb;
+  font-weight: 500;
+}
+.reports__td-task {
+  color: #374151;
+  max-width: 240px;
+  word-break: break-word;
+}
+.reports__preview-status-pill {
+  padding: 0.125rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.625rem;
+  font-weight: 700;
 }
 @media (max-width: 64rem) {
   .reports__metrics {

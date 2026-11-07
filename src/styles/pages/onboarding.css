@@ -16,6 +16,7 @@
   max-width: 53.75rem;
   min-height: 30rem;
   max-height: 90vh;
+  max-height: 90dvh;
   background: #ffffff;
   border-radius: 1.25rem;
   box-shadow: 0 1.5625rem 3.75rem rgba(0, 0, 0, 0.18), 0 0 0 0.0625rem rgba(255, 255, 255, 0.08);
@@ -40,8 +41,17 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 1rem 2rem 1.5rem;
+  padding: 1rem 2rem calc(1.5rem + env(safe-area-inset-bottom, 0px));
   border-top: 0.0625rem solid #f3f4f6;
+}
+.onboarding__footer-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.onboarding__footer-actions {
+  display: flex;
+  gap: 0.75rem;
 }
 .onboarding__dots {
   display: flex;
@@ -284,6 +294,11 @@
   padding: 1.25rem 1.5rem;
   margin-bottom: 1.25rem;
 }
+.onboarding__role-card--plain {
+  border: none;
+  background: transparent;
+  padding: 0.5rem 0;
+}
 .onboarding__role-card-label {
   font-size: 0.6875rem;
   font-weight: 600;
@@ -299,6 +314,9 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
+}
+.onboarding__role-card-value--md {
+  font-size: 1rem;
 }
 .onboarding__role-badge {
   display: inline-flex;

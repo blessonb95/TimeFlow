@@ -36,6 +36,7 @@
 	width: @sidebar-width;
 	min-width: @sidebar-width;
 	height: 100vh;
+	height: 100dvh;
 	background: @sidebar-bg;
 	border-right: 0.0625rem solid @sidebar-border;
 	.flex-col();
@@ -148,6 +149,8 @@
 		flex: 1;
 		padding: @space-4 @space-3;
 		overflow-y: auto;
+		overscroll-behavior: contain;
+		-webkit-overflow-scrolling: touch;
 		.thin-scrollbar();
 	}
 
@@ -180,17 +183,21 @@
 		position: relative;
 		user-select: none;
 
-		&:hover {
-			background: @nav-hover-bg;
-			color: @color-text-primary;
+		@media (hover: hover) and (pointer: fine) {
+			&:hover {
+				background: @nav-hover-bg;
+				color: @color-text-primary;
+			}
 		}
 
 		&--active {
 			background: @gray-900;
 			color: @white;
-			&:hover {
-				background: @gray-800;
-				color: @white;
+			@media (hover: hover) and (pointer: fine) {
+				&:hover {
+					background: @gray-800;
+					color: @white;
+				}
 			}
 		}
 
@@ -282,7 +289,7 @@
 
 	&__footer {
 		border-top: 0.0625rem solid @color-border;
-		padding: @space-2 @space-2;
+		padding: @space-2 @space-2 calc(@space-2 + env(safe-area-inset-bottom, 0px));
 	}
 
 	&__user {
@@ -470,7 +477,7 @@
 	background: @white;
 	border-bottom: 0.0625rem solid @color-border;
 	.flex-between();
-	padding: 0 @space-6;
+	padding: 0 max(@space-6, env(safe-area-inset-right, 0px)) 0 max(@space-6, env(safe-area-inset-left, 0px));
 	position: sticky;
 	top: 0;
 	z-index: 50;
@@ -611,6 +618,7 @@
 			box-shadow: @shadow-lg;
 			z-index: 200;
 			overflow: hidden;
+			overscroll-behavior: contain;
 		}
 
 		&-header {
@@ -683,7 +691,10 @@
 	flex: 1;
 	overflow-y: auto;
 	overflow-x: hidden;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
 	width: 100%;
+	padding-bottom: env(safe-area-inset-bottom, 0px);
 	.thin-scrollbar();
 }
 
@@ -693,9 +704,11 @@
 	transition: background-color 160ms ease, color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
 }
 
-.topbar__search:hover,
-.topbar__notif:hover:not(:disabled) {
-	transform: translateY(-0.0625rem);
+@media (hover: hover) and (pointer: fine) {
+	.topbar__search:hover,
+	.topbar__notif:hover:not(:disabled) {
+		transform: translateY(-0.0625rem);
+	}
 }
 
 .topbar__notif {
@@ -802,9 +815,22 @@
 	min-width: 0;
 }
 
-// Keep long names, URLs, and other unbroken strings inside their layout cells.
+// Keep long names, URLs, and other unbroken strings inside their layout cells,
+// while preventing tables from breaking words mid-syllable or collapsing cells.
 body {
 	overflow-wrap: anywhere;
+}
+
+table,
+th,
+td,
+table * {
+	overflow-wrap: normal;
+	word-break: normal;
+}
+
+table :where(div) {
+	min-width: auto;
 }
 
 .page-header {
@@ -904,7 +930,7 @@ body {
 	.topbar {
 		min-height: 3.5rem;
 		height: auto;
-		padding: 0 0.75rem;
+		padding: env(safe-area-inset-top, 0px) max(0.75rem, env(safe-area-inset-right, 0px)) 0 max(0.75rem, env(safe-area-inset-left, 0px));
 		gap: 0.5rem;
 
 		&__left {

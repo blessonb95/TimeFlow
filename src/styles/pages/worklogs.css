@@ -319,6 +319,8 @@
   border-radius: 0.75rem;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
   margin-top: 1rem;
   box-shadow: 0 0.0625rem 0.1875rem 0 rgba(0, 0, 0, 0.03);
 }
@@ -569,6 +571,8 @@
   min-width: 13.75rem;
   max-height: 15rem;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 0.25rem;
 }
 .worklogs__grid-table .worklogs__grid-dropdown-item {

@@ -8,6 +8,7 @@
 	align-items: flex-start;
 	justify-content: center;
 	padding-top: 10vh;
+	overscroll-behavior: contain;
 	animation: search-overlay-in 150ms ease-out both;
 }
 
@@ -72,6 +73,7 @@
 
 .search-modal__body {
 	padding: 0.75rem 0;
+	overscroll-behavior: contain;
 }
 
 .search-modal__section-title {
@@ -102,7 +104,16 @@
 	text-align: start;
 	transition: background 0.1s ease;
 
-	&:hover,
+	@media (hover: hover) and (pointer: fine) {
+		&:hover {
+			background: #f1f5f9;
+
+			.search-modal__item-label {
+				font-weight: 600;
+			}
+		}
+	}
+
 	&--active {
 		background: #f1f5f9;
 

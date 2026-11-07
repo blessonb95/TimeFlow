@@ -161,6 +161,10 @@
 		overflow-y: hidden;
 		-webkit-overflow-scrolling: touch;
 		margin-bottom: @space-4;
+
+		& > .table-responsive {
+			margin-bottom: 0;
+		}
 	}
 
 	&__table-header {
@@ -333,6 +337,7 @@
 
 	&__util-bar-track {
 		flex: 1;
+		min-width: 5rem;
 		height: 0.5rem;
 		background: @gray-100;
 		border-radius: @radius-full;
