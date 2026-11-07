@@ -216,12 +216,12 @@ export const Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete })
 
           <div className="onboarding__role-card">
             <div className="onboarding__role-card-label">Department</div>
-            <div className="onboarding__role-card-value" style={{ fontSize: '1rem'}}>
+            <div className="onboarding__role-card-value onboarding__role-card-value--md">
               {currentUser.department}
             </div>
           </div>
 
-          <div className="onboarding__role-card" style={{ border: 'none', background: 'transparent', padding: '0.5rem 0'}}>
+          <div className="onboarding__role-card onboarding__role-card--plain">
             <div className="onboarding__role-card-label">What you can do</div>
             <div className="onboarding__role-features">
               {roleCaps.features.map((f) => (
@@ -362,7 +362,7 @@ export const Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete })
 
         {/* Footer */}
         <div className="onboarding__footer">
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem'}}>
+          <div className="onboarding__footer-left">
             <div className="onboarding__dots">
               {Array.from({ length: TOTAL_STEPS }).map((_, i) => (
                 <div
@@ -374,7 +374,7 @@ export const Onboarding: React.FC<{ onComplete: () => void }> = ({ onComplete })
             <span className="onboarding__step-label">Step {step + 1} of {TOTAL_STEPS}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '0.75rem'}}>
+          <div className="onboarding__footer-actions">
             {step > 0 && (
               <button
                 className="onboarding__btn onboarding__btn--ghost"

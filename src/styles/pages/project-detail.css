@@ -24,9 +24,142 @@
 }
 .proj-detail__breadcrumb-sep {
   color: #4b5563;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+}
+.proj-detail__breadcrumb-chevron {
+  color: #6b7280;
 }
 .proj-detail__breadcrumb-current {
   color: #6b7280;
+}
+.proj-detail__skeleton-back {
+  margin-bottom: 1.25rem;
+}
+.proj-detail__skeleton-card {
+  padding: 1.75rem;
+  margin-bottom: 1.5rem;
+}
+.proj-detail__skeleton-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+  margin-bottom: 1.5rem;
+}
+.proj-detail__skeleton-info {
+  flex: 1;
+}
+.proj-detail__skeleton-title {
+  margin-bottom: 0.5rem;
+}
+.proj-detail__edit-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.3125rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  background: #f9fafb;
+  border: 0.0625rem solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+}
+.proj-detail__lead-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.625rem 1rem;
+  background: #f8fafc;
+  border: 0.0625rem solid #cbd5e1;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  margin: 1rem 0;
+  color: #334155;
+}
+.proj-detail__lead-banner svg {
+  flex-shrink: 0;
+}
+.proj-detail__lead-banner-label {
+  font-weight: 600;
+  color: #0f172a;
+}
+.proj-detail__lead-banner-value {
+  font-weight: 500;
+  color: #1e293b;
+}
+.proj-detail__budget-svg {
+  display: block;
+  margin-top: 0.75rem;
+}
+.proj-detail__no-budget-card {
+  padding: 1.5rem 0.75rem;
+  text-align: center;
+}
+.proj-detail__no-budget-val {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+.proj-detail__no-budget-sub {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin-top: 0.25rem;
+}
+.proj-detail__no-budget-pill {
+  display: inline-block;
+  margin-top: 0.75rem;
+  padding: 0.25rem 0.75rem;
+  background: #f1f5f9;
+  border-radius: 0.375rem;
+  font-size: 0.75rem;
+  color: #475569;
+  font-weight: 500;
+}
+.proj-detail__section-label {
+  font-size: 0.8125rem;
+  font-weight: 700;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.03125rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+.proj-detail__team-grid--managers {
+  margin-bottom: 2rem;
+}
+.proj-detail__team-card--manager {
+  border: 0.125rem solid #cbd5e1;
+  background: #f8fafc;
+}
+.proj-detail__team-role--manager {
+  font-weight: 600;
+  color: #334155;
+}
+.proj-detail__team-timesheet-btn {
+  margin-top: 0.625rem;
+  padding: 0.3125rem 0.625rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #2563eb;
+  background: #eff6ff;
+  border: 0.0625rem solid #bfdbfe;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+}
+.proj-detail__team-empty {
+  color: #6b7280;
+  font-size: 0.8125rem;
+  padding: 1rem 0;
 }
 .proj-detail__header-card {
   background: #ffffff;
@@ -102,7 +235,7 @@
   transition: all 0.12s ease;
 }
 .proj-detail__more-btn:hover {
-  border-color: #6b7280;
+  border-color: #9ca3af;
   background: #f9fafb;
 }
 .proj-detail__desc {
@@ -354,7 +487,7 @@
   transition: all 0.12s ease;
 }
 .task-panel__add-btn:hover {
-  border-color: #6b7280;
+  border-color: #9ca3af;
   color: #111827;
   background: #f9fafb;
 }
@@ -388,13 +521,39 @@
   width: 6.875rem;
   flex-shrink: 0;
 }
+.task-panel__col--approval {
+  width: 5.9375rem;
+  flex-shrink: 0;
+}
+.task-panel__col--progress {
+  width: 6.875rem;
+  flex-shrink: 0;
+}
 .task-panel__col--est {
   width: 3.75rem;
   flex-shrink: 0;
 }
 .task-panel__col--due {
-  width: 4.375rem;
+  width: 5rem;
   flex-shrink: 0;
+}
+.task-panel__col--view {
+  width: 2.8125rem;
+  flex-shrink: 0;
+  text-align: center;
+  display: flex;
+  justify-content: center;
+}
+.task-panel__view-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  color: #475569;
+  border-radius: 0.25rem;
+}
+.task-panel__view-btn:hover {
+  background: #f3f4f6;
 }
 .task-panel__list {
   display: flex;

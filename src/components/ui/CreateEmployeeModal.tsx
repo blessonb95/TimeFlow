@@ -67,8 +67,8 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
   const renderFieldError = (message?: string) => {
     if (!message) return null;
     return (
-      <div style={{ fontSize: '0.8125rem', color: '#ef4444', marginTop: '0.3125rem', display: 'flex', alignItems: 'center', gap: '0.375rem', fontWeight: 500 }}>
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14, flexShrink: 0 }}>
+      <div className="modal__field-error">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="8" cy="8" r="6.25" />
           <path d="M8 5v3.5M8 11h.01" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -79,7 +79,7 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
 
   return ReactDOM.createPortal(
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="create-employee-title" aria-describedby="employee-modal-help" tabIndex={-1}>
+      <section ref={dialogRef} className="modal modal--md" role="dialog" aria-modal="true" aria-labelledby="create-employee-title" aria-describedby="employee-modal-help" tabIndex={-1}>
         <div className="modal__header">
           <div>
             <h2 id="create-employee-title" className="modal__header-title">Add New Employee</h2>
@@ -91,16 +91,16 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
             </svg>
           </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <form onSubmit={handleSubmit} className="modal__form">
           <div className="modal__body">
-            {error && <div role="alert" aria-live="assertive" style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '0.625rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem', marginBottom: '1rem'}}>{error}</div>}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+            {error && <div role="alert" aria-live="assertive" className="modal__error-banner">{error}</div>}
+            <div className="modal__grid-2">
               <div className="form-group">
                 <label className="form-group__label" htmlFor="employee-first-name">
-                  First Name <span style={{ color: '#ef4444' }}>*</span>
+                  First Name <span className="form-group__required">*</span>
                 </label>
                 <input
-                  className="form-group__input"
+                  className={`form-group__input ${touched.firstName && fieldErrors.firstName ? 'form-group__input--error' : ''}`}
                   id="employee-first-name"
                   name="firstName"
                   autoComplete="given-name"
@@ -112,7 +112,6 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
                   onChange={e => setFirstName(e.target.value)}
                   onBlur={() => handleBlur('firstName')}
                   autoFocus
-                  style={{ borderColor: touched.firstName && fieldErrors.firstName ? '#ef4444' : undefined }}
                 />
                 {touched.firstName && fieldErrors.firstName && <div id="employee-first-name-error">{renderFieldError(fieldErrors.firstName)}</div>}
               </div>
@@ -134,7 +133,7 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
             </div>
             <div className="form-group">
               <label className="form-group__label" htmlFor="employee-work-email">
-                Work Email <span style={{ color: '#ef4444' }}>*</span>
+                Work Email <span className="form-group__required">*</span>
               </label>
               <input
                 type="email"
@@ -144,19 +143,18 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
                 required
                 aria-invalid={touched.email && !!fieldErrors.email}
                 aria-describedby={touched.email && fieldErrors.email ? 'employee-email-error' : undefined}
-                className="form-group__input"
+                className={`form-group__input ${touched.email && fieldErrors.email ? 'form-group__input--error' : ''}`}
                 placeholder="john.doe@timeflow.com"
                 value={email}
                 onChange={e => setEmail(e.target.value)}
                 onBlur={() => handleBlur('email')}
-                style={{ borderColor: touched.email && fieldErrors.email ? '#ef4444' : undefined }}
               />
               {touched.email && fieldErrors.email && <div id="employee-email-error">{renderFieldError(fieldErrors.email)}</div>}
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+            <div className="modal__grid-2">
               <div className="form-group">
                 <label className="form-group__label" htmlFor="employee-department">
-                  Department <span style={{ color: '#ef4444' }}>*</span>
+                  Department <span className="form-group__required">*</span>
                 </label>
                 <select id="employee-department" name="department" className="form-group__select" value={department} onChange={e => setDepartment(e.target.value)}>
                   <option value="Engineering">Engineering</option>
@@ -169,7 +167,7 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
               </div>
               <div className="form-group">
                 <label className="form-group__label" htmlFor="employee-role">
-                  Role <span style={{ color: '#ef4444' }}>*</span>
+                  Role <span className="form-group__required">*</span>
                 </label>
                 <select id="employee-role" name="role" className="form-group__select" value={role} onChange={e => setRole(e.target.value)}>
                   <option value="employee">Employee</option>
@@ -180,10 +178,10 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
             </div>
             <div className="form-group">
               <label className="form-group__label" htmlFor="employee-designation">
-                Designation / Job Title <span style={{ color: '#ef4444' }}>*</span>
+                Designation / Job Title <span className="form-group__required">*</span>
               </label>
               <input
-                className="form-group__input"
+                className={`form-group__input ${touched.designation && fieldErrors.designation ? 'form-group__input--error' : ''}`}
                 id="employee-designation"
                 name="designation"
                 required
@@ -193,7 +191,6 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
                 value={designation}
                 onChange={e => setDesignation(e.target.value)}
                 onBlur={() => handleBlur('designation')}
-                style={{ borderColor: touched.designation && fieldErrors.designation ? '#ef4444' : undefined }}
               />
               {touched.designation && fieldErrors.designation && <div id="employee-designation-error">{renderFieldError(fieldErrors.designation)}</div>}
             </div>
@@ -215,9 +212,8 @@ export const CreateEmployeeModal: React.FC<CreateEmployeeModalProps> = ({ onClos
             </button>
             <button
               type="submit"
-              className="btn btn--primary"
+              className="btn btn--primary modal__submit-btn"
               disabled={isSubmitDisabled}
-              style={{ opacity: isSubmitDisabled ? 0.5 : 1, cursor: isSubmitDisabled ? 'not-allowed' : 'pointer' }}
             >
               {createEmployeeMutation.isPending ? 'Adding…' : 'Add Employee'}
             </button>

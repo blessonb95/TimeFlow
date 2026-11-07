@@ -11,10 +11,11 @@ import {
 } from "../hooks/useDashboard";
 import { useApprovals, useBulkApprove } from "../hooks/useApprovals";
 import { LogTaskDrawer } from "../components/ui/LogTaskDrawer";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
+import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { DashboardSkeleton } from "../components/ui/LoadingState";
 import { WeekBars } from "../components/ui/Charts";
 import { EmptyState } from "../components/ui/EmptyState";
+import { DEFAULT_HR_USER, getSystemAuditLogs } from "../data/dummy";
 
 // ─── SVG Progress Ring ──────────────────────────────────────────────────────────
 const ProjectProgressRing: React.FC<{
@@ -64,11 +65,7 @@ const ProjectProgressRing: React.FC<{
 					strokeLinecap="round"
 					strokeDasharray={circumference}
 					strokeDashoffset={offset}
-					style={{
-						transition: "stroke-dashoffset 0.6s ease",
-						transform: "rotate(-90deg)",
-						transformOrigin: "50% 50%",
-					}}
+					className="dashboard__project-ring-fill"
 				/>
 			</svg>
 			<span className="dashboard__project-ring-label" style={{ color: strokeColor }}>
@@ -298,11 +295,11 @@ const DashboardQuickActions: React.FC<{ pendingCount?: number }> = ({ pendingCou
 				className="dashboard__quick-action dashboard__quick-action--primary"
 				onClick={() => navigate(primaryAction.to)}
 			>
-				<span style={{ display: "flex", alignItems: "center", gap: '0.5rem'}}>
+				<span className="dashboard__quick-action-inner">
 					{primaryAction.icon}
 					{primaryAction.label}
 				</span>
-				<span style={{ color: "#6b7280" }}>›</span>
+				<span className="dashboard__quick-action-arrow">›</span>
 			</button>
 			{defaultActions.map((a) => (
 				<button
@@ -311,18 +308,11 @@ const DashboardQuickActions: React.FC<{ pendingCount?: number }> = ({ pendingCou
 					className="dashboard__quick-action dashboard__quick-action--default"
 					onClick={() => navigate(a.to)}
 				>
-					<span
-						style={{
-							display: "flex",
-							alignItems: "center",
-							gap: '0.5rem',
-							color: "#4b5563",
-						}}
-					>
-						<span style={{ color: "#6b7280", display: "flex" }}>{a.icon}</span>
+					<span className="dashboard__quick-action-inner dashboard__quick-action-inner--default">
+						<span className="dashboard__quick-action-icon">{a.icon}</span>
 						{a.label}
 					</span>
-					<span style={{ color: "#6b7280" }}>›</span>
+					<span className="dashboard__quick-action-arrow">›</span>
 				</button>
 			))}
 		</div>
@@ -333,13 +323,25 @@ const DashboardQuickActions: React.FC<{ pendingCount?: number }> = ({ pendingCou
 const EmployeeDashboard: React.FC = () => {
 	const { currentUser } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading } = useEmployeeDashboard();
+	const { data, isLoading, isError, isFetching, refetch } = useEmployeeDashboard();
 	const hour = new Date().getHours();
 	const greeting =
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 	const [showLogTask, setShowLogTask] = useState(false);
 
-	if (isLoading || !data) { return <DashboardSkeleton />; }
+	if (isLoading) { return <DashboardSkeleton />; }
+	if (isError || !data) {
+		return (
+			<div className="page-inner dashboard">
+				<EmptyState
+					icon="error"
+					title="Dashboard unavailable"
+					subtitle="We couldn’t load your workspace dashboard. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
+				/>
+			</div>
+		);
+	}
 
 	const myProjects = (data.projects || []).slice(0, 3);
 	const weekHours = data.weekHours || [];
@@ -513,6 +515,8 @@ const ManagerDashboard: React.FC = () => {
 	const approvalsQuery = useApprovals();
 	const approvals = Array.isArray(approvalsQuery.data) ? approvalsQuery.data : [];
 	const bulkApproveMutation = useBulkApprove();
+	const [showBulkConfirm, setShowBulkConfirm] = useState(false);
+	const [bulkSuccessCount, setBulkSuccessCount] = useState<number | null>(null);
 	const hour = new Date().getHours();
 	const greeting =
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -522,7 +526,7 @@ const ManagerDashboard: React.FC = () => {
 		return (
 			<div className="page-inner dashboard">
 				<EmptyState
-					icon="timesheets"
+					icon="error"
 					title="Dashboard unavailable"
 					subtitle="We couldn’t load your team dashboard. Check your connection and try again."
 					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
@@ -531,10 +535,23 @@ const ManagerDashboard: React.FC = () => {
 		);
 	}
 
-	const employeeTable = Array.isArray(data.employeeTable)
+	const rawEmployeeTable = Array.isArray(data.employeeTable)
 		? data.employeeTable.filter((row: unknown) => row !== null && typeof row === "object")
 		: [];
-	const myProjects = (Array.isArray(data.projects) ? data.projects : [])
+	// Keep employee timesheet statuses in sync with live approvals cache
+	const employeeTable = rawEmployeeTable.map((row: any) => {
+		const userApprovals = approvals.filter(
+			(a: any) => a?.employee?.id && row?.user?.id && String(a.employee.id) === String(row.user.id)
+		);
+		if (userApprovals.length > 0) {
+			const hasPending = userApprovals.some((a: any) => a.status === "Pending" || a.status === "Submitted");
+			const allApproved = userApprovals.every((a: any) => a.status === "Approved");
+			if (hasPending) return { ...row, timesheetStatus: "Pending" };
+			if (allApproved) return { ...row, timesheetStatus: "Approved" };
+		}
+		return row;
+	});
+	const myProjects = (Array.isArray(data.projects) ? data.projects : Array.isArray(data.assignedProjects) ? data.assignedProjects : [])
 		.filter((project: unknown) => project !== null && typeof project === "object")
 		.slice(0, 3);
 	const teamHoursThisWeek = employeeTable.reduce(
@@ -549,19 +566,17 @@ const ManagerDashboard: React.FC = () => {
 		: "this week";
 	// Keep dashboard approval totals in sync with the sidebar, which counts the
 	// pending items returned by the approvals list.
-	const pendingApprovals = approvals.filter((a: any) => a?.status === "Pending" && typeof a.id === "string");
+	const pendingApprovals = approvals.filter((a: any) => (a?.status === "Pending" || a?.status === "Submitted") && a?.id != null);
 	const approvalCount = Array.isArray(approvalsQuery.data) ? pendingApprovals.length : null;
 	const statusCounts = data.teamStatusCounts || {};
+	const approvedTeamCount = employeeTable.filter((r: any) => r.timesheetStatus === "Approved").length || statusCounts["Approved"] || 0;
+	const awaitingSubmissionCount = employeeTable.filter(
+		(r: any) => r.timesheetStatus === "In Progress" || r.timesheetStatus === "Not Started" || r.timesheetStatus === "Draft"
+	).length || statusCounts["Awaiting submission"] || 0;
 
 	const handleBulkApproveAll = () => {
-		const pendingIds = pendingApprovals.map((a: { id: string }) => a.id);
-		if (
-			pendingIds.length > 0 &&
-			window.confirm(
-				`Are you sure you want to approve all ${pendingIds.length} pending timesheets right now?`,
-			)
-		) {
-			bulkApproveMutation.mutate(pendingIds);
+		if (pendingApprovals.length > 0) {
+			setShowBulkConfirm(true);
 		}
 	};
 
@@ -594,7 +609,7 @@ const ManagerDashboard: React.FC = () => {
 				</div>
 			</div>
 			{approvalsQuery.isError && (
-				<div role="alert" style={{ marginBottom: "1rem", color: "#92400e" }}>
+				<div role="alert" className="dashboard__alert-warning">
 					{approvalsQuery.data
 						? "Couldn’t refresh approvals. The count may be out of date."
 						: "Couldn’t load approvals, so the pending count is unavailable."}{" "}
@@ -604,7 +619,7 @@ const ManagerDashboard: React.FC = () => {
 				</div>
 			)}
 			{bulkApproveMutation.isError && (
-				<div role="alert" style={{ marginBottom: "1rem", color: "#b91c1c" }}>
+				<div role="alert" className="dashboard__alert-error">
 					Bulk approval couldn't be confirmed. Refresh the pending list before trying again.
 				</div>
 			)}
@@ -624,17 +639,8 @@ const ManagerDashboard: React.FC = () => {
 
 			{/* Approval Banner with HR Reminder */}
 			{role !== "admin" && approvalCount !== null && approvalCount > 0 && (
-				<div
-					className="dashboard__banner"
-					style={{
-						background: "#fffbe6",
-						border: "1px solid #ffe58f",
-						color: "#854d0e",
-						padding: "0.75rem 1.25rem",
-						borderRadius: 8,
-					}}
-				>
-					<div style={{ display: "flex", alignItems: "center", gap: '0.625rem'}}>
+				<div className="dashboard__banner dashboard__banner--hr">
+					<div className="dashboard__banner-content">
 						<svg
 							width="20"
 							height="20"
@@ -647,8 +653,8 @@ const ManagerDashboard: React.FC = () => {
 							<path d="M6.5 13.5a1.5 1.5 0 003 0" />
 						</svg>
 						<div>
-							<strong style={{ color: "#92400e" }}>
-								HR Reminder (from Reshma):
+							<strong className="dashboard__banner-strong">
+								HR Reminder (from {DEFAULT_HR_USER.name}):
 							</strong>{" "}
 							You have{" "}
 							<strong>
@@ -658,27 +664,17 @@ const ManagerDashboard: React.FC = () => {
 							awaiting your review and approval.
 						</div>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: '1rem'}}>
+					<div className="dashboard__banner-actions">
 						<button
 							type="button"
-							className="btn btn--sm"
+							className="btn btn--sm dashboard__banner-approve-btn"
 							onClick={handleBulkApproveAll}
 							disabled={bulkApproveMutation.isPending}
-							style={{
-								background: "#059669",
-								color: "#fff",
-								border: "none",
-								borderRadius: 6,
-								padding: "0.3125rem 0.875rem",
-								fontWeight: 600,
-								cursor: "pointer",
-							}}
 						>
 							✓ Approve All ({approvalCount})
 						</button>
 						<button type="button"
-							className="dashboard__banner-link"
-							style={{ color: "#d97706", fontWeight: 600 }}
+							className="dashboard__banner-link dashboard__banner-link--amber"
 							onClick={() => navigate("/approvals")}
 						>
 							Review listing →
@@ -805,11 +801,8 @@ const ManagerDashboard: React.FC = () => {
 			<div className="dashboard__grid">
 				<div className="dashboard__grid-left">
 					{/* Assigned Projects */}
-					<div className="dashboard__section" style={{ padding: '0rem'}}>
-						<div
-							className="dashboard__section-header"
-							style={{ padding: "1.25rem 1.5rem", marginBottom: '0rem'}}
-						>
+					<div className="dashboard__section dashboard__section--flush">
+						<div className="dashboard__section-header dashboard__section-header--padded">
 							<h2 className="dashboard__section-title">
 								{role === "admin" ? "Organization active projects" : "My assigned projects"}
 							</h2>
@@ -889,30 +882,24 @@ const ManagerDashboard: React.FC = () => {
 										}) => (
 											<tr key={row.user.id}>
 												<td>
-													<div
-														style={{
-															display: "flex",
-															alignItems: "center",
-															gap: '0.625rem',
-														}}
-													>
+													<div className="dashboard__emp-cell">
 														<Avatar
 															initials={row.user.initials}
 															color={row.user.color}
 															size="sm"
 														/>
 														<div>
-															<div style={{ fontWeight: 600, fontSize: '0.8125rem'}}>
+															<div className="dashboard__emp-name">
 																{row.user.name}
 															</div>
-															<div style={{ fontSize: '0.6875rem', color: "#6b7280" }}>
+															<div className="dashboard__emp-role">
 																{row.user.designation}
 															</div>
 														</div>
 													</div>
 												</td>
-												<td style={{ fontWeight: 600 }}>{row.weekHours}h</td>
-												<td style={{ minWidth: 140 }}>
+												<td className="dashboard__td-hours">{row.weekHours}h</td>
+												<td className="dashboard__td-util">
 													<UtilBar value={row.utilization} />
 												</td>
 												<td>
@@ -940,7 +927,7 @@ const ManagerDashboard: React.FC = () => {
 								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--pending" aria-hidden="true">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
 								</span>
-								<strong className="dashboard__timesheet-status-count">{statusCounts["Awaiting submission"] || 0}</strong>
+								<strong className="dashboard__timesheet-status-count">{awaitingSubmissionCount}</strong>
 								<span className="dashboard__timesheet-status-label">Awaiting submission</span>
 							</div>
 							<div className="dashboard__timesheet-status-item">
@@ -954,7 +941,7 @@ const ManagerDashboard: React.FC = () => {
 								<span className="dashboard__timesheet-status-icon dashboard__timesheet-status-icon--upcoming" aria-hidden="true">
 									<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="15" rx="2" /><path d="M8 3v4m8-4v4M4 10h16" /></svg>
 								</span>
-								<strong className="dashboard__timesheet-status-count">{statusCounts["Approved"] || 0}</strong>
+								<strong className="dashboard__timesheet-status-count">{approvedTeamCount}</strong>
 								<span className="dashboard__timesheet-status-label">Approved</span>
 							</div>
 						</div>
@@ -963,6 +950,36 @@ const ManagerDashboard: React.FC = () => {
 					<DashboardQuickActions pendingCount={approvalCount ?? 0} />
 				</div>
 			</div>
+			{showBulkConfirm && (
+				<ConfirmModal
+					isOpen={showBulkConfirm}
+					title="Approve All Pending Timesheets"
+					message={`Are you sure you want to approve all ${pendingApprovals.length} pending timesheets right now?`}
+					type="confirm"
+					confirmText="Approve All"
+					onConfirm={() => {
+						const pendingIds = pendingApprovals.map((a: { id: string | number }) => String(a.id));
+						const count = pendingIds.length;
+						setShowBulkConfirm(false);
+						bulkApproveMutation.mutate(pendingIds, {
+							onSuccess: () => {
+								setBulkSuccessCount(count);
+							},
+						});
+					}}
+					onCancel={() => setShowBulkConfirm(false)}
+				/>
+			)}
+			{bulkSuccessCount !== null && (
+				<ConfirmModal
+					isOpen={true}
+					title="Timesheets Approved"
+					message={`All ${bulkSuccessCount} pending timesheet${bulkSuccessCount === 1 ? "" : "s"} have been approved.`}
+					type="alert"
+					onConfirm={() => setBulkSuccessCount(null)}
+					onCancel={() => setBulkSuccessCount(null)}
+				/>
+			)}
 		</div>
 	);
 };
@@ -971,11 +988,22 @@ const ManagerDashboard: React.FC = () => {
 const CEODashboard: React.FC = () => {
 	const { currentUser } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading, isError } = useManagerDashboard();
+	const { data, isLoading, isError, isFetching, refetch } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 
 	if (isLoading) { return <DashboardSkeleton />; }
-	if (isError || !data) { return <div className="page-inner dashboard"><EmptyState icon="timesheets" title="Dashboard unavailable" subtitle="We couldn’t load the executive dashboard. Try again shortly." /></div>; }
+	if (isError || !data) {
+		return (
+			<div className="page-inner dashboard">
+				<EmptyState
+					icon="error"
+					title="Dashboard unavailable"
+					subtitle="We couldn’t load the executive dashboard. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
+				/>
+			</div>
+		);
+	}
 
 	const employeeTable = data.employeeTable || [];
 	const myProjects = (data.projects || []).slice(0, 3);
@@ -1024,18 +1052,8 @@ const CEODashboard: React.FC = () => {
 
 			{/* HR Reminder Banner for CEO */}
 			{pendingTimesheets > 0 && (
-				<div
-					className="dashboard__banner"
-					style={{
-						background: "#fffbe6",
-						border: "1px solid #ffe58f",
-						color: "#854d0e",
-						padding: "0.75rem 1.25rem",
-						borderRadius: 8,
-						marginBottom: '1.25rem',
-					}}
-				>
-					<div style={{ display: "flex", alignItems: "center", gap: '0.625rem'}}>
+				<div className="dashboard__banner dashboard__banner--hr dashboard__banner--ceo">
+					<div className="dashboard__banner-content">
 						<svg
 							width="20"
 							height="20"
@@ -1048,8 +1066,8 @@ const CEODashboard: React.FC = () => {
 							<path d="M6.5 13.5a1.5 1.5 0 003 0" />
 						</svg>
 						<div>
-							<strong style={{ color: "#92400e" }}>
-								HR Reminder (from Reshma):
+							<strong className="dashboard__banner-strong">
+								HR Reminder (from {DEFAULT_HR_USER.name}):
 							</strong>{" "}
 							You have{" "}
 							<strong>
@@ -1058,20 +1076,11 @@ const CEODashboard: React.FC = () => {
 							awaiting review and approval across the organization.
 						</div>
 					</div>
-					<div style={{ display: "flex", alignItems: "center", gap: '1rem'}}>
+					<div className="dashboard__banner-actions">
 						<button
 							type="button"
-							className="btn btn--sm"
+							className="btn btn--sm dashboard__banner-review-btn"
 							onClick={() => navigate("/approvals")}
-							style={{
-								background: "#d97706",
-								color: "#fff",
-								border: "none",
-								borderRadius: 6,
-								padding: "0.3125rem 0.875rem",
-								fontWeight: 600,
-								cursor: "pointer",
-							}}
 						>
 							Review Timesheets →
 						</button>
@@ -1174,42 +1183,25 @@ const CEODashboard: React.FC = () => {
 			<div className="dashboard__grid">
 				<div className="dashboard__grid-left">
 					{/* Active Organization Projects */}
-					<div className="dashboard__section" style={{ padding: '0rem'}}>
-						<div
-							className="dashboard__section-header"
-							style={{ padding: "1.25rem 1.5rem", marginBottom: '0rem'}}
-						>
-								<h2 className="dashboard__section-title">
+					<div className="dashboard__section dashboard__section--flush">
+						<div className="dashboard__section-header dashboard__section-header--padded">
+							<h2 className="dashboard__section-title">
 								Organization active projects
-								</h2>
+							</h2>
 							<button type="button" className="dashboard__section-link" onClick={() => navigate("/projects")}>
 								All Projects{" "}
-								<span style={{ color: "#6b7280", marginLeft: '0.25rem'}}>›</span>
+								<span className="dashboard__link-chevron">›</span>
 							</button>
 						</div>
-						<div style={{ display: "flex", flexDirection: "column" }}>
+						<div className="dashboard__ceo-project-list">
 							{myProjects.slice(0, 3).map((p: any) => (
 								<Link
-									className="dashboard__project-item"
+									className="dashboard__project-item dashboard__project-item--row"
 									key={p.id}
 									to={`/projects/${p.id}`}
-									style={{
-										borderTop: "1px solid #f3f4f6",
-										padding: "1.25rem 1.5rem",
-										display: "flex",
-										alignItems: "center",
-										cursor: "pointer",
-									}}
 								>
-									<div style={{ flex: 1, paddingRight: '1.5rem'}}>
-										<div
-											style={{
-												display: "flex",
-												alignItems: "center",
-												gap: '0.75rem',
-												marginBottom: '0.5rem',
-											}}
-										>
+									<div className="dashboard__project-item-main">
+										<div className="dashboard__project-item-top">
 											<span className="dashboard__project-item-name">
 												{p.name}
 											</span>
@@ -1227,15 +1219,7 @@ const CEODashboard: React.FC = () => {
 														: "blue"
 											}
 										/>
-										<div
-											style={{
-												display: "flex",
-												justifyContent: "space-between",
-												fontSize: '0.75rem',
-												color: "#6b7280",
-												marginTop: '0.375rem',
-											}}
-										>
+										<div className="dashboard__project-item-sub">
 											<span>Due {formatDisplayDate(p.dueDate) || "N/A"}</span>
 											<span>
 												{p.totalHours > 0
@@ -1244,16 +1228,8 @@ const CEODashboard: React.FC = () => {
 											</span>
 										</div>
 									</div>
-									<div
-										style={{ width: 64, textAlign: "center", flexShrink: 0 }}
-									>
-										<div
-											style={{
-												fontSize: '1rem',
-												fontWeight: 700,
-												color: "#111827",
-											}}
-										>
+									<div className="dashboard__project-item-pct-wrap">
+										<div className="dashboard__project-item-pct-val">
 											{p.progress}%
 										</div>
 									</div>
@@ -1295,50 +1271,34 @@ const CEODashboard: React.FC = () => {
 									{employeeTable.slice(0, 5).map((row: any) => (
 										<tr key={row.user.id}>
 											<td>
-												<div
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: '0.625rem',
-													}}
-												>
+												<div className="dashboard__emp-cell">
 													<Avatar
 														initials={row.user.initials}
 														color={row.user.color}
 														size="sm"
 													/>
 													<div>
-														<div style={{ fontWeight: 600, fontSize: '0.8125rem'}}>
+														<div className="dashboard__emp-name">
 															{row.user.name}
 														</div>
-														<div style={{ fontSize: '0.6875rem', color: "#6b7280" }}>
+														<div className="dashboard__emp-role">
 															{row.user.designation}
 														</div>
 													</div>
 												</div>
 											</td>
 											<td>
-												<span
-													style={{
-														fontSize: '0.6875rem',
-														textTransform: "uppercase",
-														fontWeight: 700,
-														padding: "0.125rem 0.5rem",
-														borderRadius: 4,
-														background: "#f3f4f6",
-														color: "#374151",
-													}}
-												>
+												<span className="dashboard__role-pill">
 													{row.user.role || "Staff"}
 												</span>
 											</td>
-											<td style={{ fontWeight: 600 }}>{row.weekHours}h</td>
-											<td style={{ minWidth: 120 }}>
+											<td className="dashboard__td-hours">{row.weekHours}h</td>
+											<td className="dashboard__td-util--sm">
 												<UtilBar value={row.utilization} />
 											</td>
 											<td>
-															<Badge variant={statusVariant(row.timesheetStatus)}>
-																{row.timesheetStatus === "Pending" || row.timesheetStatus === "Submitted" ? "Awaiting approval" : row.timesheetStatus === "Not Started" ? "Not started" : row.timesheetStatus}
+												<Badge variant={statusVariant(row.timesheetStatus)}>
+													{row.timesheetStatus === "Pending" || row.timesheetStatus === "Submitted" ? "Awaiting approval" : row.timesheetStatus === "Not Started" ? "Not started" : row.timesheetStatus}
 												</Badge>
 											</td>
 										</tr>
@@ -1354,69 +1314,32 @@ const CEODashboard: React.FC = () => {
 					{/* Timesheets Summary Breakdown */}
 					<div className="dashboard__section">
 						<div className="dashboard__section-header">
-											<h2 className="dashboard__section-title">
+							<h2 className="dashboard__section-title">
 								Company Timesheet Summary
-											</h2>
+							</h2>
 						</div>
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr",
-								gap: '0.75rem',
-							}}
-						>
-							<div
-								style={{
-									padding: '0.875rem',
-									borderRadius: 8,
-									border: "1px solid #e5e7eb",
-									textAlign: "center",
-									background: "#f8fafc",
-								}}
-							>
-								<div
-									style={{ fontSize: '1.375rem', fontWeight: 700, color: "#1e293b" }}
-								>
+						<div className="dashboard__ceo-summary-grid">
+							<div className="dashboard__ceo-summary-box dashboard__ceo-summary-box--slate">
+								<div className="dashboard__ceo-summary-val dashboard__ceo-summary-val--slate">
 									{currentWeekApprovals.length}
 								</div>
-								<div style={{ fontSize: '0.75rem', color: "#475569", marginTop: '0.25rem'}}>
+								<div className="dashboard__ceo-summary-lbl dashboard__ceo-summary-lbl--slate">
 									Current week submissions
 								</div>
 							</div>
-							<div
-								style={{
-									padding: '0.875rem',
-									borderRadius: 8,
-									border: "1px solid #e5e7eb",
-									textAlign: "center",
-									background: "#fefce8",
-								}}
-							>
-								<div
-									style={{ fontSize: '1.375rem', fontWeight: 700, color: "#ca8a04" }}
-								>
+							<div className="dashboard__ceo-summary-box dashboard__ceo-summary-box--yellow">
+								<div className="dashboard__ceo-summary-val dashboard__ceo-summary-val--yellow">
 									{pendingTimesheets}
 								</div>
-								<div style={{ fontSize: '0.75rem', color: "#854d0e", marginTop: '0.25rem' }}>
+								<div className="dashboard__ceo-summary-lbl dashboard__ceo-summary-lbl--yellow">
 									Awaiting approval
 								</div>
 							</div>
-							<div
-								style={{
-									padding: '0.875rem',
-									borderRadius: 8,
-									border: "1px solid #e5e7eb",
-									textAlign: "center",
-									background: "#f0fdf4",
-									gridColumn: "span 2",
-								}}
-							>
-								<div
-									style={{ fontSize: '1.375rem', fontWeight: 700, color: "#16a34a" }}
-								>
+							<div className="dashboard__ceo-summary-box dashboard__ceo-summary-box--green">
+								<div className="dashboard__ceo-summary-val dashboard__ceo-summary-val--green">
 									{approvedTimesheets}
 								</div>
-								<div style={{ fontSize: '0.6875rem', color: "#15803d", marginTop: '0.25rem'}}>
+								<div className="dashboard__ceo-summary-lbl dashboard__ceo-summary-lbl--green">
 									Approved Timesheets
 								</div>
 							</div>
@@ -1434,10 +1357,22 @@ const CEODashboard: React.FC = () => {
 const HRDashboard: React.FC = () => {
 	const { currentUser } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading } = useManagerDashboard();
+	const { data, isLoading, isError, isFetching, refetch } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 
-	if (isLoading || !data) { return <DashboardSkeleton />; }
+	if (isLoading) { return <DashboardSkeleton />; }
+	if (isError || !data) {
+		return (
+			<div className="page-inner dashboard">
+				<EmptyState
+					icon="error"
+					title="HR Dashboard unavailable"
+					subtitle="We couldn’t load workforce utilization data. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
+				/>
+			</div>
+		);
+	}
 
 	const deptUtilization = data.deptUtilization || [];
 	const employeeTable = data.employeeTable || [];
@@ -1605,33 +1540,27 @@ const HRDashboard: React.FC = () => {
 									{employeeTable.slice(0, 5).map((row: any) => (
 										<tr key={row.user.id}>
 											<td>
-												<div
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: '0.625rem',
-													}}
-												>
+												<div className="dashboard__emp-cell">
 													<Avatar
 														initials={row.user.initials}
 														color={row.user.color}
 														size="sm"
 													/>
 													<div>
-														<div style={{ fontWeight: 600, fontSize: '0.8125rem'}}>
+														<div className="dashboard__emp-name">
 															{row.user.name}
 														</div>
-														<div style={{ fontSize: '0.6875rem', color: "#6b7280" }}>
+														<div className="dashboard__emp-role">
 															{row.user.designation}
 														</div>
 													</div>
 												</div>
 											</td>
-											<td style={{ fontSize: '0.8125rem', color: "#374151" }}>
+											<td className="dashboard__td-dept">
 												{row.user.department || "Engineering"}
 											</td>
-											<td style={{ fontWeight: 600 }}>{row.weekHours}h</td>
-											<td style={{ minWidth: 120 }}>
+											<td className="dashboard__td-hours">{row.weekHours}h</td>
+											<td className="dashboard__td-util--sm">
 												<UtilBar value={row.utilization} />
 											</td>
 											<td>
@@ -1652,27 +1581,19 @@ const HRDashboard: React.FC = () => {
 					{/* Department Utilization Breakdown */}
 					<div className="dashboard__section">
 						<div className="dashboard__section-header">
-										<h2 className="dashboard__section-title">
+							<h2 className="dashboard__section-title">
 								Department Resource Allocation
-										</h2>
+							</h2>
 							<button type="button" className="dashboard__section-link" onClick={() => navigate("/reports")}>
 								View reports →
 							</button>
 						</div>
-						<div style={{ display: "flex", flexDirection: "column", gap: '0.875rem'}}>
+						<div className="dashboard__hr-dept-list">
 							{deptUtilization.slice(0, 5).map((d: any) => (
 								<div key={d.dept}>
-									<div
-										style={{
-											display: "flex",
-											justifyContent: "space-between",
-											fontSize: '0.8125rem',
-											fontWeight: 600,
-											marginBottom: '0.25rem',
-										}}
-									>
+									<div className="dashboard__hr-dept-row">
 										<span>{d.dept}</span>
-										<span style={{ color: "#4b5563" }}>{d.utilization}%</span>
+										<span className="dashboard__hr-dept-pct">{d.utilization}%</span>
 									</div>
 									<ProgressBar
 										value={d.utilization}
@@ -1694,15 +1615,20 @@ const HRDashboard: React.FC = () => {
 const AdminDashboard: React.FC = () => {
 	const { currentUser } = useAppStore();
 	const navigate = useNavigate();
-	const { data, isLoading } = useManagerDashboard();
+	const { data, isLoading, isError, isFetching, refetch } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
 
-	if (isLoading || !data) {
+	if (isLoading) {
+		return <DashboardSkeleton />;
+	}
+	if (isError || !data) {
 		return (
 			<div className="page-inner dashboard">
-				<LoadingSpinner
-					message="Loading System Admin Control Center…"
-					fullPage
+				<EmptyState
+					icon="error"
+					title="System Admin Dashboard unavailable"
+					subtitle="We couldn’t load system administration metrics. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
 				/>
 			</div>
 		);
@@ -1711,36 +1637,7 @@ const AdminDashboard: React.FC = () => {
 	const employeeTable = data.employeeTable || [];
 	const totalTimesheets = approvals.length;
 
-	const systemAuditLogs = [
-		{
-			id: 1,
-			time: "15:06 PM",
-			event: "MySQL Schema & Table Column Verification",
-			user: "System",
-			status: "Completed",
-		},
-		{
-			id: 2,
-			time: "14:44 PM",
-			event: "Admin Session Authenticated via JWT Token",
-			user: currentUser.name,
-			status: "Success",
-		},
-		{
-			id: 3,
-			time: "12:30 PM",
-			event: "HR Timesheet Reminder Notification Dispatched",
-			user: "Reshma (HR)",
-			status: "Delivered",
-		},
-		{
-			id: 4,
-			time: "09:15 AM",
-			event: "Automated Microservice Health Check Passed",
-			user: "System",
-			status: "Optimal",
-		},
-	];
+	const systemAuditLogs = getSystemAuditLogs(currentUser.name);
 
 	return (
 		<div className="page-inner dashboard">
@@ -1761,9 +1658,8 @@ const AdminDashboard: React.FC = () => {
 				<div className="dashboard__header-actions">
 					<button
 						type="button"
-						className="btn btn--ghost"
+						className="btn btn--ghost dashboard__admin-btn"
 						onClick={() => navigate("/employees")}
-						style={{ display: "flex", alignItems: "center", gap: '0.375rem'}}
 					>
 						<svg
 							width="14"
@@ -1780,9 +1676,8 @@ const AdminDashboard: React.FC = () => {
 					</button>
 					<button
 						type="button"
-						className="btn btn--primary"
+						className="btn btn--primary dashboard__admin-btn"
 						onClick={() => navigate("/projects")}
-						style={{ display: "flex", alignItems: "center", gap: '0.375rem'}}
 					>
 						<svg
 							width="14"
@@ -1895,10 +1790,7 @@ const AdminDashboard: React.FC = () => {
 								{s.icon}
 							</span>
 						</div>
-						<div
-							className="dashboard__stat-card-value"
-							style={{ marginTop: '0.375rem'}}
-						>
+						<div className="dashboard__stat-card-value dashboard__stat-card-value--spaced">
 							{s.value}
 						</div>
 						<div
@@ -1920,13 +1812,13 @@ const AdminDashboard: React.FC = () => {
 								<h2 className="dashboard__section-title">
 									User Accounts & Access Directory
 								</h2>
-								<div style={{ fontSize: '0.75rem', color: "#64748b", marginTop: '0.125rem'}}>
+								<div className="dashboard__section-subtitle">
 									System user roles, designations, and account status
 								</div>
 							</div>
 							<button type="button" className="dashboard__section-link" onClick={() => navigate("/employees")}>
 								Manage Users{" "}
-								<span style={{ color: "#6b7280", marginLeft: '0.25rem'}}>›</span>
+								<span className="dashboard__link-chevron">›</span>
 							</button>
 						</div>
 						<div className="table-responsive">
@@ -1970,29 +1862,17 @@ const AdminDashboard: React.FC = () => {
 											return (
 												<tr key={row.user.id}>
 													<td>
-														<div
-															style={{
-																display: "flex",
-																alignItems: "center",
-																gap: '0.625rem',
-															}}
-														>
+														<div className="dashboard__emp-cell">
 															<Avatar
 																initials={row.user.initials}
 																color={row.user.color}
 																size="sm"
 															/>
 															<div>
-																<div
-																	style={{
-																		fontWeight: 600,
-																		fontSize: '0.8125rem',
-																		color: "#0f172a",
-																	}}
-																>
+																<div className="dashboard__emp-name dashboard__emp-name--dark">
 																	{row.user.name}
 																</div>
-																<div style={{ fontSize: '0.6875rem', color: "#64748b" }}>
+																<div className="dashboard__emp-role dashboard__emp-role--slate">
 																	{row.user.designation}
 																</div>
 															</div>
@@ -2000,42 +1880,21 @@ const AdminDashboard: React.FC = () => {
 													</td>
 													<td>
 														<span
+															className="dashboard__security-role-badge"
 															style={{
-																fontSize: '0.625rem',
-																fontWeight: 700,
-																padding: "0.1875rem 0.5rem",
-																borderRadius: 4,
-																textTransform: "uppercase",
 																background: roleBadgeStyle.bg,
 																color: roleBadgeStyle.color,
-																letterSpacing: "0.025rem",
 															}}
 														>
 															{roleName}
 														</span>
 													</td>
-													<td style={{ color: "#334155", fontWeight: 500 }}>
+													<td className="dashboard__td-dept-slate">
 														{row.user.department || "General"}
 													</td>
 													<td>
-														<span
-															style={{
-																display: "inline-flex",
-																alignItems: "center",
-																gap: '0.375rem',
-																fontSize: '0.75rem',
-																fontWeight: 600,
-																color: "#059669",
-															}}
-														>
-															<span
-																style={{
-																	width: 6,
-																	height: 6,
-																	borderRadius: "50%",
-																	background: "#10b981",
-																}}
-															/>
+														<span className="dashboard__active-status">
+															<span className="dashboard__active-dot" />
 															Active
 														</span>
 													</td>
@@ -2055,50 +1914,15 @@ const AdminDashboard: React.FC = () => {
 							<h2 className="dashboard__section-title">
 								System Audit Log & Security Events
 							</h2>
-							<span
-								className="dashboard__section-link"
-								style={{ cursor: "default", color: "#64748b" }}
-							>
+							<span className="dashboard__section-link dashboard__section-link--static">
 								Real-time Trail
 							</span>
 						</div>
-						<div style={{ display: "flex", flexDirection: "column", gap: '0.75rem'}}>
+						<div className="dashboard__audit-list">
 							{systemAuditLogs.map((log) => (
-								<div
-									key={log.id}
-									style={{
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "space-between",
-										gap: '0.75rem',
-										padding: "0.75rem 1rem",
-										borderRadius: 8,
-										background: "#f8fafc",
-										border: "1px solid #e2e8f0",
-									}}
-								>
-									<div
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: '0.75rem',
-											flex: 1,
-											minWidth: 0,
-										}}
-									>
-										<div
-											style={{
-												width: 32,
-												height: 32,
-												borderRadius: "50%",
-												background: "#e0e7ff",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												color: "#4338ca",
-												flexShrink: 0,
-											}}
-										>
+								<div key={log.id} className="dashboard__audit-item">
+									<div className="dashboard__audit-left">
+										<div className="dashboard__audit-icon">
 											<svg
 												width="15"
 												height="15"
@@ -2111,40 +1935,20 @@ const AdminDashboard: React.FC = () => {
 												<path d="M8 4.5V8l2.5 1.5" />
 											</svg>
 										</div>
-										<div style={{ flex: 1, minWidth: 0 }}>
-											<div
-												style={{
-													fontSize: '0.8125rem',
-													fontWeight: 600,
-													color: "#1e293b",
-													wordBreak: "break-word",
-												}}
-											>
+										<div className="dashboard__audit-body">
+											<div className="dashboard__audit-event">
 												{log.event}
 											</div>
-											<div
-												style={{ fontSize: '0.6875rem', color: "#64748b", marginTop: '0.125rem'}}
-											>
+											<div className="dashboard__audit-user">
 												Initiated by {log.user}
 											</div>
 										</div>
 									</div>
-									<div style={{ textAlign: "right", flexShrink: 0 }}>
-										<span
-											style={{
-												fontSize: '0.625rem',
-												fontWeight: 700,
-												color: "#059669",
-												background: "#ecfdf5",
-												padding: "0.125rem 0.5rem",
-												borderRadius: 4,
-											}}
-										>
+									<div className="dashboard__audit-right">
+										<span className="dashboard__audit-status">
 											{log.status}
 										</span>
-										<div
-											style={{ fontSize: '0.6875rem', color: "#64748b", marginTop: '0.1875rem'}}
-										>
+										<div className="dashboard__audit-time">
 											{log.time}
 										</div>
 									</div>
@@ -2163,7 +1967,7 @@ const AdminDashboard: React.FC = () => {
 								Platform Infrastructure
 							</h2>
 						</div>
-						<div style={{ display: "flex", flexDirection: "column", gap: '0.875rem'}}>
+						<div className="dashboard__infra-list">
 							{[
 								{
 									label: "API Microservice",
@@ -2187,51 +1991,25 @@ const AdminDashboard: React.FC = () => {
 									label: "Total Submitted Logs",
 									status: "Tracked",
 									val: `${totalTimesheets} Submissions`,
-									color: "#6366f1",
+									color: "#2563eb",
 								},
 							].map((item, idx) => (
 								<div
 									key={idx}
-									style={{
-										display: "flex",
-										justifyContent: "space-between",
-										alignItems: "center",
-										paddingBottom: '0.625rem',
-										borderBottom: idx < 3 ? "1px solid #f1f5f9" : "none",
-									}}
+									className={`dashboard__infra-item${idx < 3 ? " dashboard__infra-item--bordered" : ""}`}
 								>
 									<div>
-										<div
-											style={{
-												fontSize: '0.8125rem',
-												fontWeight: 600,
-												color: "#1e293b",
-											}}
-										>
+										<div className="dashboard__infra-label">
 											{item.label}
 										</div>
 										<div
-											style={{
-												fontSize: '0.6875rem',
-												color: item.color,
-												fontWeight: 600,
-												marginTop: '0.125rem',
-											}}
+											className="dashboard__infra-status"
+											style={{ color: item.color }}
 										>
 											• {item.status}
 										</div>
 									</div>
-									<span
-										style={{
-											fontSize: '0.75rem',
-											fontWeight: 600,
-											color: "#475569",
-											background: "#f8fafc",
-											padding: "0.25rem 0.625rem",
-											borderRadius: 6,
-											border: "1px solid #e2e8f0",
-										}}
-									>
+									<span className="dashboard__infra-val">
 										{item.val}
 									</span>
 								</div>

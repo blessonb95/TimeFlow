@@ -56,7 +56,7 @@ export const LineChart: React.FC<{
   const iW = W - P.l - P.r, iH = H - P.t - P.b;
 
   if (!data?.length) return (
-    <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CC.muted, fontSize: '0.8125rem'}}>
+    <div className="tf-chart__empty" style={{ height }}>
       {emptyMsg}
     </div>
   );
@@ -76,8 +76,8 @@ export const LineChart: React.FC<{
   const areaPath = `M${pts[0].x} ${P.t + iH} ${pts.map(p => `L${p.x} ${p.y}`).join(' ')} L${pts[pts.length-1].x} ${P.t + iH}Z`;
 
   return (
-    <div style={{ position: 'relative', width: '100%' }}>
-      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block', overflow: 'visible' }}>
+    <div className="tf-chart">
+      <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="tf-chart__svg tf-chart__svg--visible">
         <defs>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor={color} stopOpacity="0.2" />
@@ -118,7 +118,7 @@ export const LineChart: React.FC<{
             <g key={i}
               onMouseEnter={() => setHov(i)}
               onMouseLeave={() => setHov(null)}
-              style={{ cursor: 'pointer' }}>
+              className="tf-chart__point">
               {/* Hover zone */}
               <rect x={p.x - 24} y={P.t} width={48} height={iH} fill="transparent" />
               {/* Guide line */}
@@ -127,7 +127,7 @@ export const LineChart: React.FC<{
               {/* Dot */}
               <circle cx={p.x} cy={p.y} r={isHov ? 5 : 3.5}
                 fill="#fff" stroke={color} strokeWidth="2.5"
-                style={{ transition: 'r 0.12s' }} />
+                className="tf-chart__dot" />
               {/* X label */}
               <text x={p.x} y={H - 12} textAnchor="middle"
                 fontSize="12" fill={CC.label} fontFamily="inherit">
@@ -177,7 +177,7 @@ export const BarChart: React.FC<{
   const iH = H - P.t - P.b;
 
   if (!data?.length) return (
-    <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CC.muted, fontSize: '0.8125rem'}}>
+    <div className="tf-chart__empty" style={{ height }}>
       {emptyMsg}
     </div>
   );
@@ -190,7 +190,7 @@ export const BarChart: React.FC<{
   const barW = Math.min(56, slotW * 0.55);
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="tf-chart__svg">
       <defs>
         {data.map((d, i) => (
           <linearGradient key={i} id={`bG${i}`} x1="0" y1="0" x2="0" y2="1">
@@ -222,7 +222,7 @@ export const BarChart: React.FC<{
           <g key={i}
             onMouseEnter={() => setHov(i)}
             onMouseLeave={() => setHov(null)}
-            style={{ cursor: 'pointer' }}>
+            className="tf-chart__point">
             {/* Track */}
             <rect x={x} y={P.t} width={barW} height={iH} rx="4" fill="#f8fafc" />
             {/* Bar */}
@@ -276,7 +276,7 @@ export const GroupedBarChart: React.FC<{
   const iH = H - P.t - P.b;
 
   if (!data?.length) return (
-    <div style={{ height, display: 'flex', alignItems: 'center', justifyContent: 'center', color: CC.muted, fontSize: '0.8125rem'}}>
+    <div className="tf-chart__empty" style={{ height }}>
       {emptyMsg}
     </div>
   );
@@ -293,7 +293,7 @@ export const GroupedBarChart: React.FC<{
   const legY = H - 10;
 
   return (
-    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" style={{ display: 'block' }}>
+    <svg width="100%" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="xMidYMid meet" className="tf-chart__svg">
       <defs>
         <linearGradient id="gbA" x1="0" y1="0" x2="0" y2="1">
           <stop offset="0%" stopColor={colorA} stopOpacity="1" />
@@ -330,7 +330,7 @@ export const GroupedBarChart: React.FC<{
           <g key={i}
             onMouseEnter={() => setHov(i)}
             onMouseLeave={() => setHov(null)}
-            style={{ cursor: 'pointer' }}>
+            className="tf-chart__point">
             {/* Track A */}
             <rect x={ax} y={P.t} width={barW} height={iH} rx="3" fill="#f8fafc" />
             <rect x={ax} y={P.t + iH - aH} width={barW} height={aH} rx="3" fill="url(#gbA)" opacity={isHov ? 1 : 0.85} />
@@ -382,38 +382,33 @@ export const UtilBars: React.FC<{ data: UtilRow[]; emptyMsg?: string }> = ({
   data, emptyMsg = 'No utilization data.',
 }) => {
   if (!data?.length) return (
-    <div style={{ padding: '1.5rem', textAlign: 'center', color: CC.muted, fontSize: '0.8125rem'}}>{emptyMsg}</div>
+    <div className="util-bars__empty">{emptyMsg}</div>
   );
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.875rem', padding: '0.25rem 1.5rem 1rem'}}>
+    <div className="util-bars">
       {data.map((row, i) => {
         const c = utilColor(row.pct);
         return (
-          <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '0.875rem'}}>
+          <div key={i} className="util-bars__row">
             {row.initials && (
-              <div style={{
-                width: 36, height: 36, borderRadius: '50%',
-                background: row.color || CC.primary,
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                color: '#fff', fontSize: '0.75rem', fontWeight: 700, flexShrink: 0,
-              }}>
+              <div className="util-bars__avatar" style={{ background: row.color || CC.primary }}>
                 {row.initials}
               </div>
             )}
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.375rem'}}>
-                <span style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#1e293b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div className="util-bars__info">
+              <div className="util-bars__header">
+                <span className="util-bars__name">
                   {row.name}
                 </span>
                 {row.dept && (
-                  <span style={{ fontSize: '0.75rem', color: '#64748b', flexShrink: 0, marginLeft: '0.5rem'}}>{row.dept}</span>
+                  <span className="util-bars__dept">{row.dept}</span>
                 )}
               </div>
-              <div style={{ height: 9, background: '#f1f5f9', borderRadius: 999, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${Math.min(100, row.pct)}%`, background: c, borderRadius: 999, transition: 'width 0.4s ease' }} />
+              <div className="util-bars__track">
+                <div className="util-bars__fill" style={{ width: `${Math.min(100, row.pct)}%`, background: c }} />
               </div>
             </div>
-            <span style={{ fontSize: '0.8125rem', fontWeight: 700, color: c, flexShrink: 0, minWidth: 40, textAlign: 'right' }}>
+            <span className="util-bars__pct" style={{ color: c }}>
               {row.pct}%
             </span>
           </div>
@@ -438,7 +433,7 @@ export const WeekBars: React.FC<{ data: DayHour[]; targetHours?: number }> = ({
     <div
       role="img"
       aria-label={`Hours logged by day: ${data.map((d) => `${d.day} ${d.hours} hours`).join(', ')}`}
-      style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-end', height: 100 }}
+      className="week-bars"
     >
       {data.map((d, i) => {
         const pct = (d.hours / maxH) * 100;
@@ -450,38 +445,27 @@ export const WeekBars: React.FC<{ data: DayHour[]; targetHours?: number }> = ({
             : d.hours > 0 ? '#818cf8' : '#e2e8f0';
         return (
           <div key={i}
-            style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.3125rem', position: 'relative' }}
+            className="week-bars__col"
             onMouseEnter={() => setHov(i)}
             onMouseLeave={() => setHov(null)}>
             {/* Tooltip */}
             {hov === i && d.hours > 0 && (
-              <div style={{
-                position: 'absolute', bottom: 'calc(100% + 6px)', left: '50%',
-                transform: 'translateX(-50%)',
-                background: CC.tooltipBg, color: '#fff',
-                fontSize: '0.75rem', fontWeight: 700,
-                padding: '0.3125rem 0.625rem', borderRadius: 7,
-                whiteSpace: 'nowrap', zIndex: 10,
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              }}>
+              <div className="week-bars__tooltip">
                 {d.hours}h
               </div>
             )}
-            <span aria-hidden="true" style={{ fontSize: '0.75rem', lineHeight: 1.2, color: '#526176', fontVariantNumeric: 'tabular-nums' }}>
+            <span aria-hidden="true" className="week-bars__val">
               {d.hours > 0 ? `${d.hours}h` : '—'}
             </span>
             {/* Bar track */}
-            <div style={{
-              flex: 1, width: '100%', background: '#f1f5f9', borderRadius: 7,
-              position: 'relative', overflow: 'hidden', minHeight: 48, cursor: 'pointer',
-            }}>
+            <div className="week-bars__track">
               {/* Target line */}
-              <div style={{ position: 'absolute', left: 0, right: 0, bottom: `${tgtPct}%`, height: 2, background: '#cbd5e1', zIndex: 1 }} />
+              <div className="week-bars__target" style={{ bottom: `${tgtPct}%` }} />
               {/* Fill */}
-              <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: `${pct}%`, background: col, borderRadius: 7, transition: 'height 0.35s ease' }} />
+              <div className="week-bars__fill" style={{ height: `${pct}%`, background: col }} />
             </div>
             {/* Day label */}
-            <span aria-hidden="true" style={{ fontSize: '0.75rem', color: d.isToday ? CC.primary : '#526176', fontWeight: d.isToday ? 700 : 500 }}>
+            <span aria-hidden="true" className={`week-bars__day ${d.isToday ? 'week-bars__day--today' : ''}`}>
               {d.day}
             </span>
           </div>

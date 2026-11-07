@@ -1,12 +1,14 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAppStore } from "../store/useAppStore";
+import { useLogout } from "../hooks/useAuth";
+import { useSettings, useUpdateSettings } from "../hooks/useSettings";
 import { Avatar } from "../components/ui/Avatar";
 
 export const Settings: React.FC = () => {
-	const { role, currentUser, updateCurrentUser } =
-		useAppStore();
-	const navigate = useNavigate();
+	const { role, currentUser, updateCurrentUser } = useAppStore();
+	const logout = useLogout();
+	const { data: serverSettings } = useSettings();
+	const updateSettingsMutation = useUpdateSettings();
 
 	const [showHints, setShowHints] = useState(false);
 	const [name, setName] = useState(currentUser.name);
@@ -16,18 +18,46 @@ export const Settings: React.FC = () => {
 		type: "success" | "error";
 		text: string;
 	} | null>(null);
+	const [prefMessage, setPrefMessage] = useState<string | null>(null);
+	const [notifMessage, setNotifMessage] = useState<string | null>(null);
 
 	useEffect(() => {
 		setName(currentUser.name);
 		setEmail(currentUser.email);
 	}, [currentUser]);
 
-	const [dailyTarget, setDailyTarget] = useState("8");
-	const [timezone, setTimezone] = useState("Asia/Kolkata");
-	const [weekStart, setWeekStart] = useState("Monday");
-	const [notifSubmission, setNotifSubmission] = useState(true);
-	const [notifApproval, setNotifApproval] = useState(true);
-	const [notifReminder, setNotifReminder] = useState(false);
+	const [dailyTarget, setDailyTarget] = useState(
+		() => localStorage.getItem("pref_daily_target") || "8",
+	);
+	const [timezone, setTimezone] = useState(
+		() => localStorage.getItem("pref_timezone") || "Asia/Kolkata",
+	);
+	const [weekStart, setWeekStart] = useState(
+		() => localStorage.getItem("pref_week_start") || "Monday",
+	);
+	const [notifSubmission, setNotifSubmission] = useState(
+		() => localStorage.getItem("notif_submission") !== "false",
+	);
+	const [notifApproval, setNotifApproval] = useState(
+		() => localStorage.getItem("notif_approval") !== "false",
+	);
+	const [notifReminder, setNotifReminder] = useState(
+		() => localStorage.getItem("notif_reminder") === "true",
+	);
+
+	useEffect(() => {
+		if (serverSettings) {
+			if (serverSettings.daily_hours_target) {
+				setDailyTarget(String(serverSettings.daily_hours_target));
+			}
+			if (serverSettings.timezone) {
+				setTimezone(String(serverSettings.timezone));
+			}
+			if (serverSettings.week_start_day) {
+				setWeekStart(String(serverSettings.week_start_day));
+			}
+		}
+	}, [serverSettings]);
 
 	const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const file = e.target.files?.[0];
@@ -72,12 +102,56 @@ export const Settings: React.FC = () => {
 	};
 
 	const handleSaveProfile = () => {
-		updateCurrentUser({ name, email });
+		const trimmedName = name.trim();
+		const trimmedEmail = email.trim();
+		if (!trimmedName || !trimmedEmail) {
+			setUploadMessage({
+				type: "error",
+				text: "Full name and email are required.",
+			});
+			return;
+		}
+		const parts = trimmedName.split(/\s+/);
+		const initials =
+			parts.length > 1
+				? `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase()
+				: trimmedName.slice(0, 2).toUpperCase();
+		updateCurrentUser({ name: trimmedName, email: trimmedEmail, initials });
 		setUploadMessage({
 			type: "success",
 			text: "Profile details saved successfully!",
 		});
 		setTimeout(() => setUploadMessage(null), 3000);
+	};
+
+	const handleSavePreferences = () => {
+		localStorage.setItem("pref_daily_target", dailyTarget);
+		localStorage.setItem("pref_timezone", timezone);
+		localStorage.setItem("pref_week_start", weekStart);
+		updateSettingsMutation.mutate(
+			{
+				daily_hours_target: Number(dailyTarget) || 8,
+				timezone,
+				week_start_day: weekStart,
+			},
+			{
+				onSettled: () => {
+					setPrefMessage("Work preferences saved successfully!");
+					setTimeout(() => setPrefMessage(null), 3000);
+				},
+			},
+		);
+	};
+
+	const handleToggleNotification = (
+		key: string,
+		setter: (v: boolean) => void,
+		value: boolean,
+	) => {
+		setter(value);
+		localStorage.setItem(key, String(value));
+		setNotifMessage("Notification preference updated.");
+		setTimeout(() => setNotifMessage(null), 2500);
 	};
 
 	const Toggle: React.FC<{
@@ -116,9 +190,7 @@ export const Settings: React.FC = () => {
 					</div>
 
 					<div className="settings__avatar-row">
-						<div
-							className="settings__avatar-wrapper"
-						>
+						<div className="settings__avatar-wrapper">
 							<Avatar
 								src={currentUser.avatar}
 								initials={currentUser.initials}
@@ -221,6 +293,8 @@ export const Settings: React.FC = () => {
 									className="form-group__input"
 									id="settings-daily-target"
 									type="number"
+									min="1"
+									max="24"
 									value={dailyTarget}
 									onChange={(e) => setDailyTarget(e.target.value)}
 								/>
@@ -254,9 +328,23 @@ export const Settings: React.FC = () => {
 								</select>
 							</div>
 						</div>
-						<button type="button" className="btn btn--primary btn--sm">
-							Save Preferences
+						<button
+							type="button"
+							className="btn btn--primary btn--sm"
+							onClick={handleSavePreferences}
+							disabled={updateSettingsMutation.isPending}
+						>
+							{updateSettingsMutation.isPending ? "Saving…" : "Save Preferences"}
 						</button>
+						{prefMessage && (
+							<div
+								className="settings__upload-msg settings__upload-msg--success"
+								role="status"
+								aria-live="polite"
+							>
+								{prefMessage}
+							</div>
+						)}
 					</div>
 				)}
 
@@ -271,19 +359,22 @@ export const Settings: React.FC = () => {
 							label: "Timesheet Submissions",
 							desc: "Get notified when team members submit timesheets",
 							checked: notifSubmission,
-							onChange: setNotifSubmission,
+							onChange: (v: boolean) =>
+								handleToggleNotification("notif_submission", setNotifSubmission, v),
 						},
 						{
 							label: "Approval Updates",
 							desc: "Receive updates when your timesheet is approved or rejected",
 							checked: notifApproval,
-							onChange: setNotifApproval,
+							onChange: (v: boolean) =>
+								handleToggleNotification("notif_approval", setNotifApproval, v),
 						},
 						{
 							label: "Daily Log Reminders",
 							desc: "Remind me to log time at the end of each day",
 							checked: notifReminder,
-							onChange: setNotifReminder,
+							onChange: (v: boolean) =>
+								handleToggleNotification("notif_reminder", setNotifReminder, v),
 						},
 					].map((n) => (
 						<div className="settings__toggle-row" key={n.label}>
@@ -294,6 +385,15 @@ export const Settings: React.FC = () => {
 							<Toggle label={n.label} checked={n.checked} onChange={n.onChange} />
 						</div>
 					))}
+					{notifMessage && (
+						<div
+							className="settings__upload-msg settings__upload-msg--success"
+							role="status"
+							aria-live="polite"
+						>
+							{notifMessage}
+						</div>
+					)}
 				</div>
 
 				<div className="settings__section">
@@ -304,7 +404,7 @@ export const Settings: React.FC = () => {
 					<button
 						type="button"
 						className="btn btn--ghost settings__signout-btn"
-						onClick={() => navigate("/login")}
+						onClick={logout}
 					>
 						<svg
 							width="15"
@@ -321,47 +421,46 @@ export const Settings: React.FC = () => {
 					</button>
 				</div>
 
-	
-		{/* About footer */}
-		<div className="settings__about-footer">
-			<div className="settings__about-footer-top">
-				<span className="settings__about-footer-version">TimeFlow · v1.0.0</span>
-				<button 
-					type="button"
-					className={`settings__about-toggle${showHints ? ' settings__about-toggle--active' : ''}`}
-					onClick={() => setShowHints(v => !v)}
-					title={showHints ? 'Hide secret hints' : 'Show secret hints'}
-					aria-label="Toggle secret hints"
-				>
-					✦
-				</button>
-			</div>
-			{showHints && (
-				<div className="settings__about-eggs">
-					<div className="settings__about-eggs-banner">
-						<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
-							<circle cx="8" cy="8" r="6.5" />
-							<path d="M8 7v4M8 5.5v.5" strokeLinecap="round" />
-						</svg>
-						<span>Type the missing letters anywhere outside text fields to trigger</span>
+				{/* About footer */}
+				<div className="settings__about-footer">
+					<div className="settings__about-footer-top">
+						<span className="settings__about-footer-version">TimeFlow · v1.0.0</span>
+						<button
+							type="button"
+							className={`settings__about-toggle${showHints ? " settings__about-toggle--active" : ""}`}
+							onClick={() => setShowHints((v) => !v)}
+							title={showHints ? "Hide secret hints" : "Show secret hints"}
+							aria-label="Toggle secret hints"
+						>
+							✦
+						</button>
 					</div>
-					{([
-						{ emoji: '☕', word: 'coffee',       clue: "The developer's fuel" },
-						{ emoji: '🔐', word: 'sudo approve', clue: 'Elevated permissions — denied' },
-						{ emoji: '🕹️', word: 'konami',       clue: 'Up, up, down, down...' },
-					] as const).map(({ emoji, word, clue }) => (
-						<div key={word} className="settings__about-egg">
-							<span className="settings__about-egg-emoji">{emoji}</span>
-							<code className="settings__about-egg-word">
-								{word.split(' ').map(p => p[0] + '·'.repeat(p.length - 1)).join(' ')}
-							</code>
-							<span className="settings__about-egg-clue">{clue}</span>
+					{showHints && (
+						<div className="settings__about-eggs">
+							<div className="settings__about-eggs-banner">
+								<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
+									<circle cx="8" cy="8" r="6.5" />
+									<path d="M8 7v4M8 5.5v.5" strokeLinecap="round" />
+								</svg>
+								<span>Type the missing letters anywhere outside text fields to trigger</span>
+							</div>
+							{([
+								{ emoji: "☕", word: "coffee", clue: "The developer's fuel" },
+								{ emoji: "🔐", word: "sudo approve", clue: "Elevated permissions — denied" },
+								{ emoji: "🕹️", word: "konami", clue: "Up, up, down, down..." },
+							] as const).map(({ emoji, word, clue }) => (
+								<div key={word} className="settings__about-egg">
+									<span className="settings__about-egg-emoji">{emoji}</span>
+									<code className="settings__about-egg-word">
+										{word.split(" ").map((p) => p[0] + "·".repeat(p.length - 1)).join(" ")}
+									</code>
+									<span className="settings__about-egg-clue">{clue}</span>
+								</div>
+							))}
 						</div>
-					))}
+					)}
 				</div>
-			)}
+			</div>
 		</div>
-	</div>
-	</div>
 	);
 };

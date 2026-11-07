@@ -23,13 +23,13 @@ export const ProgressBar: React.FC<ProgressBarProps> = ({ value, max = 100, colo
 interface UtilBarProps { value: number; }
 export const UtilBar: React.FC<UtilBarProps> = ({ value }) => {
   const safeValue = Math.max(0, Math.min(100, Number(value) || 0));
-  const color = safeValue >= 85 ? '#166534' : safeValue >= 70 ? '#9a3412' : '#b91c1c';
+  const tier = safeValue >= 85 ? 'high' : safeValue >= 70 ? 'med' : 'low';
   return (
     <div className="util-bar" role="img" aria-label={`Utilization ${safeValue} percent. Target range is 85 to 100 percent.`} title="Weekly target: 85–100% of a 40-hour week (34–40 hours).">
       <div className="util-bar__track">
-        <div className="util-bar__fill" style={{ width: `${safeValue}%`, background: color }} />
+        <div className={`util-bar__fill util-bar__fill--${tier}`} style={{ width: `${safeValue}%` }} />
       </div>
-      <span className="util-bar__label" style={{ color }}>{safeValue}%</span>
+      <span className={`util-bar__label util-bar__label--${tier}`}>{safeValue}%</span>
     </div>
   );
 };

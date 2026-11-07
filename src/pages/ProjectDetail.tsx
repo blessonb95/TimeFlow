@@ -12,6 +12,8 @@ import { formatDisplayDate } from '../utils/date';
 import { useAppStore } from '../store/useAppStore';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
+import { PROJECT_EXTRAS, DEFAULT_MANAGER_USER, getProjectLeadLabel } from '../data/dummy';
 
 type TaskStatus = 'Completed' | 'In Progress' | 'Todo' | 'Not Started';
 type TaskPriority = 'High' | 'Medium' | 'Low' | 'Critical';
@@ -33,32 +35,23 @@ export const ProjectDetail: React.FC = () => {
   const [taskFilter, setTaskFilter] = useState<TaskFilter>('all');
   const [taskPage, setTaskPage] = useState(1);
   const taskPageSize = 10;
-  const [completedIds, setCompletedIds] = useState<Set<string>>(new Set());
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDrawer, setShowDrawer] = useState(false);
   const [editingTaskLog, setEditingTaskLog] = useState<any | null>(null);
   const [isReadOnlyDrawer, setIsReadOnlyDrawer] = useState(false);
   const [selectedMemberLogId, setSelectedMemberLogId] = useState<string | null>(null);
 
-  const { data: project, isLoading, isFetching } = useProject(id || '');
-
-  const toggleTask = (taskId: string) => {
-    setCompletedIds(prev => {
-      const next = new Set(prev);
-      if (next.has(taskId)) next.delete(taskId); else next.add(taskId);
-      return next;
-    });
-  };
+  const { data: project, isLoading, isFetching, isError, refetch } = useProject(id || '');
 
   if (isLoading) {
     return (
-      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
-        <Skeleton width="140px" height="1.25rem" style={{ marginBottom: '1.25rem' }} />
-        <div className="skeleton-card" style={{ padding: '1.75rem', marginBottom: '1.5rem' }}>
-          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-inner page-inner--fade">
+        <Skeleton width="140px" height="1.25rem" className="proj-detail__skeleton-back" />
+        <div className="skeleton-card proj-detail__skeleton-card">
+          <div className="proj-detail__skeleton-row">
             <Skeleton width="3rem" height="3rem" borderRadius="0.75rem" />
-            <div style={{ flex: 1 }}>
-              <Skeleton width="280px" height="1.75rem" style={{ marginBottom: '0.5rem' }} />
+            <div className="proj-detail__skeleton-info">
+              <Skeleton width="280px" height="1.75rem" className="proj-detail__skeleton-title" />
               <Skeleton width="180px" height="1rem" />
             </div>
           </div>
@@ -69,8 +62,25 @@ export const ProjectDetail: React.FC = () => {
     );
   }
 
-  if (!project) {
-    return <div className="page-inner"><p style={{ padding: '2.5rem', textAlign: 'center' }}>Project not found.</p></div>;
+  if (isError || !project) {
+    return (
+      <div className="page-inner">
+        <EmptyState
+          icon={isError ? 'error' : 'projects'}
+          title={isError ? 'Unable to load project' : 'Project not found'}
+          subtitle={
+            isError
+              ? "We couldn't fetch this project's details. Check your connection and try again."
+              : 'The requested project could not be found or may have been removed.'
+          }
+          action={
+            isError
+              ? { label: isFetching ? 'Retrying…' : 'Try again', onClick: () => void refetch() }
+              : { label: 'Back to Projects', onClick: () => navigate('/projects') }
+          }
+        />
+      </div>
+    );
   }
 
   const handleOpenTaskDrawer = (t: any) => {
@@ -86,14 +96,13 @@ export const ProjectDetail: React.FC = () => {
   const members = project.teamMembers || [];
   const tasks = project.tasks || project.recentTasks || [];
 
-  const extras: Record<string, { client: string; color: string; status: string; priority: string }> = {
-    p1: { client: 'Internal',    color: '#3b82f6', status: 'Active', priority: 'High' },
-    p2: { client: 'RetailMax',   color: '#22c55e', status: 'In Review', priority: 'Medium' },
-    p3: { client: 'FinTech Corp',color: '#9333ea', status: 'Active', priority: 'High' },
-    p4: { client: 'Internal',    color: '#f97316', status: 'Planning', priority: 'Medium' },
-    p5: { client: 'Internal',    color: '#ef4444', status: 'Active', priority: 'Critical' },
+  const meta = PROJECT_EXTRAS[project.id];
+  const ex = {
+    client: meta?.client || 'TimeFlow Client',
+    color: meta?.hex || '#2563eb',
+    status: meta?.status || project.status || 'Active',
+    priority: meta?.priority || project.priority || 'High',
   };
-  const ex = extras[project.id] ?? { client: 'TimeFlow Client', color: '#3b82f6', status: project.status || 'Active', priority: project.priority || 'High' };
 
   const remaining = Math.max(0, (project.totalHours || 0) - (project.loggedHours || 0));
   const daysLeft = Math.round(remaining / 8);
@@ -114,8 +123,8 @@ export const ProjectDetail: React.FC = () => {
           <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M10 12L6 8l4-4"/></svg>
           Back
         </button>
-        <button type="button" className="proj-detail__breadcrumb-sep" onClick={() => navigate('/projects')} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0rem', color: '#64748b' }}>Projects</button>
-        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" style={{ color: '#6b7280' }}><path d="M6 12l4-4-4-4"/></svg>
+        <button type="button" className="proj-detail__breadcrumb-sep" onClick={() => navigate('/projects')}>Projects</button>
+        <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" className="proj-detail__breadcrumb-chevron"><path d="M6 12l4-4-4-4"/></svg>
         <span className="proj-detail__breadcrumb-current">Detail</span>
       </div>
 
@@ -145,21 +154,8 @@ export const ProjectDetail: React.FC = () => {
             { (role === 'manager' || role === 'admin') && (
               <button
                 type="button"
-                className="btn btn--ghost btn--sm"
+                className="btn btn--ghost btn--sm proj-detail__edit-btn"
                 onClick={() => setShowEditModal(true)}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '0.375rem',
-                  padding: '0.3125rem 0.75rem',
-                  fontSize: '0.8125rem',
-                  fontWeight: 600,
-                  color: '#374151',
-                  background: '#f9fafb',
-                  border: '1px solid #d1d5db',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                }}
               >
                 <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M11 2a2 2 0 0 1 2 2l-8 8-4 1 1-4 8-8z" />
@@ -172,27 +168,14 @@ export const ProjectDetail: React.FC = () => {
 
         <p className="proj-detail__desc">{project.description || 'No description provided.'}</p>
 
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: '0.625rem',
-          padding: '0.625rem 1rem',
-          background: '#f8fafc',
-          border: '1px solid #cbd5e1',
-          borderRadius: 8,
-          fontSize: '0.8125rem',
-          margin: '1rem 0',
-          color: '#334155'
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+        <div className="proj-detail__lead-banner">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
           </svg>
           <div>
-            <span style={{ fontWeight: 600, color: '#0f172a' }}>Project Manager(s): </span>
-            <span style={{ fontWeight: 500, color: '#1e293b' }}>
-              {project.managers && project.managers.length > 0
-                ? project.managers.map((m: any) => m.name).join(', ')
-                : 'Rahul (Engineering Lead)'}
+            <span className="proj-detail__lead-banner-label">Project Manager(s): </span>
+            <span className="proj-detail__lead-banner-value">
+              {getProjectLeadLabel(project)}
             </span>
           </div>
         </div>
@@ -248,7 +231,7 @@ export const ProjectDetail: React.FC = () => {
               {project.totalHours > 0 ? 'Budget vs Logged Hours' : 'Logged Timesheet Hours'}
             </div>
             {project.totalHours > 0 ? (
-              <svg width="100%" viewBox="0 0 450 160" preserveAspectRatio="none" style={{ display: 'block', marginTop: '0.75rem'}}>
+              <svg width="100%" viewBox="0 0 450 160" preserveAspectRatio="none" className="proj-detail__budget-svg">
                 {[0, Math.round(project.totalHours * 0.25), Math.round(project.totalHours * 0.5), Math.round(project.totalHours * 0.75), project.totalHours || 100].map((v, i) => {
                   const maxBudget = project.totalHours || 100;
                   const y = 15 + (1 - v / maxBudget) * 115;
@@ -269,14 +252,14 @@ export const ProjectDetail: React.FC = () => {
                 })()}
               </svg>
             ) : (
-              <div style={{ padding: '1.5rem 0.75rem', textAlign: 'center' }}>
-                <div style={{ fontSize: '2rem', fontWeight: 700, color: '#0f172a' }}>
+              <div className="proj-detail__no-budget-card">
+                <div className="proj-detail__no-budget-val">
                   {project.loggedHours}h
                 </div>
-                <div style={{ fontSize: '0.8125rem', color: '#64748b', marginTop: '0.25rem'}}>
+                <div className="proj-detail__no-budget-sub">
                   Total time accumulated from timesheets and work logs.
                 </div>
-                <div style={{ display: 'inline-block', marginTop: '0.75rem', padding: '0.25rem 0.75rem', background: '#f1f5f9', borderRadius: 6, fontSize: '0.75rem', color: '#475569', fontWeight: 500 }}>
+                <div className="proj-detail__no-budget-pill">
                   No budget limit set for this project
                 </div>
               </div>
@@ -331,7 +314,7 @@ export const ProjectDetail: React.FC = () => {
         return (
           <div className="task-panel">
             {isFetching && !isLoading && (
-              <div style={{ padding: "0.5rem 1rem", background: "#eff6ff", borderBottom: "1px solid #dbeafe", fontSize: '0.75rem', fontWeight: 600, color: "#1d4ed8", display: "flex", alignItems: "center", gap: '0.5rem'}}>
+              <div className="wl-panel__updating-bar">
                 <LoadingSpinner inline size="sm" /> Updating task list…
               </div>
             )}
@@ -359,31 +342,33 @@ export const ProjectDetail: React.FC = () => {
             </div>
 
             {/* Column headers */}
-            <div className="task-panel__header">
-              <div className="task-panel__col task-panel__col--task">TASK</div>
-              <div className="task-panel__col task-panel__col--assignee">ASSIGNEE</div>
-              <div className="task-panel__col task-panel__col--priority">PRIORITY</div>
-              <div className="task-panel__col task-panel__col--status" style={{ width: 95, flexShrink: 0 }}>APPROVAL</div>
-              <div className="task-panel__col task-panel__col--status" style={{ width: 110, flexShrink: 0 }}>PROGRESS</div>
-              <div className="task-panel__col task-panel__col--est">HOURS</div>
-              <div className="task-panel__col task-panel__col--due" style={{ width: 80, flexShrink: 0 }}>DATE</div>
-              <div className="task-panel__col" style={{ width: 45, flexShrink: 0, textAlign: 'center' }}>VIEW</div>
+            <div role="table" aria-label="Project tasks">
+            <div role="rowgroup">
+            <div className="task-panel__header" role="row">
+              <div className="task-panel__col task-panel__col--task" role="columnheader">TASK</div>
+              <div className="task-panel__col task-panel__col--assignee" role="columnheader">ASSIGNEE</div>
+              <div className="task-panel__col task-panel__col--priority" role="columnheader">PRIORITY</div>
+              <div className="task-panel__col task-panel__col--approval" role="columnheader">APPROVAL</div>
+              <div className="task-panel__col task-panel__col--progress" role="columnheader">PROGRESS</div>
+              <div className="task-panel__col task-panel__col--est" role="columnheader">HOURS</div>
+              <div className="task-panel__col task-panel__col--due" role="columnheader">DATE</div>
+              <div className="task-panel__col task-panel__col--view" role="columnheader">VIEW</div>
+            </div>
             </div>
 
             {/* Task rows */}
-            <div className="task-panel__list">
+            <div className="task-panel__list" role="rowgroup">
               {paginatedTasks.map((t: { id: string; taskName: string; status: string; hours: number; date: string; priority?: string; assignee?: { name: string; initials: string; color: string } }) => {
                 const pm = PRIORITY_META[t.priority || 'Medium'] || PRIORITY_META['Medium'];
                 return (
-                  <div key={t.id} className="task-panel__row">
+                  <div key={t.id} className="task-panel__row" role="row">
                     {/* Name */}
-                    <div className="task-panel__col task-panel__col--task">
+                    <div className="task-panel__col task-panel__col--task" role="cell">
                       <button
                         type="button"
                         className="task-panel__task-name task-panel__task-name--link"
                         aria-label={`Open task ${t.taskName}`}
                         onClick={() => handleOpenTaskDrawer(t)}
-                        style={{ cursor: 'pointer' }}
                         title="Click to open task in drawer"
                       >
                         {t.taskName}
@@ -391,7 +376,7 @@ export const ProjectDetail: React.FC = () => {
                     </div>
 
                     {/* Assignee */}
-                    <div className="task-panel__col task-panel__col--assignee">
+                    <div className="task-panel__col task-panel__col--assignee" role="cell">
                       {(t.assignee || (t as any).employeeName) && (
                         <div className="task-panel__assignee">
                           <div className="task-panel__avatar" style={{ background: t.assignee?.color || (t as any).employeeColor || '#3b82f6' }}>{t.assignee?.initials || (t as any).employeeInitials || 'ME'}</div>
@@ -401,35 +386,26 @@ export const ProjectDetail: React.FC = () => {
                     </div>
 
                     {/* Priority */}
-                    <div className="task-panel__col task-panel__col--priority">
+                    <div className="task-panel__col task-panel__col--priority" role="cell">
                       <span className="task-panel__priority" style={{ background: pm.bg, color: pm.color }}>
                         {pm.label}
                       </span>
                     </div>
 
                     {/* Approval Status */}
-                    <div className="task-panel__col task-panel__col--status" style={{ width: 95, flexShrink: 0 }}>
+                    <div className="task-panel__col task-panel__col--approval" role="cell">
                       <Badge variant={statusVariant((t as any).timesheetStatus || 'Pending')}>{(t as any).timesheetStatus || 'Pending'}</Badge>
                     </div>
 
                     {/* Task Status */}
-                    <div className="task-panel__col task-panel__col--status" style={{ width: 110, flexShrink: 0 }}>
+                    <div className="task-panel__col task-panel__col--progress" role="cell">
                       {(() => {
                         const s = ((t as any).taskStatus || t.status || 'In Progress') as string;
                         const display = s === 'Approved' || s === 'Rejected' ? 'In Progress' : s;
+                        const variant = display === 'Completed' ? 'completed' : display === 'In Progress' ? 'in-progress' : 'other';
                         return (
-                          <span style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '0.375rem',
-                            fontSize: '0.75rem',
-                            fontWeight: 600,
-                            color: display === 'Completed' ? '#059669' : display === 'In Progress' ? '#2563eb' : '#6b7280'
-                          }}>
-                            <span style={{
-                              width: 6, height: 6, borderRadius: '50%',
-                              background: display === 'Completed' ? '#10b981' : display === 'In Progress' ? '#3b82f6' : '#6b7280'
-                            }} />
+                          <span className={`wl-panel__task-status wl-panel__task-status--${variant}`}>
+                            <span className={`wl-panel__task-status-dot wl-panel__task-status-dot--${variant}`} />
                             {display}
                           </span>
                         );
@@ -437,22 +413,23 @@ export const ProjectDetail: React.FC = () => {
                     </div>
 
                     {/* Hours */}
-                    <div className="task-panel__col task-panel__col--est">
+                    <div className="task-panel__col task-panel__col--est" role="cell">
                       <span className="task-panel__est">{t.hours}h</span>
                     </div>
 
                     {/* Due */}
-                    <div className="task-panel__col task-panel__col--due" style={{ width: 80, flexShrink: 0 }}>
+                    <div className="task-panel__col task-panel__col--due" role="cell">
                       <span className="task-panel__due">{formatDisplayDate(t.date)}</span>
                     </div>
 
                     {/* Open Drawer Action */}
-                    <div className="task-panel__col" style={{ width: 45, flexShrink: 0, display: 'flex', justifyContent: 'center' }}>
+                    <div className="task-panel__col task-panel__col--view" role="cell">
                       <button
                         type="button"
                         title="Open task drawer"
+                        aria-label={`Open task drawer for ${t.taskName}`}
                         onClick={() => handleOpenTaskDrawer(t)}
-                        style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: '0.25rem', color: '#475569', borderRadius: 4 }}
+                        className="task-panel__view-btn"
                       >
                         <svg width="15" height="15" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
                           <path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z"/>
@@ -464,8 +441,18 @@ export const ProjectDetail: React.FC = () => {
                 );
               })}
               {filtered.length === 0 && (
-                <div className="task-panel__empty">No logged tasks in this project yet.</div>
+                <div className="task-panel__empty" role="row">
+                  <div role="cell">
+                    <EmptyState
+                      icon="timesheets"
+                      title="No logged tasks in this project yet"
+                      subtitle="Tasks logged against this project will appear here."
+                      compact
+                    />
+                  </div>
+                </div>
               )}
+            </div>
             </div>
             <Pagination
               currentPage={taskPage}
@@ -480,39 +467,26 @@ export const ProjectDetail: React.FC = () => {
       {/* ── TEAM TAB ── */}
       {activeTab === 'team' && (
         <div>
-          <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03125rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem'}}>
+          <div className="proj-detail__section-label">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
             </svg>
             <span>Project Manager(s)</span>
           </div>
-          <div className="proj-detail__team-grid" style={{ marginBottom: '2rem'}}>
+          <div className="proj-detail__team-grid proj-detail__team-grid--managers">
             {members.filter((m: any) => m.role === 'manager').length > 0 ? (
               members.filter((m: any) => m.role === 'manager').map((m: any) => {
                 const memberLog = tasks.find((t: any) => t.assignee?.name === m.name || t.employeeName === m.name || t.assignee?.initials === m.initials);
                 return (
-                  <div key={m.id} className="proj-detail__team-card" style={{ border: '2px solid #cbd5e1', background: '#f8fafc' }}>
+                  <div key={m.id} className="proj-detail__team-card proj-detail__team-card--manager">
                     <Avatar initials={m.initials} color={m.color} size="lg"/>
                     <div className="proj-detail__team-name">{m.name}</div>
-                    <div className="proj-detail__team-role" style={{ fontWeight: 600, color: '#334155' }}>Project Manager</div>
+                    <div className="proj-detail__team-role proj-detail__team-role--manager">Project Manager</div>
                     <Badge variant="blue" dot>Lead</Badge>
                     <button
                       type="button"
                       onClick={() => setSelectedMemberLogId(memberLog?.id || `user_${m.id}`)}
-                      style={{
-                        marginTop: '0.625rem',
-                        padding: '0.3125rem 0.625rem',
-                        fontSize: '0.75rem',
-                        fontWeight: 600,
-                        color: '#2563eb',
-                        background: '#eff6ff',
-                        border: '1px solid #bfdbfe',
-                        borderRadius: 6,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '0.3125rem',
-                      }}
+                      className="proj-detail__team-timesheet-btn"
                     >
                       <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
                         <path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z"/>
@@ -524,16 +498,16 @@ export const ProjectDetail: React.FC = () => {
                 );
               })
             ) : (
-              <div className="proj-detail__team-card" style={{ border: '2px solid #cbd5e1', background: '#f8fafc' }}>
-                <Avatar initials="RA" color="#3b82f6" size="lg"/>
-                <div className="proj-detail__team-name">Rahul</div>
-                <div className="proj-detail__team-role" style={{ fontWeight: 600, color: '#334155' }}>Project Manager (Default)</div>
+              <div className="proj-detail__team-card proj-detail__team-card--manager">
+                <Avatar initials={DEFAULT_MANAGER_USER.initials} color={DEFAULT_MANAGER_USER.color} size="lg"/>
+                <div className="proj-detail__team-name">{DEFAULT_MANAGER_USER.name}</div>
+                <div className="proj-detail__team-role proj-detail__team-role--manager">Project Manager (Default)</div>
                 <Badge variant="blue" dot>Lead</Badge>
               </div>
             )}
           </div>
 
-          <div style={{ fontSize: '0.8125rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', letterSpacing: '0.03125rem', marginBottom: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.375rem'}}>
+          <div className="proj-detail__section-label">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
             </svg>
@@ -551,20 +525,7 @@ export const ProjectDetail: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setSelectedMemberLogId(memberLog?.id || `user_${m.id}`)}
-                    style={{
-                      marginTop: '0.625rem',
-                      padding: '0.3125rem 0.625rem',
-                      fontSize: '0.75rem',
-                      fontWeight: 600,
-                      color: '#2563eb',
-                      background: '#eff6ff',
-                      border: '1px solid #bfdbfe',
-                      borderRadius: 6,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '0.3125rem',
-                    }}
+                    className="proj-detail__team-timesheet-btn"
                   >
                     <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
                       <path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z"/>
@@ -576,7 +537,7 @@ export const ProjectDetail: React.FC = () => {
               );
             })}
             {members.filter((m: any) => m.role !== 'manager').length === 0 && (
-              <div style={{ color: '#6b7280', fontSize: '0.8125rem', padding: '1rem 0'}}>No additional team members assigned yet.</div>
+              <div className="proj-detail__team-empty">No additional team members assigned yet.</div>
             )}
           </div>
         </div>

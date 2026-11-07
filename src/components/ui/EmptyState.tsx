@@ -6,6 +6,7 @@ export type EmptyStateIconType =
 	| "activity"
 	| "users"
 	| "search"
+	| "error"
 	| "generic";
 
 export interface EmptyStateProps {
@@ -109,6 +110,23 @@ const renderIcon = (icon?: React.ReactNode | EmptyStateIconType, compact = false
 					<line x1="21" y1="21" x2="16.65" y2="16.65" />
 				</svg>
 			);
+		case "error":
+			return (
+				<svg
+					width={size}
+					height={size}
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="2"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+				>
+					<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+					<line x1="12" y1="9" x2="12" y2="13" />
+					<line x1="12" y1="17" x2="12.01" y2="17" />
+				</svg>
+			);
 		default:
 			return (
 				<svg
@@ -137,49 +155,32 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 	compact = false,
 	padding,
 }) => {
+	const isError = icon === "error";
 	return (
 		<div
-			style={{
-				display: "flex",
-				flexDirection: "column",
-				alignItems: "center",
-				justifyContent: "center",
-				textAlign: "center",
-				padding: padding !== undefined ? padding : compact ? "1.5rem 1rem" : "2.25rem 1.25rem",
-				width: "100%",
-			}}
+			role={isError ? "alert" : undefined}
+			className={`empty-state${compact ? " empty-state--compact" : ""}`}
+			style={padding !== undefined ? { padding } : undefined}
 		>
 			<div
-				style={{
-					width: compact ? 36 : 42,
-					height: compact ? 36 : 42,
-					borderRadius: "50%",
-					background: "#eef2ff",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "center",
-					color: "#6366f1",
-					marginBottom: compact ? 8 : 12,
-					flexShrink: 0,
-				}}
+				className={`empty-state__icon${compact ? " empty-state__icon--compact" : ""}${isError ? " empty-state__icon--error" : ""}`}
 			>
 				{renderIcon(icon, compact)}
 			</div>
 			<div>
-				<div style={{ fontWeight: 600, color: "#1e293b", fontSize: compact ? 13 : 14}}>
+				<div className={`empty-state__title${compact ? " empty-state__title--compact" : ""}`}>
 					{title}
 				</div>
 				{subtitle && (
-					<div style={{ color: "#64748b", fontSize: compact ? 12 : 13, marginTop: '0.125rem'}}>
+					<div className={`empty-state__subtitle${compact ? " empty-state__subtitle--compact" : ""}`}>
 						{subtitle}
 					</div>
 				)}
 				{action && (
 					<button
 						type="button"
-						className="btn btn--secondary btn--sm"
+						className="btn btn--secondary btn--sm empty-state__action"
 						onClick={action.onClick}
-						style={{ marginTop: '0.75rem'}}
 					>
 						{action.label}
 					</button>
@@ -188,3 +189,32 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
 		</div>
 	);
 };
+
+export const ErrorState: React.FC<{
+	title?: string;
+	subtitle?: string;
+	onRetry?: () => void;
+	isRetrying?: boolean;
+	compact?: boolean;
+}> = ({
+	title = "Something went wrong",
+	subtitle = "We couldn't load this data. Please check your connection and try again.",
+	onRetry,
+	isRetrying = false,
+	compact = false,
+}) => (
+	<EmptyState
+		icon="error"
+		title={title}
+		subtitle={subtitle}
+		compact={compact}
+		action={
+			onRetry
+				? {
+						label: isRetrying ? "Retrying…" : "Try again",
+						onClick: onRetry,
+					}
+				: undefined
+		}
+	/>
+);

@@ -25,7 +25,7 @@ export const TableSkeleton: React.FC<{
   columns?: number;
   title?: string;
 }> = ({ rows = 5, columns = 5, title }) => (
-  <div className="skeleton-table-card">
+  <div className="skeleton-table-card" role="status" aria-label="Loading table data" aria-busy="true">
     {title && (
       <div className="skeleton-table-header">
         <Skeleton width="180px" height="1.5rem" />
@@ -44,11 +44,11 @@ export const TableSkeleton: React.FC<{
             {Array.from({ length: columns }).map((_, cIdx) => (
               <div key={cIdx} className="skeleton-table-cell">
                 {cIdx === 0 ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem' }}>
+                  <div className="skeleton-table-cell-user">
                     <Skeleton width="2rem" height="2rem" borderRadius="50%" />
-                    <div style={{ flex: 1 }}>
+                    <div className="skeleton-table-cell-user__info">
                       <Skeleton width="80%" height="0.875rem" />
-                      <Skeleton width="50%" height="0.75rem" style={{ marginTop: '0.25rem' }} />
+                      <Skeleton width="50%" height="0.75rem" className="skeleton-table-cell-user__sub" />
                     </div>
                   </div>
                 ) : cIdx === columns - 1 ? (
@@ -67,25 +67,25 @@ export const TableSkeleton: React.FC<{
 
 // ─── Grid Cards Skeleton (for Projects / Employees) ───────────────────────────
 export const CardGridSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) => (
-  <div className="skeleton-grid">
+  <div className="skeleton-grid" role="status" aria-label="Loading cards" aria-busy="true">
     {Array.from({ length: count }).map((_, i) => (
       <div key={i} className="skeleton-card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', width: '80%' }}>
+        <div className="skeleton-card__top">
+          <div className="skeleton-card__head">
             <Skeleton width="2.5rem" height="2.5rem" borderRadius="0.625rem" />
-            <div style={{ flex: 1 }}>
+            <div className="skeleton-card__titles">
               <Skeleton width="90%" height="1.125rem" />
-              <Skeleton width="55%" height="0.75rem" style={{ marginTop: '0.375rem' }} />
+              <Skeleton width="55%" height="0.75rem" className="skeleton-card__sub" />
             </div>
           </div>
           <Skeleton width="60px" height="1.25rem" borderRadius="9999px" />
         </div>
 
-        <Skeleton width="100%" height="0.875rem" style={{ marginBottom: '0.5rem' }} />
-        <Skeleton width="85%" height="0.875rem" style={{ marginBottom: '1.25rem' }} />
+        <Skeleton width="100%" height="0.875rem" className="skeleton-card__line1" />
+        <Skeleton width="85%" height="0.875rem" className="skeleton-card__line2" />
 
-        <div style={{ marginTop: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+        <div className="skeleton-card__foot">
+          <div className="skeleton-card__foot-row">
             <Skeleton width="80px" height="0.75rem" />
             <Skeleton width="40px" height="0.75rem" />
           </div>
@@ -98,48 +98,48 @@ export const CardGridSkeleton: React.FC<{ count?: number }> = ({ count = 6 }) =>
 
 // ─── Dashboard Full Page Skeleton ─────────────────────────────────────────────
 export const DashboardSkeleton: React.FC = () => (
-  <div className="page-inner" style={{ animation: 'fadeIn 0.25s ease' }} role="status" aria-label="Loading dashboard" aria-busy="true">
+  <div className="page-inner skeleton-dashboard" role="status" aria-label="Loading dashboard" aria-busy="true">
     {/* Page Header */}
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
-      <div>
-        <Skeleton width="220px" height="2rem" style={{ marginBottom: '0.5rem' }} />
-        <Skeleton width="340px" height="1rem" />
+    <div className="skeleton-dashboard__header">
+      <div className="skeleton-dashboard__header-left">
+        <Skeleton width="min(220px, 80%)" height="2rem" className="skeleton-dashboard__title" />
+        <Skeleton width="min(340px, 100%)" height="1rem" />
       </div>
       <Skeleton width="140px" height="2.5rem" borderRadius="0.5rem" />
     </div>
 
     {/* Metric Stat Cards */}
-    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1rem', marginBottom: '1.5rem' }}>
+    <div className="skeleton-dashboard__metrics">
       {Array.from({ length: 4 }).map((_, i) => (
-        <div key={i} className="skeleton-card" style={{ padding: '1.25rem' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+        <div key={i} className="skeleton-card">
+          <div className="skeleton-dashboard__metric-top">
             <Skeleton width="100px" height="0.875rem" />
             <Skeleton width="2rem" height="2rem" borderRadius="0.5rem" />
           </div>
-          <Skeleton width="90px" height="1.875rem" style={{ marginBottom: '0.5rem' }} />
+          <Skeleton width="90px" height="1.875rem" className="skeleton-dashboard__metric-val" />
           <Skeleton width="130px" height="0.75rem" />
         </div>
       ))}
     </div>
 
     {/* Main Content Split: Chart & Projects */}
-    <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '1.25rem' }}>
-      <div className="skeleton-card" style={{ height: '360px', padding: '1.5rem' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1.5rem' }}>
+    <div className="skeleton-dashboard__split">
+      <div className="skeleton-card skeleton-dashboard__panel">
+        <div className="skeleton-dashboard__panel-head">
           <Skeleton width="180px" height="1.25rem" />
           <Skeleton width="120px" height="1.75rem" borderRadius="0.375rem" />
         </div>
         <Skeleton width="100%" height="240px" borderRadius="0.5rem" />
       </div>
 
-      <div className="skeleton-card" style={{ height: '360px', padding: '1.5rem' }}>
-        <Skeleton width="150px" height="1.25rem" style={{ marginBottom: '1.25rem' }} />
+      <div className="skeleton-card skeleton-dashboard__panel">
+        <Skeleton width="150px" height="1.25rem" className="skeleton-dashboard__side-title" />
         {Array.from({ length: 3 }).map((_, i) => (
-          <div key={i} style={{ display: 'flex', gap: '0.75rem', alignItems: 'center', marginBottom: '1rem' }}>
+          <div key={i} className="skeleton-dashboard__side-item">
             <Skeleton width="2.5rem" height="2.5rem" borderRadius="0.5rem" />
-            <div style={{ flex: 1 }}>
+            <div className="skeleton-dashboard__side-info">
               <Skeleton width="80%" height="0.875rem" />
-              <Skeleton width="45%" height="0.75rem" style={{ marginTop: '0.25rem' }} />
+              <Skeleton width="45%" height="0.75rem" className="skeleton-dashboard__side-sub" />
             </div>
           </div>
         ))}
@@ -158,7 +158,12 @@ export const LoadingState: React.FC<{
   hint,
   fullPage = false,
 }) => (
-  <div className={`loading-state-wrap${fullPage ? ' loading-state-wrap--full' : ''}`}>
+  <div
+    className={`loading-state-wrap${fullPage ? ' loading-state-wrap--full' : ''}`}
+    role="status"
+    aria-live="polite"
+    aria-busy="true"
+  >
     <div className="loading-state-box">
       <div className="loading-state-spinner">
         <div className="loading-state-pulse" />

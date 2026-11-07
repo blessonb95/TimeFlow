@@ -47,7 +47,12 @@ const DEFAULT_GUEST_USER: AuthUser = {
 };
 
 const storedToken = getStoredAuthToken();
-const initialIsGuest = storedToken === "demo-guest-token" || localStorage.getItem("is_guest") === "true";
+if (!storedToken && localStorage.getItem("is_guest") === "true") {
+	localStorage.removeItem("is_guest");
+}
+const initialIsGuest =
+	storedToken === "demo-guest-token" ||
+	(Boolean(storedToken) && localStorage.getItem("is_guest") === "true");
 
 /** Read the cached user from localStorage (set on every login / auth sync) */
 const getCachedUser = (): AuthUser | null => {
@@ -65,10 +70,41 @@ const cacheUser = (user: AuthUser) => {
 	localStorage.setItem("active_user_id", user.id);
 };
 
+const normalizeAuthUser = (user: any): AuthUser => {
+	const name =
+		user?.name ||
+		`${user?.firstName || ""} ${user?.lastName || ""}`.trim() ||
+		"User";
+	const initials =
+		user?.initials ||
+		name
+			.split(" ")
+			.filter(Boolean)
+			.map((n: string) => n[0])
+			.join("")
+			.toUpperCase()
+			.slice(0, 2) ||
+		"US";
+	return {
+		id: String(user?.id || ""),
+		name,
+		email: user?.email || "",
+		role: (user?.role || "employee") as Role,
+		department: user?.department || "General",
+		designation: user?.designation || "Team Member",
+		initials,
+		color: user?.color || "#2563eb",
+		avatar: user?.avatar || "",
+		status: user?.status || "Active",
+	};
+};
+
 const cachedUser = getCachedUser();
 const initialUser: AuthUser = initialIsGuest
-	? DEMO_USER
-	: cachedUser && storedToken
+	? cachedUser && cachedUser.id === DEMO_USER.id
+		? cachedUser
+		: DEMO_USER
+	: cachedUser && storedToken && cachedUser.id !== DEMO_USER.id
 		? cachedUser
 		: DEFAULT_GUEST_USER;
 const initialRole: Role = initialUser.role;
@@ -91,18 +127,20 @@ export const useAppStore = create<AppState>((set) => ({
 	},
 
 	setUser: (user) => {
-		const authUser = { ...user, status: user.status || 'Active' } as AuthUser;
+		if (!user) return;
+		const authUser = normalizeAuthUser(user);
 		cacheUser(authUser);
-		set({ role: user.role, currentUser: authUser });
+		set({ role: authUser.role, currentUser: authUser });
 	},
 
 	setAuthUser: (user, token) => {
-		const authUser = { ...user, status: user.status || 'Active' } as AuthUser;
+		if (!user) return;
+		const authUser = normalizeAuthUser(user);
 		cacheUser(authUser);
 		localStorage.removeItem("is_guest");
 		set({
 			currentUser: authUser,
-			role: user.role,
+			role: authUser.role,
 			authToken: token,
 			isGuest: false,
 		});

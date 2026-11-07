@@ -1,28 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
 import { useNavigate } from 'react-router-dom';
-import { useAppStore } from '../../store/useAppStore';
 import { fireEasterEggByWord } from './EasterEgg';
 import { useDialogAccessibility } from '../../hooks/useDialogAccessibility';
-
-// Inject pulse keyframe once
-const KEYFRAME_ID = 'ee-hint-pulse-style';
-function ensureHintKeyframe() {
-  if (document.getElementById(KEYFRAME_ID)) return;
-  const s = document.createElement('style');
-  s.id = KEYFRAME_ID;
-  s.textContent = `
-    @keyframes ee-hint-pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.35; transform: scale(0.65); }
-    }
-    @keyframes ee-tooltip-in {
-      from { opacity: 0; transform: translateX(-50%) translateY(6px); }
-      to   { opacity: 1; transform: translateX(-50%) translateY(0); }
-    }
-  `;
-  document.head.appendChild(s);
-}
 
 interface SearchModalProps {
   onClose: () => void;
@@ -30,15 +10,11 @@ interface SearchModalProps {
 
 export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
 	const dialogRef = useRef<HTMLElement>(null);
-	useDialogAccessibility(dialogRef, onClose, true, false);
+	useDialogAccessibility(dialogRef, onClose, true, true);
   const navigate = useNavigate();
-  const { role } = useAppStore();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState('');
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const [showHint, setShowHint] = useState(false);
-
-  useEffect(() => { ensureHintKeyframe(); }, []);
 
   const allItems = [
     {
@@ -82,9 +58,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      } else if (e.key === 'ArrowDown') {
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         setSelectedIndex(prev => (prev < filteredItems.length - 1 ? prev + 1 : 0));
       } else if (e.key === 'ArrowUp') {
@@ -99,7 +73,7 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose, filteredItems, selectedIndex]);
+  }, [filteredItems, selectedIndex]);
 
   return ReactDOM.createPortal(
         <div className="search-modal-overlay" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -140,7 +114,6 @@ export const SearchModal: React.FC<SearchModalProps> = ({ onClose }) => {
                     className={`search-modal__item${idx === selectedIndex ? ' search-modal__item--active' : ''}`}
                     onClick={item.action}
                     onMouseEnter={() => setSelectedIndex(idx)}
-                    aria-pressed={idx === selectedIndex}
                   >
                     <div className="search-modal__item-icon">{item.icon}</div>
                     <span className="search-modal__item-label">{item.label}</span>

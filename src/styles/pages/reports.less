@@ -828,6 +828,95 @@
 		text-transform: uppercase;
 		letter-spacing: 0.05em;
 	}
+	&__chart-loading {
+		height: 160px;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		color: #64748b;
+	}
+	&__dot--budgeted {
+		background: #cbd5e1;
+	}
+	&__dot--logged {
+		background: #1e293b;
+	}
+	&__export-accent {
+		color: #2563eb;
+	}
+	&__export-controls {
+		display: flex;
+		gap: 1.25rem;
+		margin-bottom: 1.5rem;
+		padding: 1.25rem 1.5rem;
+		background: @white;
+		border-radius: 12px;
+		border: 1px solid #e5e7eb;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+	}
+	&__date-input {
+		padding: 0.5rem 0.75rem;
+		border: 1px solid #d1d5db;
+		border-radius: 6px;
+		font-size: 0.875rem;
+		height: 38px;
+	}
+	&__th-center {
+		text-align: center;
+	}
+	&__td-muted {
+		color: #6b7280;
+	}
+	&__td-center {
+		text-align: center;
+	}
+	&__td-center-semibold {
+		text-align: center;
+		font-weight: 600;
+	}
+	&__td-center-bold {
+		text-align: center;
+		font-weight: 700;
+	}
+	&__td-medium {
+		font-weight: 500;
+	}
+	&__td-logged {
+		text-align: center;
+		color: #2563eb;
+		font-weight: 600;
+	}
+	&__preview-empty--lg {
+		padding: 3.75rem 1.5rem;
+	}
+	&__preview-emp-name {
+		font-weight: 700;
+		font-size: 0.8125rem;
+	}
+	&__preview-emp-meta {
+		font-size: 0.6875rem;
+		color: #6b7280;
+	}
+	&__td-nowrap {
+		white-space: nowrap;
+	}
+	&__td-project {
+		color: #2563eb;
+		font-weight: 500;
+	}
+	&__td-task {
+		color: #374151;
+		max-width: 240px;
+		word-break: break-word;
+	}
+	&__preview-status-pill {
+		padding: 0.125rem 0.5rem;
+		border-radius: 4px;
+		font-size: 0.625rem;
+		font-weight: 700;
+	}
 }
 
 @media (max-width: 64rem) {

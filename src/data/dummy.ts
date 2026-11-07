@@ -108,3 +108,255 @@ export const EMPLOYEE_TABLE = [
   { user: USERS[6], status: 'Active' as const,    utilization: 63, projects: 3, weekHours: 28,   timesheetStatus: 'In Progress'  as const },
   { user: USERS[7], status: 'On Leave' as const,  utilization: 45, projects: 1, weekHours: 28,   timesheetStatus: 'Not Started'  as const },
 ];
+
+export const DEFAULT_HR_USER: User =
+  USERS.find((u) => u.role === 'hr') || {
+    id: 'u-hr',
+    name: 'HR Team',
+    email: 'hr@timeflow.io',
+    role: 'hr',
+    department: 'Human Resources',
+    designation: 'HR Lead',
+    avatar: '',
+    initials: 'HR',
+    color: '#2563EB',
+  };
+
+export const DEFAULT_MANAGER_USER: User =
+  USERS.find((u) => u.id === 'u9') ||
+  USERS.find((u) => u.role === 'manager') ||
+  CURRENT_MANAGER;
+
+export const PROJECT_HEX_MAP: Record<string, string> = {
+  blue: '#2563eb',
+  green: '#16a34a',
+  purple: '#9333ea',
+  orange: '#f97316',
+  red: '#ef4444',
+};
+
+export interface ProjectExtraMeta {
+  b1: string;
+  b1Color: string;
+  b2: string;
+  b2Color: string;
+  client: string;
+  color: string;
+  hex: string;
+  status: string;
+  priority: string;
+}
+
+export const PROJECT_EXTRAS: Record<string, ProjectExtraMeta> = {
+  p1: {
+    b1: 'Active',
+    b1Color: 'green',
+    b2: 'High',
+    b2Color: 'orange',
+    client: 'Internal',
+    color: 'blue',
+    hex: '#2563eb',
+    status: 'Active',
+    priority: 'High',
+  },
+  p2: {
+    b1: 'In Review',
+    b1Color: 'yellow',
+    b2: 'Medium',
+    b2Color: 'blue',
+    client: 'RetailMax',
+    color: 'green',
+    hex: '#16a34a',
+    status: 'In Review',
+    priority: 'Medium',
+  },
+  p3: {
+    b1: 'Active',
+    b1Color: 'green',
+    b2: 'High',
+    b2Color: 'orange',
+    client: 'FinTech Corp',
+    color: 'purple',
+    hex: '#9333ea',
+    status: 'Active',
+    priority: 'High',
+  },
+  p4: {
+    b1: 'Planning',
+    b1Color: 'blue',
+    b2: 'Medium',
+    b2Color: 'blue',
+    client: 'Internal',
+    color: 'orange',
+    hex: '#f97316',
+    status: 'Planning',
+    priority: 'Medium',
+  },
+  p5: {
+    b1: 'Active',
+    b1Color: 'green',
+    b2: 'Critical',
+    b2Color: 'red',
+    client: 'Internal',
+    color: 'red',
+    hex: '#ef4444',
+    status: 'Active',
+    priority: 'Critical',
+  },
+};
+
+export const getProjectLeadLabel = (project: {
+  name?: string;
+  managers?: { name: string }[];
+}): string => {
+  if (project.managers && project.managers.length > 0) {
+    return project.managers.map((m) => m.name).join(', ');
+  }
+  if (project.name?.toLowerCase() === 'internal') {
+    return 'Internal Lead';
+  }
+  return `${DEFAULT_MANAGER_USER.name} (${DEFAULT_MANAGER_USER.designation || 'Engineering Lead'})`;
+};
+
+export const getSystemAuditLogs = (adminName: string) => [
+  {
+    id: 1,
+    time: '15:06 PM',
+    event: 'MySQL Schema & Table Column Verification',
+    user: 'System',
+    status: 'Completed',
+  },
+  {
+    id: 2,
+    time: '14:44 PM',
+    event: 'Admin Session Authenticated via JWT Token',
+    user: adminName,
+    status: 'Success',
+  },
+  {
+    id: 3,
+    time: '12:30 PM',
+    event: 'HR Timesheet Reminder Notification Dispatched',
+    user: `${DEFAULT_HR_USER.name} (HR)`,
+    status: 'Delivered',
+  },
+  {
+    id: 4,
+    time: '09:15 AM',
+    event: 'Automated Microservice Health Check Passed',
+    user: 'System',
+    status: 'Optimal',
+  },
+];
+
+export const buildFallbackEmployeeReport = () =>
+  USERS.map((u) => {
+    const empRow = EMPLOYEE_TABLE.find((row) => row.user.id === u.id);
+    const totalHours = empRow?.weekHours ?? 40;
+    return {
+      name: u.name,
+      initials: u.initials,
+      color: u.color,
+      department: u.department,
+      designation: u.designation,
+      totalHours,
+      billableHours: Math.round(totalHours * 0.8 * 100) / 100,
+      nonBillableHours: Math.round(totalHours * 0.2 * 100) / 100,
+      projects: empRow?.projects ?? 2,
+      utilization: empRow?.utilization ?? 85,
+    };
+  });
+
+export const buildFallbackProjectReport = () =>
+  PROJECTS.map((p) => ({
+    id: p.id,
+    name: p.name,
+    status: p.status,
+    budgeted: p.totalHours,
+    logged: p.loggedHours,
+    utilizationPct: p.progress,
+    teamSize: p.teamMembers.length,
+  }));
+
+export const buildFallbackDetailedEntries = (params: {
+  to: string;
+  todayStr: string;
+  scope: string;
+  role: string;
+  currentUser: User;
+  empName?: string;
+}) => {
+  const { to, todayStr, scope, role, currentUser, empName } = params;
+  const dummyEntries = WORK_LOGS.map((wl) => {
+    const u = USERS.find((user) => user.id === wl.userId) || USERS[2];
+    return {
+      employeeName: u.name,
+      initials: u.initials,
+      color: u.color,
+      department: u.department || 'Engineering',
+      designation: u.designation || 'Engineer',
+      date: wl.date,
+      projectName: wl.projectName,
+      taskName: wl.taskName,
+      hours: wl.hours,
+      status: wl.status || 'Approved',
+    };
+  });
+
+  const effectiveScope = role === 'employee' ? 'self' : scope;
+  let entries = dummyEntries;
+  if (effectiveScope === 'self') {
+    entries = entries.filter(
+      (e) => e.employeeName.toLowerCase() === currentUser.name.toLowerCase(),
+    );
+    if (entries.length === 0) {
+      entries = [
+        {
+          employeeName: currentUser.name,
+          initials: currentUser.initials || 'ME',
+          color: currentUser.color || '#2563eb',
+          department: currentUser.department || 'Staff',
+          designation: currentUser.designation || 'Employee',
+          date: to || todayStr,
+          projectName: PROJECTS[1]?.name || 'TimeFlow Core Platform',
+          taskName: 'Platform optimization & code review',
+          hours: 8,
+          status: 'Approved',
+        },
+      ];
+    }
+  } else if (effectiveScope === 'employee_single' && empName) {
+    entries = entries.filter(
+      (e) => e.employeeName.toLowerCase() === empName.toLowerCase(),
+    );
+    if (entries.length === 0) {
+      const empObj = USERS.find(
+        (u) => u.name.toLowerCase() === empName.toLowerCase(),
+      );
+      entries = [
+        {
+          employeeName: empName,
+          initials:
+            empObj?.initials ||
+            empName
+              .split(' ')
+              .map((n) => n[0])
+              .join('')
+              .toUpperCase(),
+          color: empObj?.color || '#2563eb',
+          department: empObj?.department || 'Engineering',
+          designation: empObj?.designation || 'Engineer',
+          date: to || todayStr,
+          projectName: PROJECTS[1]?.name || 'TimeFlow Core Platform',
+          taskName: 'Task logs & deliverables',
+          hours: 8,
+          status: 'Approved',
+        },
+      ];
+    }
+  }
+
+  return entries;
+};
+
+

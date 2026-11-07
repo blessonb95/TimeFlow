@@ -4,13 +4,30 @@ import { clearStoredAuthToken, getStoredAuthToken } from '../utils/authTokenStor
 import {
   GUEST_USER,
   getMockProjects,
+  addMockProject,
+  updateMockProject,
+  deleteMockProject,
   getMockWorkLogs,
+  addMockWorkLog,
+  updateMockWorkLog,
+  deleteMockWorkLog,
+  submitMockWeek,
   getMockApprovals,
+  getMockApprovalDetails,
+  updateMockApprovalStatus,
+  bulkUpdateMockApprovals,
+  getMockEmployees,
+  addMockEmployee,
+  updateMockEmployee,
+  getMockNotifications,
+  markMockNotificationRead,
+  markAllMockNotificationsRead,
+  getMockSettings,
+  updateMockSettings,
   getMockEmployeeDashboard,
   getMockManagerDashboard,
   getMockReports,
 } from './mockData';
-import { USERS, NOTIFICATIONS } from '../data/dummy';
 
 const BASE_URL = import.meta.env.MODE === 'vercel'
   ? '/api'
@@ -21,22 +38,40 @@ export const apiClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+const parseBody = (raw: unknown): Record<string, any> => {
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw === 'object') return raw as Record<string, any>;
+  return {};
+};
+
 // ─── Guest / Demo Mode Mock Adapter ──────────────────────────────────────────
 const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => {
   const url = (config.url || '').replace(/^\/api/, '');
+  const cleanUrl = url.split('?')[0];
+  const parts = cleanUrl.split('/').filter(Boolean);
   const method = (config.method || 'get').toLowerCase();
   const params = config.params || {};
+  const body = parseBody(config.data);
   let data: any = { status: 'ok' };
 
-  if (url.includes('/auth/me')) {
+  if (cleanUrl.includes('/auth/me')) {
     data = GUEST_USER;
-  } else if (url.includes('/dashboard/employee')) {
+  } else if (cleanUrl.includes('/dashboard/employee')) {
     data = getMockEmployeeDashboard();
-  } else if (url.includes('/dashboard/manager')) {
+  } else if (cleanUrl.includes('/dashboard/manager')) {
     data = getMockManagerDashboard();
-  } else if (url.includes('/work-logs')) {
-    if (method === 'get') {
-      let list = getMockWorkLogs();
+  } else if (cleanUrl.includes('/work-logs')) {
+    if (cleanUrl.includes('/submit-week')) {
+      data = submitMockWeek(body.weekStart);
+    } else if (method === 'get') {
+      let list = [...getMockWorkLogs()];
       if (params.search) {
         const q = String(params.search).toLowerCase();
         list = list.filter(
@@ -47,49 +82,75 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
         );
       }
       data = list;
-    } else {
-      data = { id: `wl-demo-${Date.now()}`, message: 'Saved successfully in demo mode' };
+    } else if (method === 'post') {
+      data = addMockWorkLog(body);
+    } else if (method === 'put' || method === 'patch') {
+      const id = parts[parts.length - 1];
+      data = updateMockWorkLog(id, body);
+    } else if (method === 'delete') {
+      const id = parts[parts.length - 1];
+      data = deleteMockWorkLog(id);
     }
-  } else if (url.includes('/projects')) {
-    const parts = url.split('?')[0].split('/').filter(Boolean);
-    const projectId = parts[parts.length - 1];
+  } else if (cleanUrl.includes('/projects')) {
+    const projectId = parts.length > 1 && parts[0] === 'projects' ? parts[1] : undefined;
     let allProjects = getMockProjects();
 
-    if (parts.length > 1 && projectId && projectId !== 'projects') {
-      data = allProjects.find((p) => p.id === projectId) || allProjects[0];
-    } else if (method === 'get') {
-      if (params.search) {
-        const q = String(params.search).toLowerCase();
-        allProjects = allProjects.filter(
-          (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
-        );
+    if (method === 'get') {
+      if (projectId) {
+        data = allProjects.find((p) => p.id === projectId) || allProjects[0];
+      } else {
+        if (params.search) {
+          const q = String(params.search).toLowerCase();
+          allProjects = allProjects.filter(
+            (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q)
+          );
+        }
+        if (params.status && params.status !== 'All') {
+          allProjects = allProjects.filter(
+            (p) => p.status.toLowerCase() === String(params.status).toLowerCase()
+          );
+        }
+        data = allProjects;
       }
-      if (params.status && params.status !== 'All') {
-        allProjects = allProjects.filter(
-          (p) => p.status.toLowerCase() === String(params.status).toLowerCase()
-        );
-      }
-      data = allProjects;
-    } else {
-      data = { id: `proj-demo-${Date.now()}`, message: 'Project saved in demo mode' };
+    } else if (method === 'post') {
+      data = addMockProject(body);
+    } else if (method === 'put' || method === 'patch') {
+      data = updateMockProject(projectId || parts[parts.length - 1], body);
+    } else if (method === 'delete') {
+      data = deleteMockProject(projectId || parts[parts.length - 1]);
     }
-  } else if (url.includes('/approvals')) {
-    if (url.includes('/details/')) {
-      const appr = getMockApprovals()[0];
-      data = {
-        ...appr,
-        timesheet: {
-          id: appr.timesheetId,
-          weekStart: appr.period.split(' – ')[0] || 'Mon',
-          weekEnd: appr.period.split(' – ')[1] || 'Fri',
-          totalHours: appr.hours,
-          status: appr.status,
-          user: appr.employee,
-          tasks: getMockWorkLogs(),
-        },
-      };
+  } else if (cleanUrl.includes('/approvals')) {
+    if (cleanUrl.includes('/details')) {
+      // Matches both /approvals/:id/details and /approvals/details/:id
+      const approvalId = parts[parts.length - 1] === 'details' ? parts[parts.length - 2] : parts[parts.length - 1];
+      data = getMockApprovalDetails(approvalId);
+    } else if (cleanUrl.includes('/bulk-approve')) {
+      const ids = Array.isArray(body.ids) ? body.ids : [];
+      data = bulkUpdateMockApprovals(ids, 'Approved');
+    } else if (cleanUrl.includes('/bulk-reject')) {
+      const ids = Array.isArray(body.ids) ? body.ids : [];
+      data = bulkUpdateMockApprovals(ids, 'Rejected', body.comments);
+    } else if (cleanUrl.endsWith('/approve')) {
+      const approvalId = parts[parts.length - 2];
+      data = updateMockApprovalStatus(approvalId, 'Approved');
+    } else if (cleanUrl.endsWith('/reject')) {
+      const approvalId = parts[parts.length - 2];
+      data = updateMockApprovalStatus(approvalId, 'Rejected', body.comments);
+    } else if (cleanUrl.endsWith('/update')) {
+      const approvalId = parts[parts.length - 2];
+      data = updateMockApprovalStatus(
+        approvalId,
+        body.status || 'Submitted',
+        body.comments,
+        {
+          taskName: body.taskName,
+          taskDescription: body.taskDescription,
+          hours: body.hours !== undefined ? Number(body.hours) : undefined,
+          date: body.date,
+        }
+      );
     } else if (method === 'get') {
-      let list = getMockApprovals();
+      let list = [...getMockApprovals()];
       if (params.filter && params.filter !== 'All') {
         list = list.filter((a) => a.status.toLowerCase() === String(params.filter).toLowerCase());
       }
@@ -101,8 +162,8 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
     } else {
       data = { success: true, message: 'Status updated in demo mode' };
     }
-  } else if (url.includes('/reports')) {
-    if (url.includes('/detailed')) {
+  } else if (cleanUrl.includes('/reports')) {
+    if (cleanUrl.includes('/detailed')) {
       data = getMockWorkLogs().map((w) => ({
         employeeName: GUEST_USER.name,
         initials: GUEST_USER.initials,
@@ -118,25 +179,67 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
     } else {
       data = getMockReports();
     }
-  } else if (url.includes('/employees') || url.includes('/users')) {
-    let list = [...USERS];
-    if (params.search) {
-      const q = String(params.search).toLowerCase();
-      list = list.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+  } else if (cleanUrl.includes('/invites')) {
+    if (cleanUrl.includes('/validate')) {
+      data = {
+        email: 'colleague@timeflow.com',
+        role: 'employee',
+        department: 'Engineering',
+        invitedBy: GUEST_USER.name,
+      };
+    } else if (cleanUrl.includes('/accept')) {
+      const fullName = `${body.firstName || ''} ${body.lastName || ''}`.trim() || body.username || 'New Member';
+      addMockEmployee({
+        name: fullName,
+        email: 'colleague@timeflow.com',
+        role: 'employee',
+        department: 'Engineering',
+        designation: 'Software Engineer',
+      });
+      data = { status: 'ok', message: 'Account created in demo mode' };
+    } else {
+      const token = `demo-invite-${Date.now()}`;
+      const base = typeof window !== 'undefined' ? window.location.origin + (import.meta.env.BASE_URL || '/') : '/';
+      data = {
+        token,
+        inviteUrl: `${base.replace(/\/$/, '')}/invite?token=${token}`,
+        expiresAt: new Date(Date.now() + 48 * 3600 * 1000).toISOString(),
+      };
     }
-    if (params.department && params.department !== 'All') {
-      list = list.filter((u) => u.department.toLowerCase() === String(params.department).toLowerCase());
+  } else if (cleanUrl.includes('/employees') || cleanUrl.includes('/users')) {
+    if (method === 'get') {
+      let list = [...getMockEmployees()];
+      if (params.search) {
+        const q = String(params.search).toLowerCase();
+        list = list.filter((u) => u.name.toLowerCase().includes(q) || u.email.toLowerCase().includes(q));
+      }
+      if (params.department && params.department !== 'All') {
+        list = list.filter((u) => u.department.toLowerCase() === String(params.department).toLowerCase());
+      }
+      data = list;
+    } else if (method === 'post') {
+      data = addMockEmployee(body);
+    } else if (method === 'put' || method === 'patch') {
+      const userId = parts[parts.length - 1];
+      data = updateMockEmployee(userId, body);
     }
-    data = list;
-  } else if (url.includes('/notifications')) {
-    data = NOTIFICATIONS;
-  } else if (url.includes('/settings')) {
-    data = {
-      daily_hours_target: 8,
-      timezone: 'Asia/Kolkata',
-      week_start_day: 'Monday',
-      theme: 'system',
-    };
+  } else if (cleanUrl.includes('/notifications')) {
+    if (cleanUrl.includes('/mark-all-read')) {
+      data = markAllMockNotificationsRead();
+    } else if (cleanUrl.endsWith('/read')) {
+      const notifId = parts[parts.length - 2];
+      data = markMockNotificationRead(notifId);
+    } else if (method === 'get') {
+      data = getMockNotifications();
+    } else {
+      data = { ok: true };
+    }
+  } else if (cleanUrl.includes('/settings')) {
+    if (method === 'put' || method === 'post' || method === 'patch') {
+      data = updateMockSettings(body);
+    } else {
+      data = getMockSettings();
+    }
   }
 
   // Artificial short delay to feel realistic and snappy
@@ -153,15 +256,28 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
 
 // ─── Request interceptor: attach JWT & handle Demo Mode ───────────────────────
 apiClient.interceptors.request.use((config) => {
+  const url = config.url || '';
+  const isAuthEndpoint =
+    url.includes('/auth/login') ||
+    url.includes('/auth/register') ||
+    url.includes('/auth/check-username');
+
+  const body = parseBody(config.data);
+  const inviteToken = String(config.params?.token || body?.token || '');
+  const isDemoInvite = url.includes('/invites') && inviteToken.startsWith('demo-invite-');
+
   const token = getStoredAuthToken();
-  const isGuest = token === 'demo-guest-token' || localStorage.getItem('is_guest') === 'true';
+  const isGuest =
+    isDemoInvite ||
+    (!isAuthEndpoint &&
+      (token === 'demo-guest-token' || localStorage.getItem('is_guest') === 'true'));
 
   if (isGuest) {
     config.adapter = mockGuestAdapter as any;
     return config;
   }
 
-  if (token) {
+  if (token && token !== 'demo-guest-token') {
     config.headers.Authorization = `Bearer ${token}`;
   }
   try {
@@ -183,12 +299,17 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
+      const reqUrl = error.config?.url || '';
+      const isAuthRequest =
+        reqUrl.includes('/auth/login') ||
+        reqUrl.includes('/auth/register');
       const isGuest = getStoredAuthToken() === 'demo-guest-token' || localStorage.getItem('is_guest') === 'true';
-      if (!isGuest) {
+      if (!isGuest && !isAuthRequest) {
         clearStoredAuthToken();
         const loginUrl = (import.meta.env.BASE_URL || '/') + 'login';
         const cleanLoginUrl = loginUrl.replace('//', '/');
-        if (!window.location.pathname.endsWith('/login')) {
+        const currentPath = window.location.pathname.replace(/\/+$/, '');
+        if (!currentPath.endsWith('/login')) {
           window.location.href = cleanLoginUrl;
         }
       }

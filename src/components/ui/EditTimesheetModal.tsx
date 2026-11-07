@@ -151,7 +151,7 @@ export const EditTimesheetModal: React.FC<EditTimesheetModalProps> = ({
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="edit-timesheet-title" aria-describedby="edit-timesheet-dialog-help" tabIndex={-1}>
+			<section ref={dialogRef} className="modal modal--md" role="dialog" aria-modal="true" aria-labelledby="edit-timesheet-title" aria-describedby="edit-timesheet-dialog-help" tabIndex={-1}>
 				<div className="modal__header">
 					<div>
 						<h2 id="edit-timesheet-title" className="modal__header-title">Edit Timesheet Submission</h2>
@@ -173,68 +173,27 @@ export const EditTimesheetModal: React.FC<EditTimesheetModalProps> = ({
 						</svg>
 					</button>
 				</div>
-				<form
-					onSubmit={handleSubmit}
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						flex: 1,
-						overflow: "hidden",
-					}}
-				>
+				<form onSubmit={handleSubmit} className="modal__form">
 					<div className="modal__body">
-						{error && (
-							<div
-								style={{
-									background: "#fef2f2",
-									border: "1px solid #f87171",
-									color: "#b91c1c",
-									padding: "0.625rem 0.875rem",
-									borderRadius: 8,
-									fontSize: '0.8125rem',
-									marginBottom: '1rem',
-								}}
-							>
-								{error}
-							</div>
-						)}
+						{error && <div className="modal__error-banner">{error}</div>}
 
-						<div
-							style={{
-								display: "flex",
-								alignItems: "center",
-								gap: '0.75rem',
-								padding: '0.75rem',
-								background: "#f8fafc",
-								borderRadius: 10,
-								border: "1px solid #e2e8f0",
-								marginBottom: '1.25rem',
-							}}
-						>
+						<div className="modal__emp-summary">
 							<Avatar
 								initials={item.employee?.initials || "U"}
 								color={item.employee?.color || "#3b82f6"}
 								size="md"
 							/>
 							<div>
-								<div
-									style={{ fontWeight: 600, color: "#0f172a", fontSize: '0.875rem'}}
-								>
+								<div className="modal__emp-summary-name">
 									{item.employee?.name || "Employee"}
 								</div>
-								<div style={{ fontSize: '0.75rem', color: "#64748b", marginTop: '0.125rem'}}>
+								<div className="modal__emp-summary-sub">
 									Project: {item.projects?.[0] || "General Task"}
 								</div>
 							</div>
 						</div>
 
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr",
-								gap: '1rem',
-							}}
-						>
+						<div className="modal__grid-2">
 							<div className="form-group">
 								<label className="form-group__label" htmlFor="edit-timesheet-date">Date</label>
 								<input
@@ -248,19 +207,11 @@ export const EditTimesheetModal: React.FC<EditTimesheetModalProps> = ({
 							</div>
 							<div className="form-group">
 								<label className="form-group__label">Time Spent</label>
-								<div
-									style={{
-										display: "grid",
-										gridTemplateColumns: "1fr 1fr",
-										gap: '0.5rem',
-									}}
-								>
-									<div
-										style={{ display: "flex", alignItems: "center", gap: '0.25rem'}}
-									>
+								<div className="modal__time-grid">
+									<div className="modal__time-unit">
 										<input
 											type="number"
-										aria-label="Hours spent"
+											aria-label="Hours spent"
 											step="1"
 											min="0"
 											max="24"
@@ -268,14 +219,12 @@ export const EditTimesheetModal: React.FC<EditTimesheetModalProps> = ({
 											value={timeHours}
 											onChange={(e) => setTimeHours(e.target.value)}
 										/>
-										<span style={{ fontSize: '0.8125rem', color: "#6b7280" }}>h</span>
+										<span className="modal__time-unit-label">h</span>
 									</div>
-									<div
-										style={{ display: "flex", alignItems: "center", gap: '0.25rem'}}
-									>
+									<div className="modal__time-unit">
 										<input
 											type="number"
-										aria-label="Minutes spent"
+											aria-label="Minutes spent"
 											step="1"
 											min="0"
 											max="59"
@@ -283,7 +232,7 @@ export const EditTimesheetModal: React.FC<EditTimesheetModalProps> = ({
 											value={timeMinutes}
 											onChange={(e) => setTimeMinutes(e.target.value)}
 										/>
-										<span style={{ fontSize: '0.8125rem', color: "#6b7280" }}>m</span>
+										<span className="modal__time-unit-label">m</span>
 									</div>
 								</div>
 							</div>

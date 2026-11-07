@@ -13,20 +13,12 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   fullPage = false,
   inline = false,
 }) => {
-  const dimension = size === 'sm' ? (inline ? 16 : 24) : size === 'lg' ? 48 : 36;
-  const borderSize = size === 'sm' ? (inline ? 2 : 2.5) : size === 'lg' ? 4 : 3;
+  const sizeClass = size === 'sm' ? (inline ? 'loading-spinner-circle--sm-inline' : 'loading-spinner-circle--sm') : size === 'lg' ? 'loading-spinner-circle--lg' : 'loading-spinner-circle--md';
 
   if (inline) {
     return (
       <span className="loading-spinner-inline" role="status" aria-live="polite">
-        <span
-          className="loading-spinner-circle"
-          style={{
-            width: dimension,
-            height: dimension,
-            borderWidth: borderSize,
-          }}
-        />
+        <span className={`loading-spinner-circle ${sizeClass}`} />
         {message && <span className="loading-spinner-inline-msg">{message}</span>}
       </span>
     );
@@ -39,14 +31,7 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
       aria-live="polite"
     >
       <div className="loading-spinner-wrapper">
-        <div
-          className="loading-spinner-circle"
-          style={{
-            width: dimension,
-            height: dimension,
-            borderWidth: borderSize,
-          }}
-        />
+        <div className={`loading-spinner-circle ${sizeClass}`} />
         <div className="loading-spinner-glow" />
       </div>
       {message && (

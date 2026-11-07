@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import { useLogin } from "../hooks/useAuth";
 import { useAppStore } from "../store/useAppStore";
 
@@ -68,6 +69,7 @@ const FEATURES: FeatureItem[] = [
 
 export const Login: React.FC = () => {
 	const navigate = useNavigate();
+	const qc = useQueryClient();
 	const loginMutation = useLogin();
 	const { setGuestMode } = useAppStore();
 
@@ -81,25 +83,30 @@ export const Login: React.FC = () => {
 
 	// ── Differentiate Server Errors from Credential Errors ───────────────────────
 	const parseAuthError = (err: any): string => {
+		// Non-Axios client error (e.g., configuration error)
+		if (!err?.response && !err?.request && err?.message && err?.code !== "ERR_NETWORK") {
+			return err.message;
+		}
+
 		// Network offline or CORS or no response
-		if (!err.response || err.code === "ERR_NETWORK") {
-			return "Cannot reach the server. The backend service may be offline or starting up. Please check your network and try again.";
+		if (!err?.response || err?.code === "ERR_NETWORK") {
+			return "Cannot reach the server. Make sure the backend server (port 4000) is running, or click 'Explore as Guest' below.";
 		}
 
-		const status = err.response.status;
-		const data = err.response.data;
+		const status = err.response?.status;
+		const data = err.response?.data;
 
-		// 502 / 503 / 504 - Render cold start or service waking up
+		// 502 / 503 / 504 - Render cold start or Vite proxy target down
 		if (status === 502 || status === 503 || status === 504) {
-			return "The server is currently waking up from sleep (Render free tier cold start). Please wait ~30 seconds and try clicking Continue again.";
+			return "Backend server is unreachable or waking up. Make sure the backend server is running on port 4000, or use 'Explore as Guest'.";
 		}
 
-		// 500 - Server / Database Error
+		// 500 - Server / Database Error (or Vite proxy ECONNREFUSED when backend is stopped)
 		if (status >= 500) {
 			if (data?.error && typeof data.error === "string") {
-				return `Server Database Error (${data.error}). Please verify database tables or contact your administrator.`;
+				return `Server Database Error (${data.error}). Ensure MySQL is running and connected, or use 'Explore as Guest'.`;
 			}
-			return "Server Internal Error (500). The backend database or service encountered an issue. Please try again shortly.";
+			return "Server Error (500): The backend API (localhost:4000) or MySQL database is not running. Start the backend server or click 'Explore as Guest'.";
 		}
 
 		// 429 - Rate limiting
@@ -141,6 +148,7 @@ export const Login: React.FC = () => {
 	const handleGuestSignIn = () => {
 		setLoginError("");
 		setPasswordResetNotice("");
+		qc.clear();
 		setGuestMode();
 		navigate("/dashboard");
 	};
@@ -374,17 +382,9 @@ export const Login: React.FC = () => {
 						</p>
 
 						{/* Invite hint */}
-						<p
-							style={{
-								marginTop: "1.25rem",
-								textAlign: "center",
-								fontSize: "0.75rem",
-								color: "#64748b",
-								lineHeight: 1.6,
-							}}
-						>
+						<p className="auth-page__invite-hint">
 							Don't have an account?{" "}
-							<span style={{ color: "#6366f1", fontWeight: 600 }}>
+							<span className="auth-page__invite-hint-accent">
 								Ask your admin for an invite link.
 							</span>
 						</p>

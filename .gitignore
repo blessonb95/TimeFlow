@@ -31,3 +31,8 @@ server/.env
 env.production
 *Credentials*.txt
 
+# Local changelog
+CHANGELOG.md
+changelog*
+
+

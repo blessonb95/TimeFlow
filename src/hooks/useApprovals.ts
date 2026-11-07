@@ -4,7 +4,11 @@ import { useAppStore } from '../store/useAppStore';
 
 export const useApprovals = (filter?: string, searchName?: string, searchDate?: string) => {
   const { role } = useAppStore();
-  return useQuery({ queryKey: ['approvals', filter, role, searchName, searchDate], queryFn: () => approvalsApi.list(filter, role, searchName, searchDate), placeholderData: (prev) => prev });
+  return useQuery({
+    queryKey: ['approvals', filter, role, searchName, searchDate],
+    queryFn: () => approvalsApi.list(filter, role, searchName, searchDate),
+    placeholderData: (prev) => prev,
+  });
 };
 
 export const useApprovalDetails = (id?: string | null) =>
@@ -24,17 +28,20 @@ export const useApproveTimesheet = () => {
       const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map(item => item.id === id ? { ...item, status: 'Approved' } : item);
+        return old.map((item) => (String(item.id) === String(id) ? { ...item, status: 'Approved' } : item));
       });
       return { previousApprovals };
     },
     onSuccess: (updated, id) => {
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map(item => item.id === id ? { ...item, status: 'Approved', ...updated } : item);
+        return old.map((item) =>
+          String(item.id) === String(id) ? { ...item, ...(typeof updated === 'object' ? updated : {}), status: 'Approved' } : item
+        );
       });
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+      qc.invalidateQueries({ queryKey: ['workLogs'] });
     },
     onError: (_error, _id, context) => {
       context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
@@ -53,17 +60,24 @@ export const useRejectTimesheet = () => {
       const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map(item => item.id === id ? { ...item, status: 'Rejected', comments: comments || item.comments } : item);
+        return old.map((item) =>
+          String(item.id) === String(id)
+            ? { ...item, status: 'Rejected', comments: comments || item.comments }
+            : item
+        );
       });
       return { previousApprovals };
     },
     onSuccess: (updated, { id }) => {
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map(item => item.id === id ? { ...item, status: 'Rejected', ...updated } : item);
+        return old.map((item) =>
+          String(item.id) === String(id) ? { ...item, ...(typeof updated === 'object' ? updated : {}), status: 'Rejected' } : item
+        );
       });
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+      qc.invalidateQueries({ queryKey: ['workLogs'] });
     },
     onError: (_error, _variables, context) => {
       context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
@@ -79,15 +93,17 @@ export const useBulkApprove = () => {
     onMutate: async (ids) => {
       await qc.cancelQueries({ queryKey: ['approvals'] });
       const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
+      const idSet = new Set(ids.map(String));
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map(item => ids.includes(item.id) ? { ...item, status: 'Approved' } : item);
+        return old.map((item) => (idSet.has(String(item.id)) ? { ...item, status: 'Approved' } : item));
       });
       return { previousApprovals };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+      qc.invalidateQueries({ queryKey: ['workLogs'] });
     },
     onError: (_error, _ids, context) => {
       context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));
@@ -104,15 +120,21 @@ export const useBulkReject = () => {
     onMutate: async ({ ids, comments }) => {
       await qc.cancelQueries({ queryKey: ['approvals'] });
       const previousApprovals = qc.getQueriesData({ queryKey: ['approvals'] });
+      const idSet = new Set(ids.map(String));
       qc.setQueriesData({ queryKey: ['approvals'] }, (old: any) => {
         if (!Array.isArray(old)) return old;
-        return old.map(item => ids.includes(item.id) ? { ...item, status: 'Rejected', comments: comments || item.comments } : item);
+        return old.map((item) =>
+          idSet.has(String(item.id))
+            ? { ...item, status: 'Rejected', comments: comments || item.comments }
+            : item
+        );
       });
       return { previousApprovals };
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['approvals'] });
       qc.invalidateQueries({ queryKey: ['dashboard'] });
+      qc.invalidateQueries({ queryKey: ['workLogs'] });
     },
     onError: (_error, _variables, context) => {
       context?.previousApprovals.forEach(([queryKey, data]) => qc.setQueryData(queryKey, data));

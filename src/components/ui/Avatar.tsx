@@ -38,14 +38,14 @@ export const Avatar: React.FC<AvatarProps> = ({
 		>
 			<div
 				className={`avatar avatar--${size}`}
-				style={{ background: color, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}
+				style={{ background: color }}
 			>
 				{imgSrc && !imgError ? (
 					<img
 						src={imgSrc}
 						alt={initials}
 						onError={() => setImgError(true)}
-						style={{ width: "100%", height: "100%", objectFit: "cover" }}
+						className="avatar__img"
 					/>
 				) : (
 					initials
@@ -87,8 +87,8 @@ export const AvatarStack: React.FC<AvatarStackProps> = ({
 				</div>
 			))}
 			{extra > 0 && (
-				<div className="avatar-stack-item" style={{ zIndex: 0 }}>
-					<div className="avatar avatar--sm" style={{ background: "#6b7280" }}>
+				<div className="avatar-stack-item">
+					<div className="avatar avatar--sm avatar--overflow">
 						+{extra}
 					</div>
 				</div>

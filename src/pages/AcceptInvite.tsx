@@ -116,7 +116,7 @@ export const AcceptInvite: React.FC = () => {
             { icon: <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>, text: 'Stay aligned with your team' },
           ].map((f, i) => (
             <li key={i} className="auth-page__feature">
-              <span className="auth-page__feature-icon" style={{ fontSize: '1rem', display: 'flex' }}>{f.icon}</span>
+              <span className="auth-page__feature-icon auth-page__feature-icon--sm">{f.icon}</span>
               {f.text}
             </li>
           ))}
@@ -132,7 +132,7 @@ export const AcceptInvite: React.FC = () => {
       <main className="auth-page__right">
         <div className="auth-page__form-wrap invite-page__loading">
           <div className="invite-page__spinner" />
-          <p style={{ color: '#6b7280', marginTop: '1rem', fontSize: '0.875rem'}}>Validating your invite…</p>
+          <p className="invite-page__loading-text">Validating your invite…</p>
         </div>
       </main>
     </div>
@@ -146,8 +146,8 @@ export const AcceptInvite: React.FC = () => {
           <div className="invite-page__state-icon invite-page__state-icon--warn">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
           </div>
-          <h1 className="auth-page__title" style={{ textAlign: 'center' }}>Invite Expired</h1>
-          <p style={{ color: '#6b7280', textAlign: 'center', fontSize: '0.875rem', lineHeight: 1.6}}>
+          <h1 className="auth-page__title invite-page__state-title">Invite Expired</h1>
+          <p className="invite-page__state-desc">
             This invite link has expired. Invite links are valid for 48 hours.<br />
             Please ask your admin to send a new invite.
           </p>
@@ -164,8 +164,8 @@ export const AcceptInvite: React.FC = () => {
           <div className="invite-page__state-icon invite-page__state-icon--info">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           </div>
-          <h1 className="auth-page__title" style={{ textAlign: 'center' }}>Already Used</h1>
-          <p style={{ color: '#6b7280', textAlign: 'center', fontSize: '0.875rem', lineHeight: 1.6}}>
+          <h1 className="auth-page__title invite-page__state-title">Already Used</h1>
+          <p className="invite-page__state-desc">
             This invite link has already been used to create an account.<br />
             If that was you, <button type="button" className="auth-page__switch-link" onClick={() => navigate('/login')}>sign in here</button>.
           </p>
@@ -182,8 +182,8 @@ export const AcceptInvite: React.FC = () => {
           <div className="invite-page__state-icon invite-page__state-icon--error">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
           </div>
-          <h1 className="auth-page__title" style={{ textAlign: 'center' }}>Invalid Link</h1>
-          <p style={{ color: '#6b7280', textAlign: 'center', fontSize: '0.875rem'}}>{errorMsg}</p>
+          <h1 className="auth-page__title invite-page__state-title">Invalid Link</h1>
+          <p className="invite-page__state-desc">{errorMsg}</p>
         </div>
       </main>
     </div>
@@ -197,8 +197,8 @@ export const AcceptInvite: React.FC = () => {
           <div className="invite-page__state-icon invite-page__state-icon--success">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" width="1em" height="1em"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
           </div>
-          <h1 className="auth-page__title" style={{ textAlign: 'center' }}>Account Created!</h1>
-          <p style={{ color: '#6b7280', textAlign: 'center', fontSize: '0.875rem'}}>
+          <h1 className="auth-page__title invite-page__state-title">Account Created!</h1>
+          <p className="invite-page__state-desc">
             Your account has been created successfully. Redirecting to the login screen…
           </p>
         </div>
@@ -217,7 +217,7 @@ export const AcceptInvite: React.FC = () => {
 
           {/* Header */}
           <div className="invite-page__header">
-            <h1 className="auth-page__title" style={{ marginBottom: '0.25rem'}}>Accept your invite</h1>
+            <h1 className="auth-page__title invite-page__header-title">Accept your invite</h1>
             <p className="auth-page__subtitle">
               Invited by <strong>{inviteInfo?.invitedBy}</strong>
             </p>
@@ -250,10 +250,10 @@ export const AcceptInvite: React.FC = () => {
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="auth-page__form" style={{ marginTop: '1.25rem'}}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem'}}>
+          <form onSubmit={handleSubmit} className="auth-page__form invite-page__form">
+            <div className="invite-page__grid-2">
               <div className="form-group">
-                <label className="form-group__label" htmlFor="invite-first-name">First name <span style={{ color: '#ef4444' }}>*</span></label>
+                <label className="form-group__label" htmlFor="invite-first-name">First name <span className="form-group__required">*</span></label>
                 <input
                   className="form-group__input"
                   id="invite-first-name"
@@ -281,7 +281,7 @@ export const AcceptInvite: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-group__label" htmlFor="invite-username">Username <span style={{ color: '#ef4444' }}>*</span></label>
+              <label className="form-group__label" htmlFor="invite-username">Username <span className="form-group__required">*</span></label>
               <input
                 className="form-group__input"
                 id="invite-username"
@@ -293,12 +293,12 @@ export const AcceptInvite: React.FC = () => {
                 autoComplete="username"
               />
               {username.length > 0 && username.length < 3 && (
-                <p role="status" aria-live="polite" style={{ fontSize: '0.75rem', color: '#f97316', marginTop: '0.25rem'}}>At least 3 characters</p>
+                <p role="status" aria-live="polite" className="invite-page__hint-warn">At least 3 characters</p>
               )}
             </div>
 
             <div className="form-group">
-              <label className="form-group__label" htmlFor="invite-password">Password <span style={{ color: '#ef4444' }}>*</span></label>
+              <label className="form-group__label" htmlFor="invite-password">Password <span className="form-group__required">*</span></label>
               <div className="auth-page__pwd-wrap">
                 <input
                   className="form-group__input auth-page__pwd-input"
@@ -316,17 +316,17 @@ export const AcceptInvite: React.FC = () => {
               </div>
               {/* Strength bar */}
               {password.length > 0 && (
-                <div style={{ marginTop: '0.375rem'}}>
-                  <div style={{ display: 'flex', gap: '0.25rem'}}>
+                <div className="invite-page__strength-wrap">
+                  <div className="invite-page__strength-bars">
                     {[1,2,3,4].map(n => (
-                      <div key={n} style={{
-                        flex: 1, height: 3, borderRadius: 99,
-                        background: n <= pwdStrength ? strengthColor : '#e5e7eb',
-                        transition: 'background 0.2s',
-                      }} />
+                      <div
+                        key={n}
+                        className="invite-page__strength-bar"
+                        style={{ background: n <= pwdStrength ? strengthColor : '#e5e7eb' }}
+                      />
                     ))}
                   </div>
-                  <p role="status" aria-live="polite" aria-atomic="true" style={{ fontSize: '0.6875rem', color: strengthColor, marginTop: '0.1875rem', fontWeight: 600 }}>
+                  <p role="status" aria-live="polite" aria-atomic="true" className="invite-page__strength-label" style={{ color: strengthColor }}>
                     {strengthLabel}
                   </p>
                 </div>
@@ -334,7 +334,7 @@ export const AcceptInvite: React.FC = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-group__label" htmlFor="invite-confirm-password">Confirm password <span style={{ color: '#ef4444' }}>*</span></label>
+              <label className="form-group__label" htmlFor="invite-confirm-password">Confirm password <span className="form-group__required">*</span></label>
               <div className="auth-page__pwd-wrap">
                 <input
                   className="form-group__input auth-page__pwd-input"
@@ -351,12 +351,12 @@ export const AcceptInvite: React.FC = () => {
                 </button>
               </div>
               {confirm.length > 0 && confirm !== password && (
-                <p role="alert" aria-live="polite" style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.25rem'}}>Passwords don't match</p>
+                <p role="alert" aria-live="polite" className="invite-page__hint-error">Passwords don't match</p>
               )}
             </div>
 
             {formError && (
-              <p id="invite-form-error" role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '0.25rem'}}>{formError}</p>
+              <p id="invite-form-error" role="alert" className="invite-page__form-error">{formError}</p>
             )}
 
             <button
@@ -365,13 +365,13 @@ export const AcceptInvite: React.FC = () => {
               disabled={pageState === 'submitting'}
             >
               {pageState === 'submitting' ? (
-                <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem'}}>
+                <span className="invite-page__submit-content">
                   <span className="invite-page__btn-spinner" /> Creating account…
                 </span>
               ) : 'Create my account →'}
             </button>
 
-            <p style={{ textAlign: 'center', fontSize: '0.75rem', color: '#6b7280', marginTop: '0.75rem'}}>
+            <p className="invite-page__footer-hint">
               Already have an account?{' '}
               <button type="button" className="auth-page__switch-link" onClick={() => navigate('/login')}>
                 Sign in

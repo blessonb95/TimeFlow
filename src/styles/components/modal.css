@@ -76,6 +76,98 @@
   gap: 0.75rem;
   flex-shrink: 0;
 }
+.modal--md {
+  width: 32.5rem;
+}
+.modal__form {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+.modal__error-banner {
+  background: #fef2f2;
+  border: 0.0625rem solid #f87171;
+  color: #b91c1c;
+  padding: 0.625rem 0.875rem;
+  border-radius: 0.5rem;
+  font-size: 0.8125rem;
+  margin-bottom: 1rem;
+}
+.modal__grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+.modal__grid-2--spaced {
+  margin-top: 0.5rem;
+}
+.modal__grid-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 0.75rem;
+}
+.modal__field-error {
+  font-size: 0.75rem;
+  color: #ef4444;
+  margin-top: 0.3125rem;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 500;
+}
+.modal__field-error svg {
+  width: 0.875rem;
+  height: 0.875rem;
+  flex-shrink: 0;
+}
+.modal__textarea {
+  min-height: 5.25rem;
+  padding: 0.75rem 0.875rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+.modal__submit-btn {
+  cursor: pointer;
+}
+.modal__submit-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.modal__emp-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: #f8fafc;
+  border-radius: 0.625rem;
+  border: 0.0625rem solid #e2e8f0;
+  margin-bottom: 1.25rem;
+}
+.modal__emp-summary-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 0.875rem;
+}
+.modal__emp-summary-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin-top: 0.125rem;
+}
+.modal__time-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.5rem;
+}
+.modal__time-unit {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.modal__time-unit-label {
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
 .review-modal__field-error {
   font-size: 0.75rem;
   color: #ef4444;
@@ -411,6 +503,47 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+.review-modal__content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.review-modal__th-right {
+  text-align: right;
+}
+.review-modal__td-right {
+  text-align: right;
+}
+.review-modal__td-hours {
+  text-align: right;
+  font-weight: 600;
+}
+.review-modal__task-name {
+  font-weight: 500;
+  color: #0f172a;
+}
+.review-modal__readonly-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+.review-modal__readonly-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.8125rem;
+  color: #334155;
+  font-weight: 600;
+  background: #f1f5f9;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  border: 0.0625rem solid #cbd5e1;
+}
+.review-modal__action-btns {
+  display: flex;
+  gap: 0.625rem;
+}
 .task-desc-modal__overlay {
   position: fixed;
   inset: 0;
@@ -579,6 +712,21 @@
 }
 .confirm-modal__prompt-input:focus {
   border-color: #2563eb;
+}
+.confirm-modal__prompt-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+.confirm-modal__prompt-error svg {
+  width: 0.8125rem;
+  height: 0.8125rem;
+  flex-shrink: 0;
+}
+.confirm-modal__prompt-count {
+  font-size: 0.6875rem;
+  color: #64748b;
+  text-align: right;
 }
 .confirm-modal__footer {
   padding: 1rem 1.5rem;
