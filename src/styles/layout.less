@@ -711,7 +711,11 @@
 	font-weight: 400;
 }
 
-.topbar__search:focus-visible,
+.topbar__search:focus,
+.topbar__search:focus-visible {
+	outline: none;
+}
+
 .topbar__notif:focus-visible,
 .topbar__mobile-toggle:focus-visible,
 .topbar__notification-item:focus-visible,
