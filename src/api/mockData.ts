@@ -491,6 +491,11 @@ export const bulkUpdateMockApprovals = (ids: string[], status: 'Approved' | 'Rej
   return { success: true, updated: ids.length, status };
 };
 
+export const resetMockApprovals = () => {
+  mockApprovalsState = createInitialApprovals();
+  return mockApprovalsState;
+};
+
 export const getMockApprovalDetails = (id: string) => {
   const cleanUserId = id.startsWith('user_') ? id.replace('user_', '') : id;
   const appr =
@@ -644,13 +649,13 @@ export const getMockManagerDashboard = () => {
   };
 
   const employeeTable = [
-    { user: USERS[2], status: 'Active', utilization: 92, projects: 3, weekHours: 38.5, timesheetStatus: statusForUser(USERS[2].id, 'Pending') },
-    { user: USERS[4], status: 'Active', utilization: 88, projects: 2, weekHours: 36.0, timesheetStatus: statusForUser(USERS[4].id, 'Pending') },
-    { user: USERS[5], status: 'Active', utilization: 85, projects: 2, weekHours: 35.0, timesheetStatus: statusForUser(USERS[5].id, 'Pending') },
-    { user: USERS[7], status: 'Active', utilization: 80, projects: 3, weekHours: 32.0, timesheetStatus: statusForUser(USERS[7].id, 'Approved') },
-    { user: USERS[3], status: 'Active', utilization: 95, projects: 1, weekHours: 40.0, timesheetStatus: statusForUser(USERS[3].id, 'Approved') },
-    { user: USERS[6], status: 'Active', utilization: 72, projects: 2, weekHours: 30.0, timesheetStatus: 'In Progress' },
-    { user: USERS[8], status: 'Active', utilization: 78, projects: 2, weekHours: 34.0, timesheetStatus: 'In Progress' },
+    { user: USERS[2], status: 'Active', utilization: 96, projects: 3, primaryProject: 'TimeFlow Core Platform', weekHours: 38.5, timesheetStatus: statusForUser(USERS[2].id, 'Pending') },
+    { user: USERS[4], status: 'Active', utilization: 90, projects: 2, primaryProject: 'Client Portal Redesign', weekHours: 36.0, timesheetStatus: statusForUser(USERS[4].id, 'Pending') },
+    { user: USERS[5], status: 'Active', utilization: 88, projects: 2, primaryProject: 'Analytics Dashboard', weekHours: 35.0, timesheetStatus: statusForUser(USERS[5].id, 'Pending') },
+    { user: USERS[7], status: 'Active', utilization: 80, projects: 3, primaryProject: 'TimeFlow Core Platform', weekHours: 32.0, timesheetStatus: statusForUser(USERS[7].id, 'Approved') },
+    { user: USERS[3], status: 'Active', utilization: 100, projects: 1, primaryProject: 'Infrastructure Migration', weekHours: 40.0, timesheetStatus: statusForUser(USERS[3].id, 'Approved') },
+    { user: USERS[6], status: 'Active', utilization: 75, projects: 2, primaryProject: 'Mobile App v3', weekHours: 30.0, timesheetStatus: statusForUser(USERS[6].id, 'Approved') },
+    { user: USERS[8], status: 'Active', utilization: 85, projects: 2, primaryProject: 'Analytics Dashboard', weekHours: 34.0, timesheetStatus: statusForUser(USERS[8].id, 'Approved') },
   ];
 
   const pendingApprovals = mockApprovalsState.filter((a) => a.status === 'Pending').length;

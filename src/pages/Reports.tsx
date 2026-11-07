@@ -886,6 +886,7 @@ export const Reports: React.FC = () => {
 								Employee Hours Summary
 							</span>
 						</div>
+						<div className="table-responsive">
 						<table className="reports__table">
 							<thead>
 								<tr>
@@ -969,6 +970,7 @@ export const Reports: React.FC = () => {
 								)}
 							</tbody>
 						</table>
+						</div>
 						<Pagination
 							currentPage={empPage}
 							totalItems={employeeReport.length}
@@ -1151,6 +1153,7 @@ export const Reports: React.FC = () => {
 								Project Profitability
 							</span>
 						</div>
+						<div className="table-responsive">
 						<table className="reports__table">
 							<thead>
 								<tr>
@@ -1259,6 +1262,7 @@ export const Reports: React.FC = () => {
 								)}
 							</tbody>
 						</table>
+						</div>
 						<Pagination
 							currentPage={projPage}
 							totalItems={projectReport.length}
@@ -1684,6 +1688,7 @@ export const Reports: React.FC = () => {
 											<div className="reports__preview-section-title">
 												Employee Hours Summary
 											</div>
+											<div className="table-responsive">
 											<table className="reports__preview-table">
 												<thead>
 													<tr>
@@ -1755,10 +1760,12 @@ export const Reports: React.FC = () => {
 													)}
 												</tbody>
 											</table>
+											</div>
 											{/* Project Profitability */}
 											<div className="reports__preview-section-title">
 												Project Profitability
 											</div>
+											<div className="table-responsive">
 											<table className="reports__preview-table">
 												<thead>
 													<tr>
@@ -1830,6 +1837,7 @@ export const Reports: React.FC = () => {
 													)}
 												</tbody>
 											</table>
+											</div>
 										</>
 									);
 								})()
@@ -1877,6 +1885,7 @@ export const Reports: React.FC = () => {
 																</strong>
 															</div>
 														</div>
+														<div className="table-responsive">
 														<table className="reports__preview-table">
 															<thead>
 																<tr>
@@ -1927,6 +1936,7 @@ export const Reports: React.FC = () => {
 																})}
 															</tbody>
 														</table>
+														</div>
 													</div>
 												);
 											},

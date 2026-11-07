@@ -5,6 +5,7 @@
 .auth-page {
 	display: flex;
 	min-height: 100vh;
+	min-height: 100svh;
 
 	// ── Left branding panel ───────────────────────────────────────────────────
 	&__left {
@@ -889,7 +890,7 @@
 @media (max-width: 48rem) {
 	.auth-page {
 		min-height: 100vh;
-		min-height: 100dvh;
+		min-height: 100svh;
 
 		&__left {
 			display: none;
@@ -898,7 +899,7 @@
 		&__right {
 			width: 100%;
 			min-width: 0;
-			padding: 2rem 1rem;
+			padding: calc(2rem + env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) calc(2rem + env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
 			align-items: center;
 			background: #f1f5f9;
 		}

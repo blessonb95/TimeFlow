@@ -57,6 +57,9 @@
 
 html {
 	font-size: 1rem; /* Respects the browser default, normally 16px */
+	-webkit-tap-highlight-color: transparent;
+	-webkit-text-size-adjust: 100%;
+	overscroll-behavior: none;
 }
 
 html,
@@ -67,6 +70,7 @@ body,
 	font-size: @font-size-base;
 	color: @color-text-primary;
 	background: @color-bg;
+	overscroll-behavior: none;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 }
@@ -74,21 +78,45 @@ body,
 a {
 	text-decoration: none;
 	color: inherit;
+	touch-action: manipulation;
+}
+button,
+[role="button"],
+[role="tab"],
+summary,
+label[for] {
+	touch-action: manipulation;
+}
+button,
+[role="button"],
+[role="tab"],
+.btn,
+.badge,
+.sidebar__nav-item,
+.guest-banner__role-pill,
+.pagination__btn,
+.pagination__page-btn {
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }
 button {
 	font-family: @font-family;
 	transition-property: background-color, border-color, color, box-shadow, transform;
-	transition-duration: 160ms;
+	transition-duration: 140ms;
 	transition-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+@media (prefers-reduced-motion: no-preference) {
+	button:not(:disabled):active,
+	[role="button"]:not([aria-disabled="true"]):active {
+		transform: translateY(0) scale(0.97);
+	}
+}
+
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
 	button:not(:disabled):not(.auth-page__eye):hover {
 		transform: translateY(-0.0625rem);
-	}
-
-	button:not(:disabled):active {
-		transform: translateY(0) scale(0.985);
 	}
 
 	a[href]:hover {
@@ -97,7 +125,7 @@ button {
 	}
 }
 
-@media (hover: hover) and (prefers-reduced-motion: no-preference) {
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
 	.dashboard__week-hero,
 	.dashboard__panel,
 	.dashboard__stat-card,
@@ -112,6 +140,14 @@ button {
 	.projects__card:hover,
 	.employees__card:hover {
 		transform: translateY(-0.125rem);
+	}
+}
+
+@media (pointer: coarse) {
+	input,
+	textarea,
+	select {
+		font-size: 16px !important;
 	}
 }
 
@@ -134,13 +170,17 @@ textarea {
 
 a:focus-visible,
 button:focus-visible,
-input:focus-visible,
-select:focus-visible,
-textarea:focus-visible,
 summary:focus-visible,
 [tabindex]:focus-visible {
 	outline: 0.1875rem solid @color-primary;
 	outline-offset: 0.125rem;
+}
+
+input:focus,
+input:focus-visible,
+input[type="search"]:focus,
+input[type="search"]:focus-visible {
+	outline: none;
 }
 
 :where(input, select, textarea) {

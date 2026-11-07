@@ -29,8 +29,10 @@
 		tr {
 			border-bottom: 0.0625rem solid @color-border;
 			transition: background @transition-fast;
-			&:hover {
-				background: @canvas-light;
+			@media (hover: hover) and (pointer: fine) {
+				&:hover {
+					background: @canvas-light;
+				}
 			}
 			&:last-child {
 				border-bottom: none;
@@ -49,9 +51,15 @@
 		overflow-x: auto;
 		overflow-y: hidden;
 		-webkit-overflow-scrolling: touch;
+		touch-action: pan-x pan-y;
+		overscroll-behavior-x: contain;
 		box-shadow: @shadow-xs;
 		border: 0.0625rem solid @color-border;
 		background: @white;
+
+		& > .table-responsive {
+			margin-bottom: 0;
+		}
 
 		thead th:first-child {
 			padding-left: @space-5;
@@ -80,13 +88,30 @@
 	max-width: 100%;
 	overflow-x: auto;
 	-webkit-overflow-scrolling: touch;
+	touch-action: pan-x pan-y;
+	overscroll-behavior-x: contain;
 	margin-bottom: @space-2;
 	display: block;
 }
 
 @media (max-width: 48rem) {
+	table:not(.worklogs__grid-table),
+	.data-table,
+	.reports__table,
+	.reports__preview-table,
+	.dashboard__mgr-table {
+		width: max-content;
+		min-width: 100%;
+
+		th,
+		td {
+			white-space: nowrap;
+			overflow-wrap: normal;
+			word-break: normal;
+		}
+	}
+
 	.data-table {
-		min-width: 38rem;
 		thead th {
 			padding: 0.5rem 0.625rem;
 		}

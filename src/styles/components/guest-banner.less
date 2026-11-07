@@ -1,7 +1,7 @@
 .guest-banner {
 	background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 35%, #2563eb 75%, #3b82f6 100%);
 	color: #ffffff;
-	padding: 0.5rem 1.25rem;
+	padding: calc(0.5rem + env(safe-area-inset-top, 0px)) max(1.25rem, env(safe-area-inset-right, 0px)) 0.5rem max(1.25rem, env(safe-area-inset-left, 0px));
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
@@ -17,7 +17,7 @@
 		flex-direction: column;
 		align-items: flex-start;
 		gap: 0.5rem;
-		padding: 0.625rem 1rem;
+		padding: calc(0.625rem + env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) 0.625rem max(1rem, env(safe-area-inset-left, 0px));
 	}
 
 	&__left {
@@ -91,9 +91,11 @@
 		cursor: pointer;
 		transition: all 0.15s ease;
 
-		&:hover {
-			background: rgba(255, 255, 255, 0.18);
-			color: #ffffff;
+		@media (hover: hover) and (pointer: fine) {
+			&:hover {
+				background: rgba(255, 255, 255, 0.18);
+				color: #ffffff;
+			}
 		}
 
 		&--active {
@@ -101,9 +103,11 @@
 			color: #1e40af;
 			box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 
-			&:hover {
-				background: #ffffff;
-				color: #1e40af;
+			@media (hover: hover) and (pointer: fine) {
+				&:hover {
+					background: #ffffff;
+					color: #1e40af;
+				}
 			}
 		}
 	}
@@ -119,9 +123,16 @@
 		cursor: pointer;
 		transition: all 0.15s ease;
 
-		&:hover {
-			background: #ef4444;
-			border-color: #ef4444;
+		@media (hover: hover) and (pointer: fine) {
+			&:hover {
+				background: #ef4444;
+				border-color: #ef4444;
+				color: #ffffff;
+			}
+		}
+		&:active {
+			background: #dc2626;
+			border-color: #dc2626;
 			color: #ffffff;
 		}
 	}

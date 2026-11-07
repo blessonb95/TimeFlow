@@ -1,7 +1,7 @@
 .guest-banner {
   background: linear-gradient(90deg, #0f172a 0%, #1e3a8a 35%, #2563eb 75%, #3b82f6 100%);
   color: #ffffff;
-  padding: 0.5rem 1.25rem;
+  padding: calc(0.5rem + env(safe-area-inset-top, 0px)) 1.25rem 0.5rem 1.25rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -18,7 +18,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 0.5rem;
-    padding: 0.625rem 1rem;
+    padding: calc(0.625rem + env(safe-area-inset-top, 0px)) 1rem 0.625rem 1rem;
   }
 }
 .guest-banner__left {
@@ -85,18 +85,22 @@
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.guest-banner__role-pill:hover {
-  background: rgba(255, 255, 255, 0.18);
-  color: #ffffff;
+@media (hover: hover) and (pointer: fine) {
+  .guest-banner__role-pill:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+  }
 }
 .guest-banner__role-pill--active {
   background: #ffffff;
   color: #1e40af;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
-.guest-banner__role-pill--active:hover {
-  background: #ffffff;
-  color: #1e40af;
+@media (hover: hover) and (pointer: fine) {
+  .guest-banner__role-pill--active:hover {
+    background: #ffffff;
+    color: #1e40af;
+  }
 }
 .guest-banner__exit {
   border: 1px solid rgba(255, 255, 255, 0.35);
@@ -109,9 +113,16 @@
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.guest-banner__exit:hover {
-  background: #ef4444;
-  border-color: #ef4444;
+@media (hover: hover) and (pointer: fine) {
+  .guest-banner__exit:hover {
+    background: #ef4444;
+    border-color: #ef4444;
+    color: #ffffff;
+  }
+}
+.guest-banner__exit:active {
+  background: #dc2626;
+  border-color: #dc2626;
   color: #ffffff;
 }
 @keyframes bannerPulse {

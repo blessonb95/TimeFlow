@@ -8,6 +8,7 @@
   align-items: flex-start;
   justify-content: center;
   padding-top: 10vh;
+  overscroll-behavior: contain;
   animation: search-overlay-in 150ms ease-out both;
 }
 .search-modal {
@@ -44,10 +45,6 @@
   padding: 1rem 1.25rem;
   border-bottom: 0.0625rem solid #f3f4f6;
 }
-.search-modal__header:focus-within {
-  outline: 0.1875rem solid #2563eb;
-  outline-offset: -0.1875rem;
-}
 .search-modal__header input {
   flex: 1;
   border: none;
@@ -56,6 +53,11 @@
   margin-inline-start: 0.75rem;
   color: #111827;
   background: transparent;
+}
+.search-modal__header input:focus,
+.search-modal__header input:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 .search-modal__header input::placeholder {
   color: #6b7280;
@@ -70,6 +72,7 @@
 }
 .search-modal__body {
   padding: 0.75rem 0;
+  overscroll-behavior: contain;
 }
 .search-modal__section-title {
   font-size: 0.6875rem;
@@ -97,11 +100,17 @@
   text-align: start;
   transition: background 0.1s ease;
 }
-.search-modal__item:hover,
+@media (hover: hover) and (pointer: fine) {
+  .search-modal__item:hover {
+    background: #f1f5f9;
+  }
+  .search-modal__item:hover .search-modal__item-label {
+    font-weight: 600;
+  }
+}
 .search-modal__item--active {
   background: #f1f5f9;
 }
-.search-modal__item:hover .search-modal__item-label,
 .search-modal__item--active .search-modal__item-label {
   font-weight: 600;
 }

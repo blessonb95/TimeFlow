@@ -344,6 +344,7 @@ export const Employees: React.FC = () => {
 
       {viewMode === 'list' ? (
         <div className="data-table--card">
+          <div className="table-responsive">
           <table className="data-table">
             <caption className="sr-only">Employees and weekly timesheet summary</caption>
             <thead>
@@ -416,6 +417,7 @@ export const Employees: React.FC = () => {
               )}
             </tbody>
           </table>
+          </div>
           <Pagination
             currentPage={page}
             totalItems={filtered.length}

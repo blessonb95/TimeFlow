@@ -22,8 +22,10 @@
   border-bottom: 0.0625rem solid #e5e7eb;
   transition: background all 0.12s ease;
 }
-.data-table tbody tr:hover {
-  background: #f3f4f6;
+@media (hover: hover) and (pointer: fine) {
+  .data-table tbody tr:hover {
+    background: #f3f4f6;
+  }
 }
 .data-table tbody tr:last-child {
   border-bottom: none;
@@ -38,9 +40,14 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
   box-shadow: 0 0.0625rem 0.125rem rgba(0, 0, 0, 0.05);
   border: 0.0625rem solid #e5e7eb;
   background: #ffffff;
+}
+.data-table--card > .table-responsive {
+  margin-bottom: 0;
 }
 .data-table--card thead th:first-child {
   padding-left: 1.25rem;
@@ -65,12 +72,33 @@
   max-width: 100%;
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+  touch-action: pan-x pan-y;
+  overscroll-behavior-x: contain;
   margin-bottom: 0.5rem;
   display: block;
 }
 @media (max-width: 48rem) {
-  .data-table {
-    min-width: 38rem;
+  table:not(.worklogs__grid-table),
+  .data-table,
+  .reports__table,
+  .reports__preview-table,
+  .dashboard__mgr-table {
+    width: max-content;
+    min-width: 100%;
+  }
+  table:not(.worklogs__grid-table) th,
+  .data-table th,
+  .reports__table th,
+  .reports__preview-table th,
+  .dashboard__mgr-table th,
+  table:not(.worklogs__grid-table) td,
+  .data-table td,
+  .reports__table td,
+  .reports__preview-table td,
+  .dashboard__mgr-table td {
+    white-space: nowrap;
+    overflow-wrap: normal;
+    word-break: normal;
   }
   .data-table thead th {
     padding: 0.5rem 0.625rem;

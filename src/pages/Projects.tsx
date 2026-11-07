@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Badge } from "../components/ui/Badge";
 import { ProgressBar } from "../components/ui/ProgressBar";
@@ -10,7 +10,7 @@ import { useProjects } from "../hooks/useProjects";
 import { useAppStore } from "../store/useAppStore";
 import { CardGridSkeleton, Skeleton } from "../components/ui/LoadingState";
 import { EmptyState } from "../components/ui/EmptyState";
-import { PROJECT_EXTRAS, PROJECT_HEX_MAP, getProjectLeadLabel } from "../data/dummy";
+import { PROJECT_EXTRAS, getProjectLeadLabel } from "../data/dummy";
 
 export const Projects: React.FC = () => {
 	const { role } = useAppStore();
@@ -20,14 +20,32 @@ export const Projects: React.FC = () => {
 	const [showCreateModal, setShowCreateModal] = useState(false);
 	const [editingProject, setEditingProject] = useState<any | null>(null);
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-	const pageSize = viewMode === "list" ? 10 : 6;
+	const [isMobileView, setIsMobileView] = useState<boolean>(() =>
+		typeof window !== "undefined"
+			? window.matchMedia("(max-width: 48rem)").matches
+			: false,
+	);
+
+	useEffect(() => {
+		if (typeof window === "undefined") return;
+		const mql = window.matchMedia("(max-width: 48rem)");
+		const handleChange = (e: MediaQueryListEvent) => {
+			setIsMobileView(e.matches);
+		};
+		setIsMobileView(mql.matches);
+		mql.addEventListener("change", handleChange);
+		return () => mql.removeEventListener("change", handleChange);
+	}, []);
+
+	const effectiveViewMode = isMobileView ? "list" : viewMode;
+	const pageSize = effectiveViewMode === "list" ? 10 : 6;
 
 	const { data: projects = [], isLoading, isError, isFetching, refetch } = useProjects({
 		search: search || undefined,
 		status: filter === "All" ? undefined : filter,
 	});
 
-	const paginatedProjects = viewMode === "list"
+	const paginatedProjects = effectiveViewMode === "list"
 		? projects.slice((page - 1) * pageSize, page * pageSize)
 		: projects;
 
@@ -159,7 +177,7 @@ export const Projects: React.FC = () => {
 				</div>
 			</div>
 
-			{viewMode === "grid" ? (
+			{effectiveViewMode === "grid" ? (
 				<div className="projects__grid">
 					{paginatedProjects.map(
 						(p: {
@@ -186,7 +204,7 @@ export const Projects: React.FC = () => {
 										? "blue"
 										: "gray";
 							const ex = PROJECT_EXTRAS[p.id];
-							const dotHex = PROJECT_HEX_MAP[ex?.color || "blue"] || "#2563eb";
+							const dotColor = ex?.color || "blue";
 							const barColor =
 								p.status === "Over Budget"
 									? "red"
@@ -202,8 +220,7 @@ export const Projects: React.FC = () => {
 									<div className="projects__card-header">
 										<div className="projects__card-header-left">
 											<div
-												className="projects__card-dot"
-												style={{ backgroundColor: dotHex }}
+												className={`projects__card-dot projects__card-dot--${dotColor}`}
 											/>
 											<Link className="projects__card-title" to={`/projects/${p.id}`}>{p.name}</Link>
 										</div>
@@ -342,77 +359,77 @@ export const Projects: React.FC = () => {
 				</div>
 			) : (
 				<div className="data-table--card">
-					<table className="data-table">
-						<caption className="sr-only">Projects, status, progress, and team assignments</caption>
-						<thead>
-							<tr>
-								<th scope="col">Project</th>
-								<th scope="col">Status</th>
-								<th scope="col">Priority</th>
-								<th scope="col">Project Manager</th>
-								<th scope="col" className="projects__th-progress">Progress</th>
-								<th scope="col">Hours</th>
-								<th scope="col">Team</th>
-								{(role === "manager" || role === "admin") && (
-									<th scope="col" className="projects__th-right">Actions</th>
-								)}
-							</tr>
-						</thead>
-						<tbody>
-							{paginatedProjects.map(
-								(p: {
-									id: string;
-									name: string;
-									status: string;
-									priority: string;
-									description: string;
-									progress: number;
-									loggedHours: number;
-									totalHours: number;
-									teamMembers?: {
-										initials: string;
-										color: string;
+					<div className="table-responsive">
+						<table className="data-table">
+							<caption className="sr-only">Projects, status, progress, and team assignments</caption>
+							<thead>
+								<tr>
+									<th scope="col">Project</th>
+									<th scope="col">Status</th>
+									<th scope="col">Priority</th>
+									<th scope="col">Project Manager</th>
+									<th scope="col" className="projects__th-progress">Progress</th>
+									<th scope="col">Hours</th>
+									<th scope="col">Team</th>
+									{(role === "manager" || role === "admin") && (
+										<th scope="col" className="projects__th-right">Actions</th>
+									)}
+								</tr>
+							</thead>
+							<tbody>
+								{paginatedProjects.map(
+									(p: {
+										id: string;
 										name: string;
-									}[];
-									managers?: {
-										initials?: string;
-										color?: string;
-										name: string;
-										role?: string;
-									}[];
-								}) => {
-									const badgeVariant =
-										p.status === "On Track"
-											? "green"
-											: p.status === "At Risk"
-												? "orange"
-												: p.status === "Over Budget"
-													? "red"
-													: "gray";
-									const ex = PROJECT_EXTRAS[p.id];
-									const dotHex = PROJECT_HEX_MAP[ex?.color || "blue"] || "#2563eb";
-									const barColor =
-										p.status === "Over Budget"
-											? "red"
-											: p.status === "At Risk"
-												? "orange"
-												: "green";
+										status: string;
+										priority: string;
+										description: string;
+										progress: number;
+										loggedHours: number;
+										totalHours: number;
+										teamMembers?: {
+											initials: string;
+											color: string;
+											name: string;
+										}[];
+										managers?: {
+											initials?: string;
+											color?: string;
+											name: string;
+											role?: string;
+										}[];
+									}) => {
+										const badgeVariant =
+											p.status === "On Track"
+												? "green"
+												: p.status === "At Risk"
+													? "orange"
+													: p.status === "Over Budget"
+														? "red"
+														: "gray";
+										const ex = PROJECT_EXTRAS[p.id];
+										const dotColor = ex?.color || "blue";
+										const barColor =
+											p.status === "Over Budget"
+												? "red"
+												: p.status === "At Risk"
+													? "orange"
+													: "green";
 
-									return (
-										<tr key={p.id}>
-											<td>
-												<div className="projects__table-proj-cell">
-													<div
-														style={{ backgroundColor: dotHex }}
-														className="projects__table-dot"
-													/>
-													<div>
-												<Link className="projects__table-proj-name" to={`/projects/${p.id}`}>
-													{p.name}
-												</Link>
+										return (
+											<tr key={p.id}>
+												<td>
+													<div className="projects__table-proj-cell">
+														<div
+															className={`projects__table-dot projects__table-dot--${dotColor}`}
+														/>
+														<div>
+													<Link className="projects__table-proj-name" to={`/projects/${p.id}`}>
+														{p.name}
+													</Link>
+														</div>
 													</div>
-												</div>
-											</td>
+												</td>
 											<td>
 												<Badge variant={badgeVariant as any} dot>
 													{p.status}
@@ -514,7 +531,7 @@ export const Projects: React.FC = () => {
 							{projects.length === 0 && (
 								<tr>
 									<td
-										colSpan={role === "manager" ? 8 : 7}
+										colSpan={role === "manager" || role === "admin" ? 8 : 7}
 										className="projects__table-empty"
 									>
 										<EmptyState
@@ -528,9 +545,10 @@ export const Projects: React.FC = () => {
 							)}
 						</tbody>
 					</table>
+					</div>
 				</div>
 			)}
-			{viewMode === "list" && (
+			{effectiveViewMode === "list" && (
 				<div className="projects__pagination-wrapper">
 					<Pagination
 						currentPage={page}

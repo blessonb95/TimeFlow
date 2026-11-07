@@ -48,6 +48,8 @@
 	line-height: 1.125rem;
 	white-space: nowrap;
 	border: 0.0625rem solid transparent;
+	user-select: none;
+	-webkit-user-select: none;
 }
 
 // ─── Card ─────────────────────────────────────────────────────────────────────
@@ -73,6 +75,10 @@
 	transition: @transition-fast;
 	white-space: nowrap;
 	line-height: 1;
+	touch-action: manipulation;
+	user-select: none;
+	-webkit-user-select: none;
+	-webkit-touch-callout: none;
 }
 
 // ─── Input base ──────────────────────────────────────────────────────────────

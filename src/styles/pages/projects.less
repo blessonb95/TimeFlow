@@ -31,6 +31,12 @@
 			height: 0.5rem;
 			border-radius: 50%;
 			flex-shrink: 0;
+			background: #2563eb;
+			&--blue { background: #2563eb; }
+			&--green { background: #16a34a; }
+			&--purple { background: #9333ea; }
+			&--orange { background: #f97316; }
+			&--red { background: #ef4444; }
 		}
 		&-edit-btn {
 			display: inline-flex;
@@ -222,6 +228,12 @@
 		height: 0.625rem;
 		border-radius: 50%;
 		flex-shrink: 0;
+		background: #2563eb;
+		&--blue { background: #2563eb; }
+		&--green { background: #16a34a; }
+		&--purple { background: #9333ea; }
+		&--orange { background: #f97316; }
+		&--red { background: #ef4444; }
 	}
 	&__table-proj-name {
 		font-weight: 600;
@@ -244,6 +256,7 @@
 	&__table-progress-col {
 		.flex-col();
 		gap: 0.25rem;
+		min-width: 8.5rem;
 	}
 	&__table-progress-label {
 		.flex-between();
@@ -300,6 +313,7 @@
 	}
 	&__th-progress {
 		width: 11.25rem;
+		min-width: 8.5rem;
 	}
 	&__th-right {
 		text-align: right;
@@ -337,6 +351,9 @@
 			flex-direction: column;
 			align-items: stretch;
 			gap: @space-3;
+		}
+		&__toolbar-right {
+			display: none;
 		}
 		&__search {
 			width: 100%;
