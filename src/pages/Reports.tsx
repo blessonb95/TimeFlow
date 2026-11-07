@@ -3,12 +3,19 @@ import { Pagination } from "../components/ui/Pagination";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { DashboardSkeleton } from "../components/ui/LoadingState";
+import { EmptyState } from "../components/ui/EmptyState";
 import { useReports } from "../hooks/useReports";
 import { useEmployees } from "../hooks/useEmployees";
 import { useProjects } from "../hooks/useProjects";
 import { useAppStore } from "../store/useAppStore";
 import { AccessRestricted } from "../components/ui/AccessRestricted";
-import { USERS, PROJECTS, WORK_LOGS } from "../data/dummy";
+import {
+	USERS,
+	PROJECTS,
+	buildFallbackEmployeeReport,
+	buildFallbackProjectReport,
+	buildFallbackDetailedEntries,
+} from "../data/dummy";
 import {
 	LineChart,
 	BarChart,
@@ -97,7 +104,7 @@ export const Reports: React.FC = () => {
 		onConfirm: () => void;
 	} | null>(null);
 
-	const { data: reportsData, isLoading } = useReports();
+	const { data: reportsData, isLoading, isError, isFetching, refetch } = useReports();
 	const { data: rawEmployees = [] } = useEmployees();
 	const { data: rawProjects = [] } = useProjects();
 
@@ -116,16 +123,7 @@ export const Reports: React.FC = () => {
 	const rawEmployeeReport =
 		reportsData?.employeeReport && reportsData.employeeReport.length > 0
 			? reportsData.employeeReport
-			: USERS.map((u) => ({
-					name: u.name,
-					initials: u.initials,
-					color: u.color,
-					department: u.department,
-					designation: u.designation,
-					totalHours: 40,
-					projects: 2,
-					utilization: 85,
-				}));
+			: buildFallbackEmployeeReport();
 
 	// Regular employees can only view their own timesheet; managers/admins see all
 	const employeeReport =
@@ -140,7 +138,7 @@ export const Reports: React.FC = () => {
 						{
 							name: currentUser.name,
 							initials: currentUser.initials || "ME",
-							color: currentUser.color || "#6366f1",
+							color: currentUser.color || "#2563eb",
 							department: currentUser.department || "Staff",
 							designation: currentUser.designation || "Employee",
 							totalHours: 40,
@@ -153,15 +151,7 @@ export const Reports: React.FC = () => {
 	const projectReport =
 		reportsData?.projectReport && reportsData.projectReport.length > 0
 			? reportsData.projectReport
-			: PROJECTS.map((p) => ({
-					id: p.id,
-					name: p.name,
-					status: p.status,
-					budgeted: p.totalHours,
-					logged: p.loggedHours,
-					utilizationPct: p.progress,
-					teamSize: p.teamMembers.length,
-				}));
+			: buildFallbackProjectReport();
 
 	const todayStr = new Date().toISOString().split("T")[0];
 	// Convert yyyy-mm-dd → dd-mm-yyyy for display/export
@@ -198,75 +188,14 @@ export const Reports: React.FC = () => {
 		}
 
 		if (!entries || entries.length === 0) {
-			const dummyEntries: DetailedEntry[] = WORK_LOGS.map((wl) => {
-				const u = USERS.find((user) => user.id === wl.userId) || USERS[2];
-				return {
-					employeeName: u.name,
-					initials: u.initials,
-					color: u.color,
-					department: u.department || "Engineering",
-					designation: u.designation || "Engineer",
-					date: wl.date,
-					projectName: wl.projectName,
-					taskName: wl.taskName,
-					hours: wl.hours,
-					status: wl.status || "Approved",
-				};
+			entries = buildFallbackDetailedEntries({
+				to,
+				todayStr,
+				scope,
+				role,
+				currentUser,
+				empName,
 			});
-
-			const effectiveScope = role === "employee" ? "self" : scope;
-			entries = dummyEntries;
-			if (effectiveScope === "self") {
-				entries = entries.filter(
-					(e) =>
-						e.employeeName.toLowerCase() === currentUser.name.toLowerCase(),
-				);
-				if (entries.length === 0) {
-					entries = [
-						{
-							employeeName: currentUser.name,
-							initials: currentUser.initials || "ME",
-							color: currentUser.color || "#6366f1",
-							department: currentUser.department || "Staff",
-							designation: currentUser.designation || "Employee",
-							date: to || todayStr,
-							projectName: "TimeFlow Core Platform",
-							taskName: "Platform optimization & code review",
-							hours: 8,
-							status: "Approved",
-						},
-					];
-				}
-			} else if (effectiveScope === "employee_single" && empName) {
-				entries = entries.filter(
-					(e) => e.employeeName.toLowerCase() === empName.toLowerCase(),
-				);
-				if (entries.length === 0) {
-					const empObj = USERS.find(
-						(u) => u.name.toLowerCase() === empName.toLowerCase(),
-					);
-					entries = [
-						{
-							employeeName: empName,
-							initials:
-								empObj?.initials ||
-								empName
-									.split(" ")
-									.map((n) => n[0])
-									.join("")
-									.toUpperCase(),
-							color: empObj?.color || "#6366f1",
-							department: empObj?.department || "Engineering",
-							designation: empObj?.designation || "Engineer",
-							date: to || todayStr,
-							projectName: "TimeFlow Core Platform",
-							taskName: "Task logs & deliverables",
-							hours: 8,
-							status: "Approved",
-						},
-					];
-				}
-			}
 		}
 
 		return entries;
@@ -807,6 +736,18 @@ export const Reports: React.FC = () => {
 	);
 
 	if (isLoading) { return <DashboardSkeleton />; }
+	if (isError && !reportsData) {
+		return (
+			<div className="page-inner">
+				<EmptyState
+					icon="error"
+					title="Reports unavailable"
+					subtitle="We couldn't load analytics and report metrics. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
+				/>
+			</div>
+		);
+	}
 
 	return (
 		<div className="page-inner">
@@ -990,10 +931,10 @@ export const Reports: React.FC = () => {
 												{Math.round((row.totalHours || 0) * 100) / 100}h
 											</td>
 											<td className="reports__table-over-cell">
-												{Math.round((row.totalHours || 0) * 0.8 * 100) / 100}h
+												{(row as any).billableHours ?? Math.round((row.totalHours || 0) * 0.8 * 100) / 100}h
 											</td>
 											<td className="reports__table-sec-cell">
-												{Math.round((row.totalHours || 0) * 0.2 * 100) / 100}h
+												{(row as any).nonBillableHours ?? Math.round((row.totalHours || 0) * 0.2 * 100) / 100}h
 											</td>
 											<td>
 												<div className="reports__date-control-row">
@@ -1117,22 +1058,14 @@ export const Reports: React.FC = () => {
 					</div>
 
 					<div className="reports__util-charts">
-						<div className="reports__chart-card" style={{ flex: 1 }}>
+						<div className="reports__chart-card reports__chart-flex">
 							<div className="reports__chart-header">
 								<span className="reports__chart-title">
 									Department Utilization
 								</span>
 							</div>
 							{isLoading ? (
-								<div
-									style={{
-										height: 160,
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										color: "#64748b",
-									}}
-								>
+								<div className="reports__chart-loading">
 									Loading…
 								</div>
 							) : (
@@ -1153,11 +1086,9 @@ export const Reports: React.FC = () => {
 								Individual Utilization
 							</span>
 						</div>
-						<div style={{ padding: "0.5rem 0"}}>
+						<div className="reports__card-padding-sm">
 							{isLoading ? (
-								<div
-									style={{ padding: '1.5rem', color: "#64748b", textAlign: "center" }}
-								>
+								<div className="reports__empty-center">
 									Loading…
 								</div>
 							) : (
@@ -1190,17 +1121,11 @@ export const Reports: React.FC = () => {
 							</span>
 							<div className="reports__flex-gap-md">
 								<span className="reports__date-control-row reports__date-hint">
-									<span
-										className="worklogs__grid-dropdown-dot"
-										style={{ background: "#cbd5e1" }}
-									/>
+									<span className="worklogs__grid-dropdown-dot reports__dot--budgeted" />
 									Budgeted
 								</span>
 								<span className="reports__date-control-row reports__date-hint">
-									<span
-										className="worklogs__grid-dropdown-dot"
-										style={{ background: "#1e293b" }}
-									/>
+									<span className="worklogs__grid-dropdown-dot reports__dot--logged" />
 									Logged
 								</span>
 							</div>
@@ -1275,10 +1200,7 @@ export const Reports: React.FC = () => {
 											<tr key={i}>
 												<td>
 													<div className="reports__date-control-row">
-														<div
-															className="reports__progress-dot"
-															style={{ background: "#1e293b" }}
-														/>
+														<div className="reports__progress-dot reports__dot--logged" />
 														<span className="reports__text-highlight-purple reports__table-hours-cell reports__table-font-sm">
 															{p.name}
 														</span>
@@ -1352,36 +1274,15 @@ export const Reports: React.FC = () => {
 				<div>
 					<p className="reports__export-desc">
 						Download formatted reports for payroll processing,{" "}
-						<span style={{ color: "#6366f1" }}>client billing</span>, and
+						<span className="reports__export-accent">client billing</span>, and
 						internal management review.
 					</p>
 
-					<div
-						style={{
-							display: "flex",
-							gap: '1.25rem',
-							marginBottom: '1.5rem',
-							padding: "1.25rem 1.5rem",
-							background: "#fff",
-							borderRadius: 12,
-							border: "1px solid #e5e7eb",
-							flexWrap: "wrap",
-							alignItems: "flex-end",
-							boxShadow: "0 1px 3px rgba(0,0,0,0.02)",
-						}}
-					>
+					<div className="reports__export-controls">
 						<div>
 							<label
 								htmlFor="report-date-from"
-								style={{
-									display: "block",
-									fontSize: '0.75rem',
-									fontWeight: 600,
-									marginBottom: '0.375rem',
-									color: "#4b5563",
-									textTransform: "uppercase",
-									letterSpacing: "0.05em",
-								}}
+								className="reports__filter-label"
 							>
 								Date From
 							</label>
@@ -1389,13 +1290,7 @@ export const Reports: React.FC = () => {
 								type="date"
 								id="report-date-from"
 								max={todayStr}
-								style={{
-									padding: "0.5rem 0.75rem",
-									border: "1px solid #d1d5db",
-									borderRadius: 6,
-									fontSize: '0.875rem',
-									height: 38,
-								}}
+								className="reports__date-input"
 								value={exportFrom}
 								onChange={(e) => setExportFrom(e.target.value)}
 							/>
@@ -1404,15 +1299,7 @@ export const Reports: React.FC = () => {
 						<div>
 							<label
 								htmlFor="report-date-to"
-								style={{
-									display: "block",
-									fontSize: '0.75rem',
-									fontWeight: 600,
-									marginBottom: '0.375rem',
-									color: "#4b5563",
-									textTransform: "uppercase",
-									letterSpacing: "0.05em",
-								}}
+								className="reports__filter-label"
 							>
 								Date To
 							</label>
@@ -1420,13 +1307,7 @@ export const Reports: React.FC = () => {
 								type="date"
 								id="report-date-to"
 								max={todayStr}
-								style={{
-									padding: "0.5rem 0.75rem",
-									border: "1px solid #d1d5db",
-									borderRadius: 6,
-									fontSize: '0.875rem',
-									height: 38,
-								}}
+								className="reports__date-input"
 								value={exportTo}
 								onChange={(e) => setExportTo(e.target.value)}
 							/>
@@ -1436,18 +1317,10 @@ export const Reports: React.FC = () => {
 							role === "hr" ||
 							role === "manager" ||
 							role === "admin") && (
-							<div style={{ flex: "1 1 220px", minWidth: 220 }}>
+							<div className="reports__flex-wrap-col">
 								<label
 									htmlFor="report-export-scope"
-									style={{
-										display: "block",
-										fontSize: '0.75rem',
-										fontWeight: 600,
-										marginBottom: '0.375rem',
-										color: "#4b5563",
-										textTransform: "uppercase",
-										letterSpacing: "0.05em",
-									}}
+									className="reports__filter-label"
 								>
 									Export Scope / Mode
 								</label>
@@ -1457,16 +1330,7 @@ export const Reports: React.FC = () => {
 									onChange={(e) =>
 										setExportScope(e.target.value as ExportScope)
 									}
-									style={{
-										width: "100%",
-										padding: "0.5rem 0.75rem",
-										border: "1px solid #d1d5db",
-										borderRadius: 6,
-										fontSize: '0.875rem',
-										height: 38,
-										background: "#fff",
-										fontWeight: 500,
-									}}
+									className="reports__select"
 								>
 									<option value="self">Self</option>
 									<option value="project_all">All Projects</option>
@@ -1721,8 +1585,7 @@ export const Reports: React.FC = () => {
 						<div className="reports__preview-modal-body">
 							{previewLoading ? (
 								<div className="reports__preview-loading">
-									<div className="reports__preview-spinner" />
-									<span>Loading timesheet data…</span>
+									<LoadingSpinner message="Loading timesheet data…" size="md" />
 								</div>
 							) : previewPage === 1 ? (
 								/* Page 1: Summary */
@@ -1743,7 +1606,7 @@ export const Reports: React.FC = () => {
 														{
 															name: currentUser.name,
 															initials: currentUser.initials || "ME",
-															color: currentUser.color || "#6366f1",
+															color: currentUser.color || "#2563eb",
 															department: currentUser.department || "Staff",
 															designation:
 																currentUser.designation || "Employee",
@@ -1827,9 +1690,9 @@ export const Reports: React.FC = () => {
 														<th scope="col">Employee</th>
 														<th scope="col">Department</th>
 														<th scope="col">Designation</th>
-														<th scope="col" style={{ textAlign: "center" }}>Total Hours</th>
-														<th scope="col" style={{ textAlign: "center" }}>Projects</th>
-														<th scope="col" style={{ textAlign: "center" }}>Utilization</th>
+														<th scope="col" className="reports__th-center">Total Hours</th>
+														<th scope="col" className="reports__th-center">Projects</th>
+														<th scope="col" className="reports__th-center">Utilization</th>
 													</tr>
 												</thead>
 												<tbody>
@@ -1858,7 +1721,7 @@ export const Reports: React.FC = () => {
 																			<div
 																				className="reports__table-avatar"
 																				style={{
-																					background: r.color || "#6366f1",
+																					background: r.color || "#2563eb",
 																				}}
 																			>
 																				{r.initials || "U"}
@@ -1866,31 +1729,23 @@ export const Reports: React.FC = () => {
 																			<span>{r.name}</span>
 																		</div>
 																	</td>
-																	<td style={{ color: "#6b7280" }}>
+																	<td className="reports__td-muted">
 																		{r.department || "–"}
 																	</td>
-																	<td style={{ color: "#6b7280" }}>
+																	<td className="reports__td-muted">
 																		{r.designation || "–"}
 																	</td>
-																	<td
-																		style={{
-																			textAlign: "center",
-																			fontWeight: 600,
-																		}}
-																	>
+																	<td className="reports__td-center-semibold">
 																		{Math.round((r.totalHours || 0) * 100) /
 																			100}
 																		h
 																	</td>
-																	<td style={{ textAlign: "center" }}>
+																	<td className="reports__td-center">
 																		{r.projects}
 																	</td>
 																	<td
-																		style={{
-																			textAlign: "center",
-																			color: uc,
-																			fontWeight: 700,
-																		}}
+																		className="reports__td-center-bold"
+																		style={{ color: uc }}
 																	>
 																		{util}%
 																	</td>
@@ -1908,10 +1763,10 @@ export const Reports: React.FC = () => {
 												<thead>
 													<tr>
 														<th scope="col">Project</th>
-														<th scope="col" style={{ textAlign: "center" }}>Budgeted</th>
-														<th scope="col" style={{ textAlign: "center" }}>Logged</th>
-														<th scope="col" style={{ textAlign: "center" }}>Remaining</th>
-														<th scope="col" style={{ textAlign: "center" }}>Health</th>
+														<th scope="col" className="reports__th-center">Budgeted</th>
+														<th scope="col" className="reports__th-center">Logged</th>
+														<th scope="col" className="reports__th-center">Remaining</th>
+														<th scope="col" className="reports__th-center">Health</th>
 													</tr>
 												</thead>
 												<tbody>
@@ -1943,27 +1798,21 @@ export const Reports: React.FC = () => {
 															const hb = healthBadge(health);
 															return (
 																<tr key={pi}>
-																	<td style={{ fontWeight: 500 }}>{p.name}</td>
-																	<td style={{ textAlign: "center" }}>
+																	<td className="reports__td-medium">{p.name}</td>
+																	<td className="reports__td-center">
 																		{p.budgeted || 0}h
 																	</td>
-																	<td
-																		style={{
-																			textAlign: "center",
-																			color: "#4f46e5",
-																			fontWeight: 600,
-																		}}
-																	>
+																	<td className="reports__td-logged">
 																		{p.logged || 0}h
 																	</td>
-																	<td style={{ textAlign: "center" }}>
+																	<td className="reports__td-center">
 																		{Math.max(
 																			0,
 																			(p.budgeted || 0) - (p.logged || 0),
 																		)}
 																		h
 																	</td>
-																	<td style={{ textAlign: "center" }}>
+																	<td className="reports__td-center">
 																		<span
 																			className="badge"
 																			style={{
@@ -1988,10 +1837,7 @@ export const Reports: React.FC = () => {
 								/* Page 2: Detailed */
 								<>
 									{previewDetailed.length === 0 ? (
-										<div
-											className="reports__preview-empty"
-											style={{ padding: "3.75rem 1.5rem"}}
-										>
+										<div className="reports__preview-empty reports__preview-empty--lg">
 											No detailed timesheet entries for this period.
 										</div>
 									) : (
@@ -2011,19 +1857,15 @@ export const Reports: React.FC = () => {
 															<div className="reports__table-employee">
 																<div
 																	className="reports__table-avatar"
-																	style={{ background: emp.color || "#6366f1" }}
+																	style={{ background: emp.color || "#2563eb" }}
 																>
 																	{emp.initials || "U"}
 																</div>
 																<div>
-																	<div
-																		style={{ fontWeight: 700, fontSize: '0.8125rem'}}
-																	>
+																	<div className="reports__preview-emp-name">
 																		{empName}
 																	</div>
-																	<div
-																		style={{ fontSize: '0.6875rem', color: "#6b7280" }}
-																	>
+																	<div className="reports__preview-emp-meta">
 																		{emp.department} · {emp.designation}
 																	</div>
 																</div>
@@ -2041,8 +1883,8 @@ export const Reports: React.FC = () => {
 																	<th scope="col">Date</th>
 																	<th scope="col">Project</th>
 																	<th scope="col">Task</th>
-																	<th scope="col" style={{ textAlign: "center" }}>Hours</th>
-																	<th scope="col" style={{ textAlign: "center" }}>
+																	<th scope="col" className="reports__th-center">Hours</th>
+																	<th scope="col" className="reports__th-center">
 																		Status
 																	</th>
 																</tr>
@@ -2057,41 +1899,22 @@ export const Reports: React.FC = () => {
 																				: { bg: "#f3f4f6", color: "#6b7280" };
 																	return (
 																		<tr key={ei}>
-																			<td style={{ whiteSpace: "nowrap" }}>
+																			<td className="reports__td-nowrap">
 																				{fmtDate(e.date)}
 																			</td>
-																			<td
-																				style={{
-																					color: "#4f46e5",
-																					fontWeight: 500,
-																				}}
-																			>
+																			<td className="reports__td-project">
 																				{e.projectName}
 																			</td>
-																			<td
-																				style={{
-																					color: "#374151",
-																					maxWidth: 240,
-																					wordBreak: "break-word",
-																				}}
-																			>
+																			<td className="reports__td-task">
 																				{e.taskName}
 																			</td>
-																			<td
-																				style={{
-																					textAlign: "center",
-																					fontWeight: 700,
-																				}}
-																			>
+																			<td className="reports__td-center-bold">
 																				{e.hours}h
 																			</td>
-																			<td style={{ textAlign: "center" }}>
+																			<td className="reports__td-center">
 																				<span
+																					className="reports__preview-status-pill"
 																					style={{
-																						padding: "0.125rem 0.5rem",
-																						borderRadius: 4,
-																						fontSize: '0.625rem',
-																						fontWeight: 700,
 																						background: statusBg.bg,
 																						color: statusBg.color,
 																					}}

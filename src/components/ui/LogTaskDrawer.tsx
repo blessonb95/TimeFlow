@@ -207,22 +207,13 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 			<div
 				role="alert"
 				aria-live="polite"
-				style={{
-					fontSize: '0.75rem',
-					color: "#ef4444",
-					marginTop: '0.3125rem',
-					display: "flex",
-					alignItems: "center",
-					gap: '0.375rem',
-					fontWeight: 500,
-				}}
+				className="modal__field-error"
 			>
 				<svg
 					viewBox="0 0 16 16"
 					fill="none"
 					stroke="currentColor"
 					strokeWidth="1.5"
-					style={{ width: 14, height: 14, flexShrink: 0 }}
 				>
 					<circle cx="8" cy="8" r="6.25" />
 					<path
@@ -257,21 +248,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 				</div>
 				<div className="drawer__body">
 					{isUserDisabled && (
-						<div
-							style={{
-								padding: "0.75rem 1rem",
-								background: "#fef2f2",
-								border: "1px solid #fecaca",
-								borderRadius: 8,
-								color: "#991b1b",
-								fontSize: '0.8125rem',
-								marginBottom: '1rem',
-								fontWeight: 600,
-								display: "flex",
-								alignItems: "center",
-								gap: '0.625rem',
-							}}
-						>
+						<div className="drawer__disabled-banner">
 							<svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#dc2626" strokeWidth="1.8">
 								<circle cx="8" cy="8" r="6" />
 								<path d="M5 5l6 6M11 5l-6 6" />
@@ -280,27 +257,17 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 						</div>
 					)}
 					{error && (
-						<p role="alert"
-							style={{
-								color: "#ef4444",
-								fontSize: '0.8125rem',
-								marginBottom: '0.75rem',
-								padding: "0.5rem 0.75rem",
-								background: "#fef2f2",
-								border: "1px solid #f87171",
-								borderRadius: 8,
-							}}
-						>
+						<p role="alert" className="drawer__error-banner">
 							{error}
 						</p>
 					)}
 
 					<div className="form-group">
 						<label className="form-group__label" htmlFor="log-project">
-							Project <span style={{ color: "#ef4444" }}>*</span>
+							Project <span className="form-group__required">*</span>
 						</label>
 						<select
-							className="form-group__select"
+							className={`form-group__select ${shouldShowFieldError("project") && fieldErrors.project ? "form-group__select--error" : ""}`}
 							id="log-project"
 							aria-invalid={shouldShowFieldError("project") && !!fieldErrors.project}
 							aria-describedby={shouldShowFieldError("project") && fieldErrors.project ? "log-project-error" : undefined}
@@ -309,12 +276,6 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 							value={project}
 							onChange={(e) => setProject(e.target.value)}
 							onBlur={() => handleBlur("project")}
-							style={{
-								borderColor:
-								shouldShowFieldError("project") && fieldErrors.project
-										? "#ef4444"
-										: undefined,
-							}}
 							disabled={isReadOnly}
 						>
 							<option value="">Select project…</option>
@@ -335,10 +296,10 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 
 					<div className="form-group">
 						<label className="form-group__label" htmlFor="log-task-name">
-							Task Name <span style={{ color: "#ef4444" }}>*</span>
+							Task Name <span className="form-group__required">*</span>
 						</label>
 						<input
-							className="form-group__input"
+							className={`form-group__input ${shouldShowFieldError("task") && fieldErrors.task ? "form-group__input--error" : ""}`}
 							id="log-task-name"
 							aria-invalid={shouldShowFieldError("task") && !!fieldErrors.task}
 							aria-describedby={shouldShowFieldError("task") && fieldErrors.task ? "log-task-name-error" : undefined}
@@ -349,10 +310,6 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 							onChange={(e) => setTask(e.target.value)}
 							onBlur={() => handleBlur("task")}
 							disabled={isReadOnly}
-							style={{
-								borderColor:
-									shouldShowFieldError("task") && fieldErrors.task ? "#ef4444" : undefined,
-							}}
 						/>
 						{shouldShowFieldError("task") && <div id="log-task-name-error">{renderFieldError(fieldErrors.task)}</div>}
 					</div>
@@ -389,7 +346,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 						</div>
 						{!isReadOnly && (
 							<>
-								<div style={{ display: "flex", gap: '0.5rem'}}>
+								<div className="drawer__ticket-input-row">
 									<input
 										className="form-group__input"
 										aria-label="Ticket ID or URL"
@@ -398,7 +355,6 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										value={ticketInput}
 										onChange={(e) => setTicketInput(e.target.value)}
 										onKeyDown={(e) => e.key === "Enter" && addTicket()}
-										style={{ flex: 1 }}
 									/>
 									<button
 										type="button"
@@ -408,30 +364,22 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										Add
 									</button>
 								</div>
-								<p style={{ fontSize: '0.6875rem', color: "#6b7280", marginTop: '0.25rem'}}>
+								<p className="drawer__ticket-hint">
 									Press Enter or click Add. Any URL or ticket ID accepted.
 								</p>
 							</>
 						)}
 					</div>
 
-					<div
-						style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: '1rem'}}
-					>
+					<div className="modal__grid-2">
 						<div className="form-group">
 							<label className="form-group__label" id="time-spent-label">
-								Time Spent <span style={{ color: "#ef4444" }}>*</span>
+								Time Spent <span className="form-group__required">*</span>
 							</label>
-							<div
-								style={{
-									display: "grid",
-									gridTemplateColumns: "1fr 1fr",
-									gap: '0.5rem',
-								}}
-							>
-								<div style={{ display: "flex", alignItems: "center", gap: '0.25rem'}}>
+							<div className="modal__time-grid">
+								<div className="modal__time-unit">
 									<input
-										className="form-group__input"
+										className={`form-group__input ${shouldShowFieldError("time") && fieldErrors.time ? "form-group__input--error" : ""}`}
 										type="number"
 										aria-label="Hours spent"
 										aria-invalid={shouldShowFieldError("time") && !!fieldErrors.time}
@@ -444,18 +392,12 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										onChange={(e) => setTimeHours(e.target.value)}
 										onBlur={() => handleBlur("time")}
 										disabled={isReadOnly}
-										style={{
-											borderColor:
-											shouldShowFieldError("time") && fieldErrors.time
-													? "#ef4444"
-													: undefined,
-										}}
 									/>
-									<span style={{ fontSize: '0.8125rem', color: "#6b7280" }}>h</span>
+									<span className="modal__time-unit-label">h</span>
 								</div>
-								<div style={{ display: "flex", alignItems: "center", gap: '0.25rem'}}>
+								<div className="modal__time-unit">
 									<input
-										className="form-group__input"
+										className={`form-group__input ${shouldShowFieldError("time") && fieldErrors.time ? "form-group__input--error" : ""}`}
 										type="number"
 										aria-label="Minutes spent"
 										aria-invalid={shouldShowFieldError("time") && !!fieldErrors.time}
@@ -468,24 +410,18 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 										onChange={(e) => setTimeMinutes(e.target.value)}
 										onBlur={() => handleBlur("time")}
 										disabled={isReadOnly}
-										style={{
-											borderColor:
-											shouldShowFieldError("time") && fieldErrors.time
-													? "#ef4444"
-													: undefined,
-										}}
 									/>
-									<span style={{ fontSize: '0.8125rem', color: "#6b7280" }}>m</span>
+									<span className="modal__time-unit-label">m</span>
 								</div>
 							</div>
 							{shouldShowFieldError("time") && <div id="log-time-error">{renderFieldError(fieldErrors.time)}</div>}
 						</div>
 						<div className="form-group">
 							<label className="form-group__label" htmlFor="log-date">
-								Date <span style={{ color: "#ef4444" }}>*</span>
+								Date <span className="form-group__required">*</span>
 							</label>
 							<input
-								className="form-group__input"
+								className={`form-group__input ${shouldShowFieldError("date") && fieldErrors.date ? "form-group__input--error" : ""}`}
 								id="log-date"
 								aria-invalid={shouldShowFieldError("date") && !!fieldErrors.date}
 								aria-describedby={shouldShowFieldError("date") && fieldErrors.date ? "log-date-error" : undefined}
@@ -497,10 +433,6 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 								onChange={(e) => setDate(e.target.value)}
 								onBlur={() => handleBlur("date")}
 								disabled={isReadOnly}
-								style={{
-									borderColor:
-									shouldShowFieldError("date") && fieldErrors.date ? "#ef4444" : undefined,
-								}}
 							/>
 						{shouldShowFieldError("date") && <div id="log-date-error">{renderFieldError(fieldErrors.date)}</div>}
 						</div>
@@ -508,7 +440,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 
 					<div className="form-group">
 						<label className="form-group__label" htmlFor="log-status">
-							Status <span style={{ color: "#ef4444" }}>*</span>
+							Status <span className="form-group__required">*</span>
 						</label>
 						<select
 							className="form-group__select"
@@ -528,7 +460,7 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 				</div>
 				<div className="drawer__footer">
 					{isUpdatingList && (
-						<div style={{ padding: "0.375rem 0.75rem", background: "#eff6ff", borderRadius: 6, fontSize: '0.75rem', fontWeight: 500, color: "#1d4ed8", display: "flex", alignItems: "center", gap: '0.5rem', marginRight: "auto"}}>
+						<div className="drawer__updating-pill">
 							<LoadingSpinner inline size="sm" />
 							Updating task list…
 						</div>
@@ -544,16 +476,9 @@ export const LogTaskDrawer: React.FC<DrawerProps> = ({
 					{!isReadOnly && (
 						<button
 							type="button"
-							className="btn btn--primary"
+							className="btn btn--primary drawer__save-btn"
 							onClick={handleSave}
 							disabled={isSubmitDisabled}
-							style={{
-								opacity: isSubmitDisabled ? 0.6 : 1,
-								cursor: isSubmitDisabled ? "not-allowed" : "pointer",
-								display: "inline-flex",
-								alignItems: "center",
-								gap: '0.375rem',
-							}}
 						>
 							{isPending ? (
 								<>

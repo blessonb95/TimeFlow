@@ -2,6 +2,8 @@ import React, { useRef, useState } from 'react';
 import { Avatar } from './Avatar';
 import { Badge, statusVariant } from './Badge';
 import { ConfirmModal } from './ConfirmModal';
+import { EmptyState } from './EmptyState';
+import { LoadingSpinner } from './LoadingSpinner';
 import { useApprovalDetails, useApproveTimesheet, useRejectTimesheet } from '../../hooks/useApprovals';
 import { useAppStore } from '../../store/useAppStore';
 import type { ApprovalStatus } from '../../types';
@@ -18,7 +20,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
 	const dialogRef = useRef<HTMLElement>(null);
 	useDialogAccessibility(dialogRef, onClose, !!approvalId);
   const { role, currentUser } = useAppStore();
-  const { data, isLoading } = useApprovalDetails(approvalId);
+  const { data, isLoading, isError, isFetching, refetch } = useApprovalDetails(approvalId);
   const approveMutation = useApproveTimesheet();
   const rejectMutation = useRejectTimesheet();
 
@@ -136,13 +138,20 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
 
         {/* Content Body */}
         <div className="review-modal__body">
-          {isLoading || !data ? (
+          {isLoading ? (
             <div className="review-modal__loading">
-              <div className="spinner" />
-              Loading audit details for timesheet…
+              <LoadingSpinner message="Loading audit details for timesheet…" size="md" />
             </div>
+          ) : isError || !data ? (
+            <EmptyState
+              icon="error"
+              title="Timesheet details unavailable"
+              subtitle="Could not load audit details for this timesheet."
+              action={{ label: isFetching ? 'Retrying…' : 'Try again', onClick: () => void refetch() }}
+              compact
+            />
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem'}}>
+            <div className="review-modal__content">
               {/* Employee Summary Card */}
               <div className="review-modal__card">
                 <div className="review-modal__card-info">
@@ -202,7 +211,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
                           <th scope="col">Date</th>
                           <th scope="col">Project</th>
                           <th scope="col">Task & Description</th>
-                          <th scope="col" style={{ textAlign: 'right' }}>Hours</th>
+                          <th scope="col" className="review-modal__th-right">Hours</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -217,7 +226,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
                               </span>
                             </td>
                             <td>
-                              <div style={{ fontWeight: 500, color: '#0f172a' }}>{log.taskName}</div>
+                              <div className="review-modal__task-name">{log.taskName}</div>
                               {log.taskDescription && log.taskDescription.trim() && log.taskDescription !== '<p></p>' && (
                                 <div
                                   className="rich-text-content review-modal__task-desc"
@@ -225,7 +234,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
                                 />
                               )}
                             </td>
-                            <td style={{ textAlign: 'right', fontWeight: 600 }}>
+                            <td className="review-modal__td-hours">
                               {log.hours.toFixed(1)}h
                             </td>
                           </tr>
@@ -233,8 +242,8 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
                       </tbody>
                       <tfoot>
                         <tr>
-                          <td colSpan={3} style={{ textAlign: 'right' }}>Total Audited Hours:</td>
-                          <td style={{ textAlign: 'right' }}>
+                          <td colSpan={3} className="review-modal__td-right">Total Audited Hours:</td>
+                          <td className="review-modal__td-right">
                             {data.logs.reduce((acc: number, l: any) => acc + (Number(l.hours) || 0), 0).toFixed(1)}h
                           </td>
                         </tr>
@@ -251,8 +260,8 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
         <div className="review-modal__footer">
           {data && (
             isReadOnly ? (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem', fontSize: '0.8125rem', color: '#334155', fontWeight: 600, background: '#f1f5f9', padding: '0.375rem 0.75rem', borderRadius: 6, border: '1px solid #cbd5e1' }}>
+              <div className="review-modal__readonly-bar">
+                <div className="review-modal__readonly-pill">
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="#2563eb" strokeWidth="1.6">
                     <path d="M1 8s3-5.5 7-5.5S15 8 15 8s-3 5.5-7 5.5S1 8 1 8z"/>
                     <circle cx="8" cy="8" r="2.5"/>
@@ -266,7 +275,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
             ) : showRejectInput ? (
               <form onSubmit={handleRejectSubmit} className="review-modal__reject-form">
                 <label className="review-modal__reject-label" htmlFor="review-reject-reason">
-                  Rejection Comments for Employee <span style={{ color: '#ef4444' }}>*</span>
+                  Rejection Comments for Employee <span className="form-group__required">*</span>
                 </label>
                 <div>
                   <textarea
@@ -311,7 +320,7 @@ export const TimesheetReviewModal: React.FC<TimesheetReviewModalProps> = ({ appr
               </form>
             ) : (
               <div className="review-modal__action-row">
-                <div style={{ display: 'flex', gap: '0.625rem'}}>
+                <div className="review-modal__action-btns">
                   {/* Reject button — only shown when not already Rejected */}
                   {data.approval.status !== 'Rejected' && (
                     <button

@@ -9,6 +9,17 @@
 	color: @white;
 	flex-shrink: 0;
 	font-size: 0.6875rem;
+	overflow: hidden;
+
+	&__img {
+		width: 100%;
+		height: 100%;
+		object-fit: cover;
+	}
+
+	&--overflow {
+		background: @gray-500;
+	}
 
 	&--xs {
 		width: 1.375rem;

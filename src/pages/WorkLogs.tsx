@@ -7,6 +7,7 @@ import { LogTaskDrawer } from '../components/ui/LogTaskDrawer';
 import { TaskDescriptionModal } from '../components/ui/TaskDescriptionModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
 import { Pagination } from '../components/ui/Pagination';
 import { ConfirmModal } from '../components/ui/ConfirmModal';
 import { Badge, statusVariant } from '../components/ui/Badge';
@@ -72,9 +73,10 @@ export const WorkLogs: React.FC = () => {
   const [showDrawer, setShowDrawer]   = useState(false);
   const [isReadOnlyDrawer, setIsReadOnlyDrawer] = useState(false);
   const [editingLog, setEditingLog]   = useState<any | null>(null);
+  const [drawerDefaultProject, setDrawerDefaultProject] = useState<string | undefined>(undefined);
   const [viewDescLog, setViewDescLog] = useState<any | null>(null);
   const [search, setSearch]           = useState('');
-  const [dateMode, setDateMode]       = useState<'day' | 'week'>('day');
+  const [dateMode, setDateMode]       = useState<'day' | 'week'>('week');
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().slice(0, 10));
   const [page, setPage]               = useState(1);
   const [gridProjectIds, setGridProjectIds] = useState<string[]>([]);
@@ -83,7 +85,7 @@ export const WorkLogs: React.FC = () => {
   const todayStr = new Date().toISOString().slice(0, 10);
   const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; title: string; message: string; type: 'alert' | 'confirm'; onConfirm: () => void } | null>(null);
 
-  const { data: workLogs = [], isLoading, isFetching } = useWorkLogs({ search });
+  const { data: workLogs = [], isLoading, isFetching, isError, refetch } = useWorkLogs({ search });
   const { data: projects = [] } = useProjects();
   const submitWeekMutation = useSubmitWeek();
   const deleteWorkLogMutation = useDeleteWorkLog();
@@ -212,15 +214,28 @@ export const WorkLogs: React.FC = () => {
 
   if (isLoading && !workLogs.length && !search) {
     return (
-      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-inner page-inner--fade">
+        <div className="wl-panel__skeleton-header">
           <div>
-            <Skeleton width="180px" height="2rem" style={{ marginBottom: '0.375rem' }} />
+            <Skeleton width="180px" height="2rem" className="wl-panel__skeleton-title" />
             <Skeleton width="280px" height="0.875rem" />
           </div>
           <Skeleton width="120px" height="2.25rem" borderRadius="0.5rem" />
         </div>
         <TableSkeleton rows={6} columns={6} />
+      </div>
+    );
+  }
+
+  if (isError && !workLogs.length) {
+    return (
+      <div className="page-inner">
+        <EmptyState
+          icon="error"
+          title="Unable to load work logs"
+          subtitle="We couldn't fetch your timesheet entries. Check your connection and try again."
+          action={{ label: isFetching ? 'Retrying…' : 'Try again', onClick: () => void refetch() }}
+        />
       </div>
     );
   }
@@ -248,7 +263,7 @@ export const WorkLogs: React.FC = () => {
         const remaining = Math.max(0, target - totalHours);
         const pct = Math.min(100, (totalHours / target) * 100);
         const isOver = totalHours > target;
-        const barColor = isOver ? '#ef4444' : pct >= 75 ? '#f97316' : '#6366f1';
+        const barColor = isOver ? '#ef4444' : pct >= 75 ? '#f97316' : '#2563eb';
         const period = dateMode === 'day'
           ? new Date(selectedDate + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' })
           : `Week of ${dateNavLabel}`;
@@ -295,6 +310,22 @@ export const WorkLogs: React.FC = () => {
                     <svg viewBox="0 0 16 16" fill="none" stroke="currentColor"><path d="M6 12l4-4-4-4"/></svg>
                   </button>
                 </div>
+                {view === 'list' && (
+                  <div className="worklogs__view-toggle" role="group" aria-label="Date range mode">
+                    <button
+                      type="button"
+                      aria-pressed={dateMode === 'day'}
+                      className={`worklogs__view-btn${dateMode === 'day' ? ' worklogs__view-btn--active' : ''}`}
+                      onClick={() => { setDateMode('day'); setPage(1); }}
+                    >Day</button>
+                    <button
+                      type="button"
+                      aria-pressed={dateMode === 'week'}
+                      className={`worklogs__view-btn${dateMode === 'week' ? ' worklogs__view-btn--active' : ''}`}
+                      onClick={() => { setDateMode('week'); setPage(1); }}
+                    >Week</button>
+                  </div>
+                )}
               </div>
 
               {/* Date Title & Count */}
@@ -394,7 +425,7 @@ export const WorkLogs: React.FC = () => {
               type="button"
               aria-pressed={view === 'grid'}
               className={`worklogs__view-btn${view === 'grid' ? ' worklogs__view-btn--active' : ''}`}
-              onClick={() => setView('grid')}
+              onClick={() => { setView('grid'); setDateMode('week'); }}
             >Weekly Grid</button>
           </div>
           <button type="button" className="btn btn--ghost" onClick={handleSubmitWeek} disabled={submitWeekMutation.isPending}>
@@ -411,32 +442,35 @@ export const WorkLogs: React.FC = () => {
       {view === 'list' ? (
         <div className="wl-panel">
           {isFetching && !isLoading && (
-            <div style={{ padding: "0.5rem 1rem", background: "#eff6ff", borderBottom: "1px solid #dbeafe", fontSize: '0.75rem', fontWeight: 600, color: "#1d4ed8", display: "flex", alignItems: "center", gap: '0.5rem'}}>
+            <div className="wl-panel__updating-bar">
               <LoadingSpinner inline size="sm" /> Updating task list…
             </div>
           )}
           {/* Column headers */}
-          <div className="wl-panel__header">
-            <div className="wl-panel__col wl-panel__col--task">TASK</div>
-            <div className="wl-panel__col wl-panel__col--project">PROJECT</div>
-            <div className="wl-panel__col wl-panel__col--desc">DESC</div>
-            <div className="wl-panel__col wl-panel__col--hours">HOURS</div>
-            <div className="wl-panel__col wl-panel__col--date">DATE</div>
-            <div className="wl-panel__col wl-panel__col--status-sm">APPROVAL</div>
-            <div className="wl-panel__col wl-panel__col--status-md">PROGRESS</div>
-            <div className="wl-panel__col wl-panel__col--actions">ACTIONS</div>
+          <div role="table" aria-label="Logged work tasks">
+          <div role="rowgroup">
+          <div className="wl-panel__header" role="row">
+            <div className="wl-panel__col wl-panel__col--task" role="columnheader">TASK</div>
+            <div className="wl-panel__col wl-panel__col--project" role="columnheader">PROJECT</div>
+            <div className="wl-panel__col wl-panel__col--desc" role="columnheader">DESC</div>
+            <div className="wl-panel__col wl-panel__col--hours" role="columnheader">HOURS</div>
+            <div className="wl-panel__col wl-panel__col--date" role="columnheader">DATE</div>
+            <div className="wl-panel__col wl-panel__col--status-sm" role="columnheader">APPROVAL</div>
+            <div className="wl-panel__col wl-panel__col--status-md" role="columnheader">PROGRESS</div>
+            <div className="wl-panel__col wl-panel__col--actions" role="columnheader">ACTIONS</div>
+          </div>
           </div>
 
           {/* Rows */}
-          <div className="wl-panel__list">
+          <div className="wl-panel__list" role="rowgroup">
             {paginated.map((log: any) => {
               const color = projColor(log.projectName || '');
               const isLocked = log.status === 'Approved' || log.status === 'Rejected' || log.timesheetStatus === 'Approved' || log.timesheetStatus === 'Rejected';
               return (
-                <div key={log.id} className="wl-panel__row">
+                <div key={log.id} className="wl-panel__row" role="row">
 
                   {/* Task (First Column) */}
-                  <div className="wl-panel__col wl-panel__col--task">
+                  <div className="wl-panel__col wl-panel__col--task" role="cell">
                     <button
                       type="button"
                       className="wl-panel__task-name wl-panel__task-name--link"
@@ -453,7 +487,7 @@ export const WorkLogs: React.FC = () => {
                   </div>
 
                   {/* Project (Second Column) */}
-                  <div className="wl-panel__col wl-panel__col--project">
+                  <div className="wl-panel__col wl-panel__col--project" role="cell">
                     <span className="wl-panel__mobile-label">Project</span>
                     <div className="wl-panel__project-meta">
                       <span className="wl-panel__proj-name">{log.projectName || 'General'}</span>
@@ -461,7 +495,7 @@ export const WorkLogs: React.FC = () => {
                   </div>
 
                   {/* Description Column (Icon Only) */}
-                  <div className="wl-panel__col wl-panel__col--desc">
+                  <div className="wl-panel__col wl-panel__col--desc" role="cell">
                     <button
                       type="button"
                       className="wl-panel__desc-btn"
@@ -477,13 +511,13 @@ export const WorkLogs: React.FC = () => {
                   </div>
 
                   {/* Hours */}
-                  <div className="wl-panel__col wl-panel__col--hours">
+                  <div className="wl-panel__col wl-panel__col--hours" role="cell">
                     <span className="wl-panel__mobile-label">Hours</span>
                     <span className="wl-panel__hours">{log.hours}h</span>
                   </div>
 
                   {/* Date */}
-                  <div className="wl-panel__col wl-panel__col--date">
+                  <div className="wl-panel__col wl-panel__col--date" role="cell">
                     <span className="wl-panel__mobile-label">Date</span>
                     <span className="wl-panel__date">
                       {log.date
@@ -493,13 +527,13 @@ export const WorkLogs: React.FC = () => {
                   </div>
 
                   {/* Approval Status */}
-                  <div className="wl-panel__col wl-panel__col--status-sm">
+                  <div className="wl-panel__col wl-panel__col--status-sm" role="cell">
                     <span className="wl-panel__mobile-label">Approval</span>
                     <Badge variant={statusVariant(log.timesheetStatus || 'Pending')}>{log.timesheetStatus || 'Pending'}</Badge>
                   </div>
 
                   {/* Task Status */}
-                  <div className="wl-panel__col wl-panel__col--status-md">
+                  <div className="wl-panel__col wl-panel__col--status-md" role="cell">
                     <span className="wl-panel__mobile-label">Progress</span>
                     {(() => {
                       const s = (log.taskStatus || log.status || 'In Progress') as string;
@@ -515,7 +549,7 @@ export const WorkLogs: React.FC = () => {
                   </div>
 
                   {/* Actions */}
-                  <div className="wl-panel__col wl-panel__col--actions">
+                  <div className="wl-panel__col wl-panel__col--actions" role="cell">
                     <div className="wl-panel__actions">
                       <button
                         type="button"
@@ -560,19 +594,21 @@ export const WorkLogs: React.FC = () => {
               );
             })}
             {filtered.length === 0 && (
-              <div className="wl-panel__empty">
-                <div className="wl-panel__empty-title">
-                  No timesheet entries found for {dateMode === 'day' ? formatDisplayDate(selectedDate) : dateNavLabel}.
+              <div className="wl-panel__empty" role="row">
+                <div role="cell">
+                  <EmptyState
+                    icon="timesheets"
+                    title={`No timesheet entries found for ${dateMode === 'day' ? formatDisplayDate(selectedDate) : dateNavLabel}`}
+                    subtitle="Log a task to start tracking your hours for this period."
+                    action={{
+                      label: `+ Log Task for ${dateMode === 'day' ? formatDisplayDate(selectedDate) : 'This Week'}`,
+                      onClick: () => { setEditingLog(null); setIsReadOnlyDrawer(false); setShowDrawer(true); },
+                    }}
+                  />
                 </div>
-                <button
-                  type="button"
-                  className="btn btn--primary wl-panel__empty-btn"
-                  onClick={() => { setEditingLog(null); setIsReadOnlyDrawer(false); setShowDrawer(true); }}
-                >
-                  + Log Task for {dateMode === 'day' ? formatDisplayDate(selectedDate) : 'This Week'}
-                </button>
               </div>
             )}
+          </div>
           </div>
           <Pagination
             currentPage={page}
@@ -602,32 +638,43 @@ export const WorkLogs: React.FC = () => {
             </thead>
             <tbody>
               {displayedProjects.map((p: { id: string; name: string }) => {
-                const logs = workLogs.filter((l: { projectId: string }) => l.projectId === p.id);
+                const weekDateSet = new Set(gridDays.map(d => d.dateStr));
+                const logs = workLogs.filter(
+                  (l: { projectId: string; date?: string }) =>
+                    l.projectId === p.id && l.date && weekDateSet.has(String(l.date).split('T')[0])
+                );
                 const rowTotal = logs.reduce((s: number, l: { hours: number }) => s + (l.hours || 0), 0);
                 return (
                   <tr key={p.id} className="worklogs__grid-row">
                     <td className="worklogs__grid-td worklogs__grid-td--proj">
                       <div className="worklogs__grid-proj-info">
-                        <Link
-                          className="worklogs__grid-proj-name"
-                          to={`/projects/${p.id}`}
-                        >
-                          {p.name}
-                        </Link>
+                        <div className="worklogs__grid-proj-meta">
+                          <span
+                            className="worklogs__grid-proj-dot"
+                            style={{ backgroundColor: projColor(p.name) }}
+                          />
+                          <Link
+                            className="worklogs__grid-proj-name"
+                            to={`/projects/${p.id}`}
+                          >
+                            {p.name}
+                          </Link>
+                        </div>
+                        {role !== 'manager' && (
+                          <button
+                            type="button"
+                            className="worklogs__grid-remove-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveProject(p.id);
+                            }}
+                            title="Remove project row"
+                            aria-label={`Remove ${p.name} row`}
+                          >
+                            ✕
+                          </button>
+                        )}
                       </div>
-                      {role !== 'manager' && (
-                        <button
-                          type="button"
-                          className="worklogs__grid-remove-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveProject(p.id);
-                          }}
-                          title="Remove project row"
-                        >
-                          ✕
-                        </button>
-                      )}
                     </td>
                     {gridDays.map((day, i) => {
                       const dayLogs = logs.filter((l: any) => l.date && String(l.date).split('T')[0] === day.dateStr);
@@ -670,6 +717,8 @@ export const WorkLogs: React.FC = () => {
                                 }
                                 setSelectedDate(day.dateStr);
                                 setEditingLog(null);
+                                setDrawerDefaultProject(p.id);
+                                setIsReadOnlyDrawer(false);
                                 setShowDrawer(true);
                               }}
                             >–</button>
@@ -687,7 +736,7 @@ export const WorkLogs: React.FC = () => {
               {/* Add project row */}
               {role !== 'manager' && (
                 <tr className="worklogs__grid-add-row">
-                  <td colSpan={7} className="worklogs__grid-add-td">
+                  <td colSpan={9} className="worklogs__grid-add-td">
                     <div className="worklogs__grid-add-wrapper">
                       <button
                         type="button"
@@ -762,10 +811,12 @@ export const WorkLogs: React.FC = () => {
         <LogTaskDrawer
           editingLog={editingLog}
           defaultDate={selectedDate}
+          defaultProject={drawerDefaultProject}
           isReadOnly={isReadOnlyDrawer}
           onClose={() => {
             setShowDrawer(false);
             setEditingLog(null);
+            setDrawerDefaultProject(undefined);
           }}
         />
       )}

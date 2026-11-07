@@ -13,12 +13,13 @@ import { useProjects } from '../hooks/useProjects';
 import { useSendReminder } from '../hooks/useNotifications';
 import { useAppStore } from '../store/useAppStore';
 import { AccessRestricted } from '../components/ui/AccessRestricted';
+import { DEFAULT_HR_USER } from '../data/dummy';
 import type { ApprovalStatus } from '../types';
 
 type FilterTab = 'All' | ApprovalStatus;
 
 export const Approvals: React.FC = () => {
-  const { role } = useAppStore();
+  const { role, currentUser } = useAppStore();
   const [filter, setFilter] = useState<FilterTab>('All');
   const [searchName, setSearchName] = useState('');
   const [searchDate, setSearchDate] = useState('');
@@ -53,7 +54,7 @@ export const Approvals: React.FC = () => {
       onConfirm: () => {
         setModalConfig(null);
         sendReminderMutation.mutate(
-          { message: `HR (Reshma) sent a reminder: Please review and approve pending timesheet for ${empName} (${a.hours}h).` },
+          { message: `HR (${currentUser?.name || DEFAULT_HR_USER.name}) sent a reminder: Please review and approve pending timesheet for ${empName} (${a.hours}h).` },
           {
             onSuccess: () => {
               setModalConfig({
@@ -80,7 +81,7 @@ export const Approvals: React.FC = () => {
       onConfirm: () => {
         setModalConfig(null);
         sendReminderMutation.mutate(
-          { message: `HR (Reshma) sent an urgent reminder: You have ${targetCount} pending timesheet(s) awaiting your review and approval.` },
+          { message: `HR (${currentUser?.name || DEFAULT_HR_USER.name}) sent an urgent reminder: You have ${targetCount} pending timesheet(s) awaiting your review and approval.` },
           {
             onSuccess: () => {
               setSelected([]);
@@ -305,13 +306,13 @@ export const Approvals: React.FC = () => {
 
   if (isLoading && approvals.length === 0) {
     return (
-      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-inner approvals__loading">
+        <div className="approvals__loading-header">
           <div>
-            <Skeleton width="180px" height="2rem" style={{ marginBottom: '0.375rem' }} />
+            <Skeleton width="180px" height="2rem" className="approvals__loading-title" />
             <Skeleton width="260px" height="0.875rem" />
           </div>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
+          <div className="approvals__loading-actions">
             <Skeleton width="110px" height="2.25rem" borderRadius="0.5rem" />
             <Skeleton width="110px" height="2.25rem" borderRadius="0.5rem" />
           </div>
@@ -337,12 +338,12 @@ export const Approvals: React.FC = () => {
   return (
     <div className="page-inner">
       {actionFailed && (
-        <div role="alert" style={{ marginBottom: '1rem', color: '#b91c1c' }}>
+        <div role="alert" className="approvals__alert-error">
           We couldn't confirm that action completed. Check the current item status before trying again.
         </div>
       )}
       {isError && approvals.length > 0 && (
-        <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexWrap: 'wrap', marginBottom: '1rem', color: '#92400e' }}>
+        <div role="alert" className="approvals__alert-stale">
           <span>Couldn't refresh approvals. The displayed results may be out of date.</span>
           <button type="button" className="btn btn--secondary btn--sm" onClick={() => void refetch()} disabled={isFetching}>
             {isFetching ? 'Retrying…' : 'Retry'}
@@ -353,51 +354,42 @@ export const Approvals: React.FC = () => {
         <div className="page-header__row">
           <div>
             <h1 className="page-header__title">Approvals</h1>
-            <div className="page-header__subtitle">Review timesheet submissions · Week of Jun 30, 2026</div>
+            <div className="page-header__subtitle">
+              Review timesheet submissions ·{' '}
+              {(() => {
+                const now = new Date();
+                const day = now.getDay();
+                const diffToMon = day === 0 ? -6 : 1 - day;
+                const mon = new Date(now);
+                mon.setDate(now.getDate() + diffToMon);
+                return `Week of ${mon.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+              })()}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Floating Celebration Toast when All Caught Up */}
       {pending === 0 && !isLoading && showCaughtUpToast && (
-        <div 
-          style={{
-            position: 'fixed',
-            top: 24,
-            right: 24,
-            zIndex: 1000,
-            display: 'flex',
-            alignItems: 'flex-start',
-            gap: '0.75rem',
-            background: '#ecfdf5',
-            border: '1px solid #a7f3d0',
-            borderRadius: 12,
-            padding: '0.875rem 1.125rem',
-            boxShadow: '0 10px 30px rgba(16, 185, 129, 0.2)',
-            maxWidth: 420,
-            animation: 'slideInRight 0.3s ease-out'
-          }}
-        >
-          <div style={{
-            width: 28, height: 28, borderRadius: '50%', background: '#10b981', color: '#fff',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '0.125rem'
-          }}>
+        <div className="approvals__caught-up-toast">
+          <div className="approvals__caught-up-icon">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M13.5 4.5L6.5 11.5L3 8" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontWeight: 700, fontSize: '0.8125rem', color: '#065f46', marginBottom: '0.125rem'}}>
+          <div className="approvals__caught-up-body">
+            <div className="approvals__caught-up-title">
               All caught up! No pending timesheets awaiting approval
             </div>
-            <div style={{ fontSize: '0.75rem', color: '#047857', lineHeight: 1.4}}>
+            <div className="approvals__caught-up-desc">
               Great job staying on top of reviews! All submitted timesheets across your team have been processed.
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowCaughtUpToast(false)}
-            style={{ background: 'none', border: 'none', color: '#059669', cursor: 'pointer', fontSize: '0.875rem', padding: '0 0.125rem', lineHeight: 1}}
+            aria-label="Dismiss notification"
+            className="approvals__caught-up-close"
           >✕</button>
         </div>
       )}
@@ -428,20 +420,8 @@ export const Approvals: React.FC = () => {
       </div>
 
       {/* Informative Note Banner */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '0.625rem',
-        background: '#f0f9ff',
-        border: '1px solid #bae6fd',
-        color: '#0369a1',
-        padding: '0.625rem 1rem',
-        borderRadius: 8,
-        fontSize: '0.8125rem',
-        marginBottom: '1rem',
-        fontWeight: 500
-      }}>
-        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0284c7" strokeWidth="1.8" style={{ flexShrink: 0 }}>
+      <div className="approvals__info-banner">
+        <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="#0284c7" strokeWidth="1.8" className="approvals__info-icon">
           <circle cx="8" cy="8" r="6.5"/>
           <path d="M8 5v3.5M8 11h.01"/>
         </svg>
@@ -451,9 +431,9 @@ export const Approvals: React.FC = () => {
       </div>
 
       {/* Search & Date Filters */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem', flexWrap: 'wrap', background: '#ffffff', padding: '0.75rem 1rem', borderRadius: 12, border: '1px solid #e2e8f0', boxShadow: '0 1px 3px rgba(0,0,0,0.02)' }}>
-        <div style={{ position: 'relative', flex: '1 1 240px', maxWidth: 320 }}>
-          <svg style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', width: 15, height: 15, color: '#64748b' }} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <div className="approvals__search-bar">
+        <div className="approvals__search-field approvals__search-field--name">
+          <svg className="approvals__search-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
             <circle cx="7" cy="7" r="5"/><path d="M11 11l3 3"/>
           </svg>
           <input
@@ -462,26 +442,24 @@ export const Approvals: React.FC = () => {
             placeholder="Search employee by name…"
             value={searchName}
             onChange={e => { setSearchName(e.target.value); setPage(1); }}
-            className="form-group__input"
-            style={{ paddingLeft: '2.125rem', width: '100%', height: 36, fontSize: '0.8125rem'}}
+            className="form-group__input approvals__search-input"
           />
           {searchName && (
             <button
               type="button"
               aria-label="Clear employee filter"
               onClick={() => { setSearchName(''); setPage(1); }}
-              style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}
+              className="approvals__search-clear"
             >✕</button>
           )}
         </div>
 
-        <div style={{ position: 'relative', flex: '1 1 200px', maxWidth: 240 }}>
+        <div className="approvals__search-field approvals__search-field--project">
           <select
             aria-label="Filter by project"
             value={searchProject}
             onChange={e => { setSearchProject(e.target.value); setPage(1); }}
-            className="form-group__select"
-            style={{ width: '100%', height: 36, fontSize: '0.8125rem', paddingLeft: '0.75rem'}}
+            className="form-group__select approvals__filter-select"
           >
             <option value="">All Projects</option>
             {projects.map((p: any) => (
@@ -491,13 +469,12 @@ export const Approvals: React.FC = () => {
         </div>
 
         {(role === 'ceo' || role === 'hr') && (
-          <div style={{ position: 'relative', flex: '1 1 180px', maxWidth: 200 }}>
+          <div className="approvals__search-field approvals__search-field--role">
             <select
               aria-label="Filter by role"
               value={searchRole}
               onChange={e => { setSearchRole(e.target.value); setPage(1); }}
-              className="form-group__select"
-              style={{ width: '100%', height: 36, fontSize: '0.8125rem', paddingLeft: '0.75rem', fontWeight: 500 }}
+              className="form-group__select approvals__filter-select approvals__filter-select--role"
             >
               <option value="">All Roles</option>
               <option value="employee">Employees</option>
@@ -508,14 +485,14 @@ export const Approvals: React.FC = () => {
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: '#f8fafc', padding: '0.25rem 0.75rem', borderRadius: 8, border: '1px solid #e2e8f0' }}>
-          <label htmlFor="approvals-filter-date-input" style={{ fontSize: '0.8125rem', fontWeight: 600, color: '#475569', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
-            <svg style={{ width: 14, height: 14, color: '#64748b' }} viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v3M11 1v3"/></svg>
+        <div className="approvals__date-filter">
+          <label htmlFor="approvals-filter-date-input" className="approvals__date-label">
+            <svg className="approvals__date-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5"><rect x="2" y="3" width="12" height="11" rx="2"/><path d="M2 7h12M5 1v3M11 1v3"/></svg>
             Filter Date:
           </label>
-          <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }} >
+          <div className="approvals__date-input-wrap">
             {!searchDate && (
-              <span style={{ position: 'absolute', left: 6, pointerEvents: 'none', color: '#64748b', fontSize: '0.8125rem', fontWeight: 500 }}>
+              <span className="approvals__date-placeholder">
                 {new Date().toISOString().split('T')[0]}
               </span>
             )}
@@ -525,8 +502,7 @@ export const Approvals: React.FC = () => {
               type="date"
               value={searchDate}
               onChange={e => { setSearchDate(e.target.value); setPage(1); }}
-              className="form-group__input"
-              style={{ height: 30, padding: '0.125rem 0.375rem', width: 150, border: 'none', background: 'transparent', fontWeight: 600, fontSize: '0.8125rem', color: !searchDate ? 'transparent' : '#0f172a' }}
+              className={`form-group__input approvals__date-input${!searchDate ? ' approvals__date-input--empty' : ''}`}
               title="Filter timesheets by specific date"
             />
           </div>
@@ -535,26 +511,23 @@ export const Approvals: React.FC = () => {
               type="button"
               aria-label="Clear date filter"
               onClick={(e) => { e.stopPropagation(); setSearchDate(''); setPage(1); }}
-              style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '0 0.25rem', display: 'flex', alignItems: 'center' }}
+              className="approvals__date-clear"
             >✕</button>
           )}
         </div>
 
-
-
         {(searchName || searchDate || searchProject || searchRole) && (
           <button
             type="button"
-            className="btn btn--ghost btn--sm"
+            className="btn btn--ghost btn--sm approvals__reset-btn"
             onClick={() => { setSearchName(''); setSearchDate(''); setSearchProject(''); setSearchRole(''); setPage(1); }}
-            style={{ fontSize: '0.75rem', color: '#64748b' }}
           >Reset Filters</button>
         )}
       </div>
 
       {/* Filters + Bulk */}
       <div className="approvals__filters">
-      <div className="approvals__filter-tabs" role="group" aria-label="Filter approvals by status">
+        <div className="approvals__filter-tabs" role="group" aria-label="Filter approvals by status">
           {(['All', 'Pending', 'Approved', 'Rejected'] as FilterTab[]).map(f => (
             <button
               key={f}
@@ -565,7 +538,7 @@ export const Approvals: React.FC = () => {
             >{f}</button>
           ))}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
+        <div className="approvals__bulk-bar">
           {pending > 0 ? (
             <>
               {filtered.length > 0 && (
@@ -598,22 +571,9 @@ export const Approvals: React.FC = () => {
               {role === 'hr' ? (
                 <button
                   type="button"
-                  className="btn btn--sm"
+                  className="btn btn--sm approvals__reminder-btn"
                   onClick={handleSendBulkReminder}
                   disabled={sendReminderMutation.isPending}
-                  style={{
-                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: 6,
-                    padding: '0.375rem 0.875rem',
-                    fontWeight: 600,
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '0.375rem',
-                    cursor: 'pointer',
-                    boxShadow: '0 1px 3px rgba(217, 119, 6, 0.25)'
-                  }}
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 1.5a5 5 0 015 5v2.5l1 2H2l1-2V6.5a5 5 0 015-5z"/><path d="M6.5 13.5a1.5 1.5 0 003 0"/></svg>
                   <span>Send Reminder to Managers ({selected.length > 0 ? selected.length : pending})</span>
@@ -685,28 +645,28 @@ export const Approvals: React.FC = () => {
           <tbody>
             {isLoading && approvals.length === 0 ? (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', padding: '2.5rem', color: '#6b7280' }}>
+                <td colSpan={9} className="approvals__loading-cell">
                   Loading approvals…
                 </td>
               </tr>
             ) : paginated.map((a: any) => (
               <tr key={a.id}>
                 <td>
-                  <input type="checkbox" className="checkbox" aria-label={`Select timesheet for ${a.user?.name || a.employeeName || 'employee'}`} checked={selected.includes(a.id)} onChange={() => toggleSelect(a.id)} />
+                  <input type="checkbox" className="checkbox" aria-label={`Select timesheet for ${a.employee?.name || a.user?.name || a.employeeName || 'employee'}`} checked={selected.includes(a.id)} onChange={() => toggleSelect(a.id)} />
                 </td>
                 <td>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem'}}>
+                  <div className="approvals__emp-cell">
                     <Avatar initials={a.employee?.initials || 'U'} color={a.employee?.color || '#3b82f6'} size="sm" />
                     <div>
-                      <div style={{ fontWeight: 600, color: '#0f172a' }}>
+                      <div className="approvals__emp-name">
                         {a.employee?.name || 'Employee'}
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>{a.employee?.designation || 'Team Member'}</div>
+                      <div className="approvals__emp-role">{a.employee?.designation || 'Team Member'}</div>
                     </div>
                   </div>
                 </td>
                 <td>
-                  <div style={{ fontWeight: 600, color: '#0f172a' }} title={a.taskName}>
+                  <div className="approvals__task-name" title={a.taskName}>
                     {a.taskName ? (a.taskName.length > 40 ? a.taskName.substring(0, 40) + '....' : a.taskName) : 'Work Log Task'}
                   </div>
                 </td>
@@ -715,58 +675,44 @@ export const Approvals: React.FC = () => {
                     {(a.projects || []).map((p: string, i: number) => <div key={i}>{p}</div>)}
                   </div>
                 </td>
-                <td style={{ color: '#0f172a', fontWeight: 500, whiteSpace: 'nowrap' }}>{getSingleTimesheetDate(a)}</td>
-                <td style={{ color: '#64748b', fontSize: '0.8125rem', whiteSpace: 'nowrap' }}>{getSubmittedDate(a)}</td>
-                <td style={{ fontWeight: 600 }}>{a.hours}h</td>
+                <td className="approvals__td-date">{getSingleTimesheetDate(a)}</td>
+                <td className="approvals__td-submitted">{getSubmittedDate(a)}</td>
+                <td className="approvals__td-hours">{a.hours}h</td>
                 <td><Badge variant={statusVariant(a.status as any)}>{a.status}</Badge></td>
                 <td>
                   {role === 'hr' ? (
                     a.status === 'Pending' ? (
                       <button
                         type="button"
-                        className="btn btn--sm"
+                        className="btn btn--sm approvals__reminder-btn approvals__reminder-btn--sm"
                         onClick={() => handleSendReminder(a)}
                         disabled={sendReminderMutation.isPending}
-                        style={{
-                          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: 6,
-                          padding: '0.3125rem 0.75rem',
-                          fontSize: '0.75rem',
-                          fontWeight: 600,
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '0.3125rem',
-                          cursor: 'pointer',
-                          boxShadow: '0 1px 2px rgba(217, 119, 6, 0.2)'
-                        }}
                         title="Send reminder to manager to approve this timesheet"
                       >
                         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M8 1.5a5 5 0 015 5v2.5l1 2H2l1-2V6.5a5 5 0 015-5z"/><path d="M6.5 13.5a1.5 1.5 0 003 0"/></svg>
                         <span>Send Reminder</span>
                       </button>
                     ) : (
-                      <span style={{ fontSize: '0.75rem', color: '#6b7280', fontStyle: 'italic' }}>
+                      <span className="approvals__processed-text">
                         Processed ({a.status})
                       </span>
                     )
                   ) : (
                     <div className="approvals__actions">
                       {/* View button — always visible */}
-                      <button type="button" className="approvals__review-btn" onClick={() => setReviewModalId(a.id)} title="View timesheet details" aria-label={`View timesheet details for ${a.user?.name || a.employeeName || 'employee'}`}>
-                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 16, height: 16 }}><path d="M1.5 8c2.5-4 5.5-5.5 6.5-5.5s4 1.5 6.5 5.5c-2.5 4-5.5 5.5-6.5 5.5S4 12 1.5 8z"/><circle cx="8" cy="8" r="2.5"/></svg>
+                      <button type="button" className="approvals__review-btn" onClick={() => setReviewModalId(a.id)} title="View timesheet details" aria-label={`View timesheet details for ${a.employee?.name || a.user?.name || a.employeeName || 'employee'}`}>
+                        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" className="approvals__icon-md"><path d="M1.5 8c2.5-4 5.5-5.5 6.5-5.5s4 1.5 6.5 5.5c-2.5 4-5.5 5.5-6.5 5.5S4 12 1.5 8z"/><circle cx="8" cy="8" r="2.5"/></svg>
                       </button>
                       {/* Approve — shown for Pending or Rejected (re-approve a rejected timesheet) */}
                       {(a.status === 'Pending' || a.status === 'Rejected') && (
-                        <button type="button" className="approvals__action-btn approvals__action-btn--approve" onClick={() => updateStatus(a.id, 'Approved' as any)} disabled={approveMutation.isPending} title={a.status === 'Rejected' ? 'Approve this previously rejected timesheet' : 'Approve timesheet'} aria-label={`${a.status === 'Rejected' ? 'Approve previously rejected' : 'Approve'} timesheet for ${a.user?.name || a.employeeName || 'employee'}`}>
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}><path d="M3 8l3 3 7-7"/></svg>
+                        <button type="button" className="approvals__action-btn approvals__action-btn--approve" onClick={() => updateStatus(a.id, 'Approved' as any)} disabled={approveMutation.isPending} title={a.status === 'Rejected' ? 'Approve this previously rejected timesheet' : 'Approve timesheet'} aria-label={`${a.status === 'Rejected' ? 'Approve previously rejected' : 'Approve'} timesheet for ${a.employee?.name || a.user?.name || a.employeeName || 'employee'}`}>
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="approvals__icon-sm"><path d="M3 8l3 3 7-7"/></svg>
                         </button>
                       )}
                       {/* Reject — shown for Pending or Approved (retract an approval) */}
                       {(a.status === 'Pending' || a.status === 'Approved') && (
-                        <button type="button" className="approvals__action-btn approvals__action-btn--reject" onClick={() => updateStatus(a.id, 'Rejected' as any)} disabled={rejectMutation.isPending} title={a.status === 'Approved' ? 'Retract approval and reject timesheet' : 'Reject timesheet'} aria-label={`${a.status === 'Approved' ? 'Retract approval and reject' : 'Reject'} timesheet for ${a.user?.name || a.employeeName || 'employee'}`}>
-                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" style={{ width: 14, height: 14 }}><path d="M4 4l8 8M12 4l-8 8"/></svg>
+                        <button type="button" className="approvals__action-btn approvals__action-btn--reject" onClick={() => updateStatus(a.id, 'Rejected' as any)} disabled={rejectMutation.isPending} title={a.status === 'Approved' ? 'Retract approval and reject timesheet' : 'Reject timesheet'} aria-label={`${a.status === 'Approved' ? 'Retract approval and reject' : 'Reject'} timesheet for ${a.employee?.name || a.user?.name || a.employeeName || 'employee'}`}>
+                          <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6" className="approvals__icon-sm"><path d="M4 4l8 8M12 4l-8 8"/></svg>
                         </button>
                       )}
                     </div>
@@ -776,8 +722,13 @@ export const Approvals: React.FC = () => {
             ))}
             {!isLoading && filtered.length === 0 && (
               <tr>
-                <td colSpan={9} style={{ textAlign: 'center', padding: '1.5rem', color: '#6b7280' }}>
-                  No approvals found for this filter.
+                <td colSpan={9} className="approvals__empty-cell">
+                  <EmptyState
+                    icon="timesheets"
+                    title="No approvals found"
+                    subtitle="No timesheet submissions match your current filters."
+                    compact
+                  />
                 </td>
               </tr>
             )}

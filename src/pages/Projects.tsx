@@ -8,8 +8,9 @@ import { CreateProjectModal } from "../components/ui/CreateProjectModal";
 import { EditProjectModal } from "../components/ui/EditProjectModal";
 import { useProjects } from "../hooks/useProjects";
 import { useAppStore } from "../store/useAppStore";
-import { LoadingSpinner } from "../components/ui/LoadingSpinner";
 import { CardGridSkeleton, Skeleton } from "../components/ui/LoadingState";
+import { EmptyState } from "../components/ui/EmptyState";
+import { PROJECT_EXTRAS, PROJECT_HEX_MAP, getProjectLeadLabel } from "../data/dummy";
 
 export const Projects: React.FC = () => {
 	const { role } = useAppStore();
@@ -21,7 +22,7 @@ export const Projects: React.FC = () => {
 	const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 	const pageSize = viewMode === "list" ? 10 : 6;
 
-	const { data: projects = [], isLoading } = useProjects({
+	const { data: projects = [], isLoading, isError, isFetching, refetch } = useProjects({
 		search: search || undefined,
 		status: filter === "All" ? undefined : filter,
 	});
@@ -30,74 +31,26 @@ export const Projects: React.FC = () => {
 		? projects.slice((page - 1) * pageSize, page * pageSize)
 		: projects;
 
-	const extras: Record<
-		string,
-		{
-			b1: string;
-			b1Color: string;
-			b2: string;
-			b2Color: string;
-			client: string;
-			color: string;
-		}
-	> = {
-		p1: {
-			b1: "Active",
-			b1Color: "green",
-			b2: "High",
-			b2Color: "orange",
-			client: "Internal",
-			color: "blue",
-		},
-		p2: {
-			b1: "In Review",
-			b1Color: "yellow",
-			b2: "Medium",
-			b2Color: "blue",
-			client: "RetailMax",
-			color: "green",
-		},
-		p3: {
-			b1: "Active",
-			b1Color: "green",
-			b2: "High",
-			b2Color: "orange",
-			client: "FinTech Corp",
-			color: "purple",
-		},
-		p4: {
-			b1: "Planning",
-			b1Color: "blue",
-			b2: "Medium",
-			b2Color: "blue",
-			client: "Internal",
-			color: "orange",
-		},
-		p5: {
-			b1: "Active",
-			b1Color: "green",
-			b2: "Critical",
-			b2Color: "red",
-			client: "Internal",
-			color: "red",
-		},
-	};
-
-	const hexMap: Record<string, string> = {
-		blue: "#3b82f6",
-		green: "#22c55e",
-		purple: "#9333ea",
-		orange: "#f97316",
-		red: "#ef4444",
-	};
-
 	if (isLoading && projects.length === 0 && !search) {
 		return (
-			<div className="page-inner" style={{ animation: "fadeIn 0.2s ease" }}>
-				<div className="page-header" style={{ marginBottom: "1.5rem" }}>
+			<div className="page-inner page-inner--fade">
+				<div className="page-header projects__skeleton-header">
 					<Skeleton width="180px" height="2rem" />
 				</div>
 				<CardGridSkeleton count={6} />
+			</div>
+		);
+	}
+
+	if (isError && projects.length === 0) {
+		return (
+			<div className="page-inner">
+				<EmptyState
+					icon="error"
+					title="Unable to load projects"
+					subtitle="We couldn't fetch the projects list. Check your connection and try again."
+					action={{ label: isFetching ? "Retrying…" : "Try again", onClick: () => void refetch() }}
+				/>
 			</div>
 		);
 	}
@@ -109,7 +62,7 @@ export const Projects: React.FC = () => {
 					<div>
 						<h1 className="page-header__title">Projects</h1>
 					</div>
-					{role === "manager" && (
+					{(role === "manager" || role === "admin") && (
 						<button
 							type="button"
 							className="btn btn--primary"
@@ -177,7 +130,7 @@ export const Projects: React.FC = () => {
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="1.5"
-								style={{ width: 14, height: 14 }}
+								className="projects__view-icon"
 							>
 								<rect x="1.5" y="1.5" width="5" height="5" rx="1" />
 								<rect x="9.5" y="1.5" width="5" height="5" rx="1" />
@@ -197,7 +150,7 @@ export const Projects: React.FC = () => {
 								fill="none"
 								stroke="currentColor"
 								strokeWidth="1.5"
-								style={{ width: 14, height: 14 }}
+								className="projects__view-icon"
 							>
 								<path d="M1.5 4h13M1.5 8h13M1.5 12h13" />
 							</svg>
@@ -232,8 +185,8 @@ export const Projects: React.FC = () => {
 									: p.status === "Ongoing" || p.status === "On Track"
 										? "blue"
 										: "gray";
-							const ex = extras[p.id];
-							const dotHex = hexMap[ex?.color || "blue"] || "#3b82f6";
+							const ex = PROJECT_EXTRAS[p.id];
+							const dotHex = PROJECT_HEX_MAP[ex?.color || "blue"] || "#2563eb";
 							const barColor =
 								p.status === "Over Budget"
 									? "red"
@@ -247,26 +200,18 @@ export const Projects: React.FC = () => {
 									className="projects__card"
 								>
 									<div className="projects__card-header">
-										<div
-											style={{ display: "flex", alignItems: "center", gap: '0.5rem'}}
-										>
+										<div className="projects__card-header-left">
 											<div
-												style={{
-													width: 8,
-													height: 8,
-													borderRadius: "50%",
-													backgroundColor: dotHex,
-												}}
+												className="projects__card-dot"
+												style={{ backgroundColor: dotHex }}
 											/>
 											<Link className="projects__card-title" to={`/projects/${p.id}`}>{p.name}</Link>
 										</div>
-										<div
-											style={{ display: "flex", alignItems: "center", gap: '0.5rem'}}
-										>
+										<div className="projects__card-header-right">
 											<Badge variant={badgeVariant as any} dot>
 												{p.status}
 											</Badge>
-											{role === "manager" && (
+											{(role === "manager" || role === "admin") && (
 												<button
 													type="button"
 													onClick={(e) => {
@@ -274,19 +219,8 @@ export const Projects: React.FC = () => {
 														setEditingProject(p);
 													}}
 													title="Edit project details"
-													style={{
-														display: "inline-flex",
-														alignItems: "center",
-														justifyContent: "center",
-														width: 30,
-														height: 30,
-														padding: '0rem',
-														color: "#3b82f6",
-														background: "#ffffff",
-														border: "1px solid #e2e8f0",
-														borderRadius: 6,
-														cursor: "pointer",
-													}}
+													aria-label={`Edit ${p.name}`}
+													className="projects__card-edit-btn"
 												>
 													<svg
 														width="14"
@@ -306,19 +240,7 @@ export const Projects: React.FC = () => {
 										{p.description || "No description provided."}
 									</div>
 
-									<div
-										style={{
-											display: "flex",
-											alignItems: "center",
-											gap: '0.5rem',
-											padding: "0.5rem 0.75rem",
-											background: "#f8fafc",
-											border: "1px solid #e2e8f0",
-											borderRadius: 8,
-											fontSize: '0.75rem',
-											margin: "0.75rem 0 0.5rem 0",
-										}}
-									>
+									<div className="projects__card-lead-banner">
 										<svg
 											width="16"
 											height="16"
@@ -328,20 +250,15 @@ export const Projects: React.FC = () => {
 											strokeWidth="2"
 											strokeLinecap="round"
 											strokeLinejoin="round"
-											style={{ flexShrink: 0 }}
 										>
 											<path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
 										</svg>
 										<div>
-											<span style={{ fontWeight: 600, color: "#0f172a" }}>
+											<span className="projects__card-lead-label">
 												Project Manager:{" "}
 											</span>
-											<span style={{ color: "#334155", fontWeight: 500 }}>
-												{p.managers && p.managers.length > 0
-													? p.managers.map((m: any) => m.name).join(", ")
-													: p.name.toLowerCase() === "internal"
-														? "Internal Lead"
-														: "Rahul (Engineering Lead)"}
+											<span className="projects__card-lead-name">
+												{getProjectLeadLabel(p)}
 											</span>
 										</div>
 									</div>
@@ -414,18 +331,12 @@ export const Projects: React.FC = () => {
 						},
 					)}
 					{projects.length === 0 && (
-						<div
-							style={{
-								gridColumn: "1 / -1",
-								padding: '2.5rem',
-								textAlign: "center",
-								color: "#6b7280",
-								background: "#fff",
-								borderRadius: 12,
-								border: "1px solid #e5e7eb",
-							}}
-						>
-							No projects found matching your filters.
+						<div className="projects__grid-empty">
+							<EmptyState
+								icon="projects"
+								title="No projects found"
+								subtitle="No projects match your current search or status filter."
+							/>
 						</div>
 					)}
 				</div>
@@ -439,11 +350,11 @@ export const Projects: React.FC = () => {
 								<th scope="col">Status</th>
 								<th scope="col">Priority</th>
 								<th scope="col">Project Manager</th>
-								<th scope="col" style={{ width: 180 }}>Progress</th>
+								<th scope="col" className="projects__th-progress">Progress</th>
 								<th scope="col">Hours</th>
 								<th scope="col">Team</th>
-								{role === "manager" && (
-									<th scope="col" style={{ textAlign: "right" }}>Actions</th>
+								{(role === "manager" || role === "admin") && (
+									<th scope="col" className="projects__th-right">Actions</th>
 								)}
 							</tr>
 						</thead>
@@ -478,8 +389,8 @@ export const Projects: React.FC = () => {
 												: p.status === "Over Budget"
 													? "red"
 													: "gray";
-									const ex = extras[p.id];
-									const dotHex = hexMap[ex?.color || "blue"] || "#3b82f6";
+									const ex = PROJECT_EXTRAS[p.id];
+									const dotHex = PROJECT_HEX_MAP[ex?.color || "blue"] || "#2563eb";
 									const barColor =
 										p.status === "Over Budget"
 											? "red"
@@ -490,20 +401,9 @@ export const Projects: React.FC = () => {
 									return (
 										<tr key={p.id}>
 											<td>
-												<div
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: '0.625rem',
-													}}
-												>
+												<div className="projects__table-proj-cell">
 													<div
-														style={{
-															width: 10,
-															height: 10,
-															borderRadius: "50%",
-															backgroundColor: dotHex,
-														}}
+														style={{ backgroundColor: dotHex }}
 														className="projects__table-dot"
 													/>
 													<div>
@@ -544,11 +444,7 @@ export const Projects: React.FC = () => {
 														<path d="M2 4l3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />
 													</svg>
 													<span>
-														{p.managers && p.managers.length > 0
-															? p.managers.map((m: any) => m.name).join(", ")
-															: p.name.toLowerCase() === "internal"
-																? "Internal Lead"
-																: "Rahul (Engineering Lead)"}
+														{getProjectLeadLabel(p)}
 													</span>
 												</div>
 											</td>
@@ -574,7 +470,7 @@ export const Projects: React.FC = () => {
 														/ {p.totalHours}h
 													</span>
 												) : (
-													<span className="projects__table-hours-total" style={{ fontSize: '0.6875rem', color: '#6b7280' }}>
+													<span className="projects__table-hours-total projects__table-no-budget">
 														{" "}
 														(No budget)
 													</span>
@@ -589,12 +485,13 @@ export const Projects: React.FC = () => {
 													max={4}
 												/>
 											</td>
-											{role === "manager" && (
+											{(role === "manager" || role === "admin") && (
 												<td className="projects__table-action-cell">
 													<button
 														type="button"
 														onClick={() => setEditingProject(p)}
 														title="Edit project details"
+														aria-label={`Edit ${p.name}`}
 														className="projects__table-edit-btn"
 													>
 														<svg
@@ -620,7 +517,12 @@ export const Projects: React.FC = () => {
 										colSpan={role === "manager" ? 8 : 7}
 										className="projects__table-empty"
 									>
-										No projects found matching your filters.
+										<EmptyState
+											icon="projects"
+											title="No projects found"
+											subtitle="No projects match your current search or status filter."
+											compact
+										/>
 									</td>
 								</tr>
 							)}

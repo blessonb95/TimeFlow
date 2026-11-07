@@ -68,6 +68,115 @@
 		gap: @space-3;
 		flex-shrink: 0;
 	}
+
+	&--md {
+		width: 32.5rem;
+	}
+
+	&__form {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+		overflow: hidden;
+	}
+
+	&__error-banner {
+		background: #fef2f2;
+		border: 0.0625rem solid #f87171;
+		color: #b91c1c;
+		padding: 0.625rem 0.875rem;
+		border-radius: 0.5rem;
+		font-size: 0.8125rem;
+		margin-bottom: 1rem;
+	}
+
+	&__grid-2 {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 1rem;
+
+		&--spaced {
+			margin-top: 0.5rem;
+		}
+	}
+
+	&__grid-3 {
+		display: grid;
+		grid-template-columns: 1fr 1fr 1fr;
+		gap: 0.75rem;
+	}
+
+	&__field-error {
+		font-size: 0.75rem;
+		color: #ef4444;
+		margin-top: 0.3125rem;
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-weight: 500;
+
+		svg {
+			width: 0.875rem;
+			height: 0.875rem;
+			flex-shrink: 0;
+		}
+	}
+
+	&__textarea {
+		min-height: 5.25rem;
+		padding: 0.75rem 0.875rem;
+		line-height: 1.5;
+		resize: vertical;
+	}
+
+	&__submit-btn {
+		cursor: pointer;
+
+		&:disabled {
+			opacity: 0.5;
+			cursor: not-allowed;
+		}
+	}
+
+	&__emp-summary {
+		display: flex;
+		align-items: center;
+		gap: 0.75rem;
+		padding: 0.75rem;
+		background: #f8fafc;
+		border-radius: 0.625rem;
+		border: 0.0625rem solid #e2e8f0;
+		margin-bottom: 1.25rem;
+
+		&-name {
+			font-weight: 600;
+			color: #0f172a;
+			font-size: 0.875rem;
+		}
+
+		&-sub {
+			font-size: 0.75rem;
+			color: #64748b;
+			margin-top: 0.125rem;
+		}
+	}
+
+	&__time-grid {
+		display: grid;
+		grid-template-columns: 1fr 1fr;
+		gap: 0.5rem;
+	}
+
+	&__time-unit {
+		display: flex;
+		align-items: center;
+		gap: 0.25rem;
+
+		&-label {
+			font-size: 0.8125rem;
+			color: #6b7280;
+		}
+	}
 }
 
 // ─── Review / Audit Modal & Drawer ───────────────────────────────────────────
@@ -394,6 +503,47 @@
 			cursor: not-allowed;
 		}
 	}
+	&__content {
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+	&__th-right {
+		text-align: right;
+	}
+	&__td-right {
+		text-align: right;
+	}
+	&__td-hours {
+		text-align: right;
+		font-weight: 600;
+	}
+	&__task-name {
+		font-weight: 500;
+		color: #0f172a;
+	}
+	&__readonly-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		width: 100%;
+	}
+	&__readonly-pill {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		font-size: 0.8125rem;
+		color: #334155;
+		font-weight: 600;
+		background: #f1f5f9;
+		padding: 0.375rem 0.75rem;
+		border-radius: 0.375rem;
+		border: 0.0625rem solid #cbd5e1;
+	}
+	&__action-btns {
+		display: flex;
+		gap: 0.625rem;
+	}
 }
 
 // ─── Task Description Modal ───────────────────────────────────────────────────
@@ -580,6 +730,26 @@
 		&:focus {
 			border-color: @color-primary;
 		}
+	}
+
+	&__prompt-wrap {
+		display: flex;
+		flex-direction: column;
+		gap: 0.375rem;
+	}
+
+	&__prompt-error {
+		svg {
+			width: 0.8125rem;
+			height: 0.8125rem;
+			flex-shrink: 0;
+		}
+	}
+
+	&__prompt-count {
+		font-size: 0.6875rem;
+		color: #64748b;
+		text-align: right;
 	}
 
 	&__footer {

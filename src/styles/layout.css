@@ -1,40 +1,28 @@
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
-html {
-  font-size: 1rem;
-}
-html,
-body,
-#root {
-  height: 100%;
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  font-size: 0.875rem;
-  color: #111827;
-  background: #f3f4f6;
-  -webkit-font-smoothing: antialiased;
-}
-a {
-  text-decoration: none;
-  color: inherit;
-}
-button {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
-input,
-select,
-textarea {
-  font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-}
 .app-shell {
   display: flex;
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+}
+@keyframes sidebarSlideInLeft {
+  0% {
+    opacity: 0;
+    transform: translateX(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes topbarSlideInTop {
+  0% {
+    opacity: 0;
+    transform: translateY(-100%);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 .sidebar {
   width: 16rem;
@@ -47,6 +35,7 @@ textarea {
   overflow: hidden;
   flex-shrink: 0;
   z-index: 100;
+  animation: sidebarSlideInLeft 0.45s cubic-bezier(0.16, 1, 0.3, 1);
   transition: width 0.2s ease, min-width 0.2s ease, transform 0.2s ease;
 }
 .sidebar__logo {
@@ -111,7 +100,7 @@ textarea {
   height: 1.25rem;
 }
 .sidebar__logo-name {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 700;
   color: #111827;
   letter-spacing: -0.01875rem;
@@ -463,12 +452,13 @@ textarea {
   top: 0;
   z-index: 50;
   flex-shrink: 0;
+  animation: topbarSlideInTop 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .topbar__left {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #111827;
 }
@@ -576,6 +566,71 @@ textarea {
   line-height: 1;
   box-shadow: 0 0.125rem 0.3125rem rgba(239, 68, 68, 0.4);
   pointer-events: none;
+}
+.topbar__notif-wrap {
+  position: relative;
+}
+.topbar__notif-dropdown {
+  position: absolute;
+  top: calc(100% + 0.625rem);
+  right: 0;
+  width: 20rem;
+  max-width: calc(100vw - 2rem);
+  background: #ffffff;
+  border: 0.0625rem solid #e5e7eb;
+  border-radius: 0.75rem;
+  box-shadow: 0 0.625rem 1.5rem rgba(0, 0, 0, 0.08);
+  z-index: 200;
+  overflow: hidden;
+}
+.topbar__notif-header {
+  padding: 0.875rem 1rem;
+  border-bottom: 0.0625rem solid #f0f0f0;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: #111827;
+}
+.topbar__notif-empty {
+  padding: 1rem;
+  font-size: 0.75rem;
+  color: #6b7280;
+  text-align: center;
+}
+.topbar__notif-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 624.9375rem;
+  background: #2563eb;
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+}
+.topbar__notif-body {
+  flex: 1;
+  min-width: 0;
+}
+.topbar__notif-time {
+  color: #6b7280;
+  font-size: 0.6875rem;
+  margin-top: 0.125rem;
+}
+.topbar__notification-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  padding: 0.625rem 1rem;
+  border-bottom: 0.0625rem solid #f9fafb;
+  font-size: 0.75rem;
+  color: #111827;
+  background: #f9fafb;
+  display: flex;
+  gap: 0.5rem;
+  align-items: flex-start;
+  cursor: pointer;
+}
+.topbar__notification-item--read {
+  color: #6b7280;
+  background: #ffffff;
+  cursor: default;
 }
 .main-area {
   flex: 1;
@@ -768,6 +823,7 @@ body {
     box-shadow: 0 0.625rem 1.875rem rgba(0, 0, 0, 0.15);
   }
   .sidebar--collapsed {
+    animation: none;
     transform: translateX(-100%);
     width: 16.25rem !important;
     min-width: 16.25rem !important;
@@ -777,8 +833,10 @@ body {
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .sidebar {
+  .sidebar,
+  .topbar {
     transition: none;
+    animation: none;
   }
 }
 @media (max-width: 48rem) {

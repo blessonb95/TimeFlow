@@ -4,7 +4,7 @@ import { authenticate, requireRole } from '../../middleware/auth';
 
 const router = Router();
 router.use(authenticate);
-router.use(requireRole('manager', 'admin'));   // ← employees blocked here
+router.use(requireRole('manager', 'admin', 'ceo', 'hr'));   // ← employees blocked here
 
 router.get('/',                     approvalsController.list);
 router.get('/:id/details',          approvalsController.getDetails);

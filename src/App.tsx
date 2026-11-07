@@ -23,7 +23,7 @@ function AuthSync() {
   const { data } = useCurrentUser();
   useEffect(() => {
     if (isGuest || authToken === 'demo-guest-token') return;
-    if (data && authToken) {
+    if (data && (data as any).id && authToken) {
       setAuthUser(data as Parameters<typeof setAuthUser>[0], authToken);
     }
   }, [data, authToken, setAuthUser, isGuest]);
@@ -38,10 +38,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
 function OnboardingGate({ children }: { children: React.ReactNode }) {
   const { currentUser, isGuest } = useAppStore();
-  if (isGuest || currentUser.id === 'guest-demo-user') {
-    return <>{children}</>;
-  }
-
   const onboardingKey = currentUser.id ? `onboarding_completed_${currentUser.id}` : 'onboarding_completed';
 
   const [showOnboarding, setShowOnboarding] = useState(
@@ -55,6 +51,10 @@ function OnboardingGate({ children }: { children: React.ReactNode }) {
       setShowOnboarding(!localStorage.getItem(key));
     }
   }, [currentUser.id]);
+
+  if (isGuest || currentUser.id === 'guest-demo-user') {
+    return <>{children}</>;
+  }
 
   const handleComplete = () => {
     localStorage.setItem(onboardingKey, 'true');

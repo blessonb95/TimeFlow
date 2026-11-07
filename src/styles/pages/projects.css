@@ -21,7 +21,7 @@
   margin-bottom: 0.75rem;
 }
 .projects__card-title {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #111827;
   text-decoration: none;
@@ -249,7 +249,7 @@
 }
 @media (max-width: 48rem) {
   .projects__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
   }
   .projects__toolbar {
     flex-direction: column;

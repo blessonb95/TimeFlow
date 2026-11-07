@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNotifications, useMarkRead } from "../../hooks/useNotifications";
+import { useNotifications, useMarkRead, useMarkAllRead } from "../../hooks/useNotifications";
 import { useLogout } from "../../hooks/useAuth";
 import { useAppStore } from "../../store/useAppStore";
 import { Link } from "react-router-dom";
@@ -11,6 +11,7 @@ export const Topbar: React.FC = () => {
 	const { isSidebarCollapsed, toggleSidebar } = useAppStore();
 	const { data: notificationsList = [] } = useNotifications();
 	const markReadMutation = useMarkRead();
+	const markAllReadMutation = useMarkAllRead();
 	const [showNotif, setShowNotif] = useState(false);
 	const [showSearch, setShowSearch] = useState(false);
 	const notifRef = useRef<HTMLDivElement>(null);
@@ -78,7 +79,8 @@ export const Topbar: React.FC = () => {
 						fill="none"
 						stroke="currentColor"
 						strokeWidth="2"
-						style={{ width: 20, height: 20 }}
+						width="20"
+						height="20"
 					>
 						<path d="M4 6h16M4 12h16M4 18h16" />
 					</svg>
@@ -104,7 +106,7 @@ export const Topbar: React.FC = () => {
 				</button>
 			</div>
 			<div className="topbar__right">
-				<div ref={notifRef} style={{ position: "relative" }}>
+				<div ref={notifRef} className="topbar__notif-wrap">
 					<button
 						type="button"
 						className="topbar__notif"
@@ -134,37 +136,23 @@ export const Topbar: React.FC = () => {
 							id="topbar-notifications"
 							aria-label="Notifications"
 							role="region"
-							style={{
-								position: "absolute",
-								top: "calc(100% + 10px)",
-								right: 0,
-								width: 320,
-								background: "#fff",
-								border: "1px solid #e5e7eb",
-								borderRadius: 12,
-								boxShadow: "0 10px 24px rgba(0,0,0,.08)",
-								zIndex: 200,
-							}}
+							className="topbar__notif-dropdown"
 						>
-							<div
-								style={{
-									padding: "0.875rem 1rem",
-									borderBottom: "1px solid #f0f0f0",
-									fontWeight: 600,
-									fontSize: '0.8125rem',
-								}}
-							>
-								Notifications
+							<div className="topbar__notif-header">
+								<span>Notifications</span>
+								{unreadCount > 0 && (
+									<button
+										type="button"
+										className="btn btn--ghost btn--sm"
+										onClick={() => markAllReadMutation.mutate()}
+										disabled={markAllReadMutation.isPending}
+									>
+										Mark all read
+									</button>
+								)}
 							</div>
 							{notificationsList.length === 0 ? (
-								<div
-									style={{
-										padding: "1rem",
-										fontSize: '0.75rem',
-										color: "#6b7280",
-										textAlign: "center",
-									}}
-								>
+								<div className="topbar__notif-empty">
 									No notifications
 								</div>
 							) : (
@@ -178,43 +166,15 @@ export const Topbar: React.FC = () => {
 										<button
 											type="button"
 											key={n.id}
-											className="topbar__notification-item"
+											className={`topbar__notification-item${n.read ? " topbar__notification-item--read" : ""}`}
 											onClick={() => !n.read && markReadMutation.mutate(n.id)}
-											aria-label={`${n.message}${n.read ? ', read' : ', mark as read'}`}
-							disabled={n.read}
-											style={{
-												padding: "0.625rem 1rem",
-												borderBottom: "1px solid #f9fafb",
-												fontSize: '0.75rem',
-												color: n.read ? "#6b7280" : "#111827",
-												background: n.read ? "#fff" : "#f9fafb",
-												display: "flex",
-												gap: '0.5rem',
-												alignItems: "flex-start",
-												cursor: n.read ? "default" : "pointer",
-											}}
+											aria-label={`${n.message}${n.read ? ", read" : ", mark as read"}`}
+											disabled={n.read}
 										>
-											{!n.read && (
-												<span
-													style={{
-														width: 6,
-														height: 6,
-														borderRadius: "50%",
-														background: "#3b82f6",
-														marginTop: '0.25rem',
-														flexShrink: 0,
-													}}
-												/>
-											)}
-											<div style={{ flex: 1 }}>
+											{!n.read && <span className="topbar__notif-dot" />}
+											<div className="topbar__notif-body">
 												<div>{n.message}</div>
-												<div
-													style={{
-														color: "#6b7280",
-														fontSize: '0.6875rem',
-														marginTop: '0.125rem',
-													}}
-												>
+												<div className="topbar__notif-time">
 													{n.time}
 												</div>
 											</div>
@@ -238,7 +198,8 @@ export const Topbar: React.FC = () => {
 						fill="none"
 						stroke="currentColor"
 						strokeWidth="1.5"
-						style={{ width: 16, height: 16 }}
+						width="16"
+						height="16"
 					>
 						<path d="M6 14H3a1.5 1.5 0 01-1.5-1.5v-9A1.5 1.5 0 013 2h3" />
 						<path d="M10.5 11l3.5-3-3.5-3M14 8H6" />

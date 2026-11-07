@@ -43,6 +43,26 @@ export const useMarkRead = () => {
   });
 };
 
+export const useMarkAllRead = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const local = getLocalReminders();
+      if (local.length > 0) {
+        const updated = local.map((n: any) => ({ ...n, read: true }));
+        localStorage.setItem('hr_reminder_notifications', JSON.stringify(updated));
+      }
+      try {
+        await notificationsApi.markAllRead();
+      } catch {
+        // ignore if offline
+      }
+      return { ok: true };
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['notifications'] }),
+  });
+};
+
 export const useSendReminder = () => {
   const qc = useQueryClient();
   return useMutation({

@@ -32,6 +32,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 	useDialogAccessibility(dialogRef, onClose);
 	const { data: existingProjects } = useProjects();
 	const updateMutation = useUpdateProject();
+	const deleteMutation = useDeleteProject();
+	const [confirmDelete, setConfirmDelete] = useState(false);
 
 	const [name, setName] = useState(project.name || "");
 	const [description, setDescription] = useState(project.description || "");
@@ -63,18 +65,6 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 		useState<string[]>(initialManagers);
 	const [selectedEmployees, setSelectedEmployees] =
 		useState<string[]>(initialEmployees);
-
-	const handleToggleManager = (id: string) => {
-		setSelectedManagers((prev) =>
-			prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
-		);
-	};
-
-	const handleToggleEmployee = (id: string) => {
-		setSelectedEmployees((prev) =>
-			prev.includes(id) ? prev.filter((m) => m !== id) : [...prev, id],
-		);
-	};
 
 	const isDuplicate = existingProjects?.some(
 		(p: { id: string; name: string }) =>
@@ -148,23 +138,12 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 	const renderFieldError = (message?: string) => {
 		if (!message) return null;
 		return (
-			<div
-				style={{
-					fontSize: '0.75rem',
-					color: "#ef4444",
-					marginTop: '0.3125rem',
-					display: "flex",
-					alignItems: "center",
-					gap: '0.375rem',
-					fontWeight: 500,
-				}}
-			>
+			<div className="modal__field-error">
 				<svg
 					viewBox="0 0 16 16"
 					fill="none"
 					stroke="currentColor"
 					strokeWidth="1.5"
-					style={{ width: 14, height: 14, flexShrink: 0 }}
 				>
 					<circle cx="8" cy="8" r="6.25" />
 					<path
@@ -185,7 +164,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 				if (e.target === e.currentTarget) onClose();
 			}}
 		>
-			<section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="edit-project-title" aria-describedby="edit-project-dialog-help" tabIndex={-1}>
+			<section ref={dialogRef} className="modal modal--md" role="dialog" aria-modal="true" aria-labelledby="edit-project-title" aria-describedby="edit-project-dialog-help" tabIndex={-1}>
 				<div className="modal__header">
 					<div>
 						<h2 id="edit-project-title" className="modal__header-title">Edit Project Details</h2>
@@ -208,38 +187,16 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 					</button>
 				</div>
 
-				<form
-					onSubmit={handleUpdate}
-					style={{
-						display: "flex",
-						flexDirection: "column",
-						flex: 1,
-						overflow: "hidden",
-					}}
-				>
+				<form onSubmit={handleUpdate} className="modal__form">
 					<div className="modal__body">
-						{error && (
-							<div
-								style={{
-									background: "#fef2f2",
-									border: "1px solid #f87171",
-									color: "#b91c1c",
-									padding: "0.625rem 0.875rem",
-									borderRadius: 8,
-									fontSize: '0.8125rem',
-									marginBottom: '1rem',
-								}}
-							>
-								{error}
-							</div>
-						)}
+						{error && <div className="modal__error-banner">{error}</div>}
 
 						<div className="form-group">
 							<label className="form-group__label" htmlFor="edit-project-name">
-								Project Name <span style={{ color: "#ef4444" }}>*</span>
+								Project Name <span className="form-group__required">*</span>
 							</label>
 							<input
-								className="form-group__input"
+								className={`form-group__input ${touched.name && fieldErrors.name ? "form-group__input--error" : ""}`}
 								id="edit-project-name"
 								placeholder="e.g. Q3 Mobile App Redesign"
 								value={name}
@@ -247,10 +204,6 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 								onBlur={() => handleBlur("name")}
 								onFocus={() => handleFocus("name")}
 								autoFocus
-								style={{
-									borderColor:
-										touched.name && fieldErrors.name ? "#ef4444" : undefined,
-								}}
 							/>
 							{touched.name && renderFieldError(fieldErrors.name)}
 						</div>
@@ -258,31 +211,19 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 						<div className="form-group">
 							<label className="form-group__label" htmlFor="edit-project-description">Description</label>
 							<textarea
-								className="form-group__input"
+								className="form-group__input modal__textarea"
 								id="edit-project-description"
 								placeholder="Brief summary of project goals and scope..."
 								value={description}
 								onChange={(e) => setDescription(e.target.value)}
 								onBlur={() => handleBlur("description")}
-								style={{
-									minHeight: 84,
-									padding: "0.75rem 0.875rem",
-									lineHeight: "1.5",
-									resize: "vertical",
-								}}
 							/>
 						</div>
 
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr 1fr",
-								gap: '0.75rem',
-							}}
-						>
+						<div className="modal__grid-3">
 							<div className="form-group">
 								<label className="form-group__label" htmlFor="edit-project-type">
-									Project Type <span style={{ color: "#ef4444" }}>*</span>
+									Project Type <span className="form-group__required">*</span>
 								</label>
 								<select
 									className="form-group__select"
@@ -296,7 +237,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 							</div>
 							<div className="form-group">
 								<label className="form-group__label" htmlFor="edit-project-status">
-									Status <span style={{ color: "#ef4444" }}>*</span>
+									Status <span className="form-group__required">*</span>
 								</label>
 								<select
 									className="form-group__select"
@@ -311,7 +252,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 							</div>
 							<div className="form-group">
 								<label className="form-group__label" htmlFor="edit-project-priority">
-									Priority <span style={{ color: "#ef4444" }}>*</span>
+									Priority <span className="form-group__required">*</span>
 								</label>
 								<select
 									className="form-group__select"
@@ -327,13 +268,7 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 							</div>
 						</div>
 
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr",
-								gap: '1rem',
-							}}
-						>
+						<div className="modal__grid-2">
 							<div className="form-group">
 								<label className="form-group__label" htmlFor="edit-project-hours">
 									Estimated Budget Hours
@@ -363,17 +298,10 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 							</div>
 						</div>
 
-						<div
-							style={{
-								display: "grid",
-								gridTemplateColumns: "1fr 1fr",
-								gap: '1rem',
-								marginTop: '0.5rem',
-							}}
-						>
+						<div className="modal__grid-2 modal__grid-2--spaced">
 							<div className="form-group">
-								<label className="form-group__label">
-									Managers <span style={{ color: "#ef4444" }}>*</span>
+								<label className="form-group__label" htmlFor="edit-project-managers">
+									Managers <span className="form-group__required">*</span>
 								</label>
 								<Select
 									inputId="edit-project-managers"
@@ -409,8 +337,8 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 							</div>
 
 							<div className="form-group">
-								<label className="form-group__label">
-									Employees <span style={{ color: "#ef4444" }}>*</span>
+								<label className="form-group__label" htmlFor="edit-project-employees">
+									Employees <span className="form-group__required">*</span>
 								</label>
 								<Select
 									inputId="edit-project-employees"
@@ -448,25 +376,63 @@ export const EditProjectModal: React.FC<EditProjectModalProps> = ({
 					</div>
 
 					<div className="modal__footer">
-						<button
-							type="button"
-							className="btn btn--ghost"
-							onClick={onClose}
-							disabled={updateMutation.isPending}
-						>
-							Cancel
-						</button>
-						<button
-							type="submit"
-							className="btn btn--primary"
-							disabled={isSubmitDisabled}
-							style={{
-								opacity: isSubmitDisabled ? 0.5 : 1,
-								cursor: isSubmitDisabled ? "not-allowed" : "pointer",
-							}}
-						>
-							{updateMutation.isPending ? "Saving…" : "Save Changes"}
-						</button>
+						{confirmDelete ? (
+							<>
+								<button
+									type="button"
+									className="btn btn--ghost"
+									onClick={() => setConfirmDelete(false)}
+									disabled={deleteMutation.isPending}
+								>
+									Keep Project
+								</button>
+								<button
+									type="button"
+									className="btn btn--danger"
+									disabled={deleteMutation.isPending}
+									onClick={() => {
+										deleteMutation.mutate(project.id, {
+											onSuccess: () => {
+												onClose();
+												onDeleted?.();
+											},
+											onError: () => {
+												setError("Failed to delete project.");
+												setConfirmDelete(false);
+											},
+										});
+									}}
+								>
+									{deleteMutation.isPending ? "Deleting…" : "Confirm Delete"}
+								</button>
+							</>
+						) : (
+							<>
+								<button
+									type="button"
+									className="btn btn--danger btn--sm"
+									onClick={() => setConfirmDelete(true)}
+									disabled={updateMutation.isPending || deleteMutation.isPending}
+								>
+									Delete Project
+								</button>
+								<button
+									type="button"
+									className="btn btn--ghost"
+									onClick={onClose}
+									disabled={updateMutation.isPending}
+								>
+									Cancel
+								</button>
+								<button
+									type="submit"
+									className="btn btn--primary modal__submit-btn"
+									disabled={isSubmitDisabled}
+								>
+									{updateMutation.isPending ? "Saving…" : "Save Changes"}
+								</button>
+							</>
+						)}
 					</div>
 				</form>
 			</section>

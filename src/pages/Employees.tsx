@@ -8,6 +8,7 @@ import { useEmployees, useUpdateEmployee } from '../hooks/useEmployees';
 import { useAppStore } from '../store/useAppStore';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
+import { EmptyState } from '../components/ui/EmptyState';
 import { AccessRestricted } from '../components/ui/AccessRestricted';
 import { invitesApi } from '../api/invites';
 import { useDialogAccessibility } from '../hooks/useDialogAccessibility';
@@ -55,42 +56,28 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
 
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1000,
-        background: 'rgba(0,0,0,0.45)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        backdropFilter: 'blur(3px)',
-        padding: '1rem',
-      }}
+      className="invite-modal__backdrop"
       onClick={e => { if (e.target === e.currentTarget) onClose(); }}
     >
-      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="invite-modal-title" tabIndex={-1} style={{
-        background: '#fff', borderRadius: 16, padding: '2rem 2rem 1.75rem',
-        width: '100%', maxWidth: 480, boxShadow: '0 20px 60px rgba(0,0,0,0.18)',
-        animation: 'slideUp 0.2s ease',
-      }}>
+      <section ref={dialogRef} role="dialog" aria-modal="true" aria-labelledby="invite-modal-title" tabIndex={-1} className="invite-modal__dialog">
         {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '1.5rem'}}>
+        <div className="invite-modal__header">
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', marginBottom: '0.25rem'}}>
-              <div style={{
-                width: 36, height: 36, borderRadius: 10,
-                background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-              }}>
+            <div className="invite-modal__title-row">
+              <div className="invite-modal__icon">
                 <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.6">
                   <path d="M8 1v14M1 8h14"/>
                 </svg>
               </div>
-              <h2 id="invite-modal-title" style={{ fontSize: '1.125rem', fontWeight: 700, color: '#0f172a', margin: '0rem'}}>Invite Team Member</h2>
+              <h2 id="invite-modal-title" className="invite-modal__title">Invite Team Member</h2>
             </div>
-            <p style={{ fontSize: '0.8125rem', color: '#64748b', margin: '0rem'}}>Send a role-specific invite link</p>
+            <p className="invite-modal__subtitle">Send a role-specific invite link</p>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close invite dialog"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b', padding: '0.25rem'}}
+            className="invite-modal__close-btn"
           >
             <svg width="18" height="18" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
               <path d="M2 2l12 12M14 2L2 14"/>
@@ -101,36 +88,24 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         {inviteUrl ? (
           /* ── Success state ── */
           <div>
-            <div style={{
-              background: '#f0fdf4', border: '1px solid #bbf7d0', borderRadius: 12,
-              padding: '1rem 1.125rem', marginBottom: '1.25rem',
-              display: 'flex', alignItems: 'center', gap: '0.75rem',
-            }}>
-              <div style={{ fontSize: '1.375rem'}}>🎉</div>
+            <div className="invite-modal__success-banner">
+              <div className="invite-modal__success-emoji">🎉</div>
               <div>
-                <div style={{ fontWeight: 600, color: '#15803d', fontSize: '0.875rem', marginBottom: '0.125rem'}}>Invite link created!</div>
-                <div style={{ fontSize: '0.75rem', color: '#166534' }}>Share this link with {email}. It expires in 48 hours.</div>
+                <div className="invite-modal__success-title">Invite link created!</div>
+                <div className="invite-modal__success-sub">Share this link with {email}. It expires in 48 hours.</div>
               </div>
             </div>
 
-            <div style={{ marginBottom: '1rem'}}>
-              <div style={{ fontSize: '0.75rem', fontWeight: 600, color: '#374151', marginBottom: '0.5rem', textTransform: 'uppercase', letterSpacing: '0.03125rem'}}>Invite Link</div>
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '0.5rem',
-                background: '#f8fafc', border: '1.5px solid #e2e8f0', borderRadius: 10, padding: '0.625rem 0.875rem',
-              }}>
-                <div style={{ flex: 1, fontSize: '0.75rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div className="invite-modal__link-group">
+              <div className="invite-modal__link-label">Invite Link</div>
+              <div className="invite-modal__link-box">
+                <div className="invite-modal__link-url">
                   {inviteUrl}
                 </div>
                 <button
+                  type="button"
                   onClick={handleCopy}
-                  style={{
-                    flexShrink: 0, padding: '0.375rem 0.875rem', borderRadius: 8,
-                    background: copied ? '#22c55e' : '#6366f1',
-                    color: '#fff', border: 'none', cursor: 'pointer',
-                    fontSize: '0.75rem', fontWeight: 600, transition: 'background 0.2s',
-                    display: 'flex', alignItems: 'center', gap: '0.375rem',
-                  }}
+                  className={`invite-modal__copy-btn${copied ? ' invite-modal__copy-btn--copied' : ''}`}
                 >
                   {copied ? (
                     <><svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2"><path d="M2 8l4 4 8-8"/></svg> Copied!</>
@@ -141,24 +116,18 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '0.5rem'}}>
+            <div className="invite-modal__actions">
               <button
+                type="button"
                 onClick={() => { setInviteUrl(''); setEmail(''); }}
-                style={{
-                  flex: 1, padding: '0.625rem 0', borderRadius: 10,
-                  border: '1.5px solid #e2e8f0', background: '#fff',
-                  color: '#374151', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer',
-                }}
+                className="invite-modal__btn-secondary"
               >
                 Invite Another
               </button>
               <button
+                type="button"
                 onClick={onClose}
-                style={{
-                  flex: 1, padding: '0.625rem 0', borderRadius: 10,
-                  background: '#0f172a', border: 'none',
-                  color: '#fff', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer',
-                }}
+                className="invite-modal__btn-done"
               >
                 Done
               </button>
@@ -167,8 +136,8 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
         ) : (
           /* ── Form ── */
           <form onSubmit={handleCreate}>
-            <div className="form-group" style={{ marginBottom: '1rem'}}>
-              <label className="form-group__label" htmlFor="invite-email">Email address <span style={{ color: '#ef4444' }}>*</span></label>
+            <div className="form-group invite-modal__field">
+              <label className="form-group__label" htmlFor="invite-email">Email address <span className="invite-modal__required">*</span></label>
               <input
                 className="form-group__input"
                 type="email"
@@ -181,37 +150,31 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
               />
             </div>
 
-            <fieldset className="form-group" style={{ marginBottom: '1rem', border: 0, minWidth: 0 }}>
-              <legend className="form-group__label">Role <span style={{ color: '#ef4444' }}>*</span></legend>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem'}}>
+            <fieldset className="form-group invite-modal__fieldset">
+              <legend className="form-group__label">Role <span className="invite-modal__required">*</span></legend>
+              <div className="invite-modal__role-list">
                 {INVITE_ROLES.map(r => (
                   <label
                     key={r.value}
-                    style={{
-                      display: 'flex', alignItems: 'flex-start', gap: '0.75rem',
-                      padding: '0.625rem 0.875rem', borderRadius: 10, cursor: 'pointer',
-                      border: `1.5px solid ${role === r.value ? '#6366f1' : '#e2e8f0'}`,
-                      background: role === r.value ? '#eef2ff' : '#fafafa',
-                      transition: 'all 0.15s',
-                    }}
+                    className={`invite-modal__role-option${role === r.value ? ' invite-modal__role-option--active' : ''}`}
                   >
                     <input
                       type="radio" name="invite-role" value={r.value}
                       checked={role === r.value}
                       onChange={() => setRole(r.value)}
-                      style={{ marginTop: '0.125rem'}}
+                      className="invite-modal__role-radio"
                     />
                     <div>
-                      <div style={{ fontWeight: 600, fontSize: '0.8125rem', color: '#0f172a' }}>{r.label}</div>
-                      <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '0.0625rem'}}>{r.desc}</div>
+                      <div className="invite-modal__role-label">{r.label}</div>
+                      <div className="invite-modal__role-desc">{r.desc}</div>
                     </div>
                   </label>
                 ))}
               </div>
             </fieldset>
 
-            <div className="form-group" style={{ marginBottom: '1.25rem'}}>
-              <label className="form-group__label" htmlFor="invite-department">Department <span style={{ color: '#ef4444' }}>*</span></label>
+            <div className="form-group invite-modal__field--lg">
+              <label className="form-group__label" htmlFor="invite-department">Department <span className="invite-modal__required">*</span></label>
               <select
                 className="form-group__select"
                 id="invite-department"
@@ -223,28 +186,18 @@ const InviteModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
             </div>
 
             {error && (
-              <p role="alert" style={{ color: '#ef4444', fontSize: '0.8125rem', marginBottom: '0.75rem'}}>{error}</p>
+              <p role="alert" className="invite-modal__error">{error}</p>
             )}
 
-            <div style={{ display: 'flex', gap: '0.5rem'}}>
+            <div className="invite-modal__actions">
               <button
                 type="button" onClick={onClose}
-                style={{
-                  flex: 1, padding: '0.625rem 0', borderRadius: 10,
-                  border: '1.5px solid #e2e8f0', background: '#fff',
-                  color: '#374151', fontWeight: 600, fontSize: '0.8125rem', cursor: 'pointer',
-                }}
+                className="invite-modal__btn-secondary"
               >Cancel</button>
               <button
                 type="submit"
                 disabled={loading}
-                style={{
-                  flex: 2, padding: '0.625rem 0', borderRadius: 10,
-                  background: loading ? '#a5b4fc' : 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-                  border: 'none', color: '#fff', fontWeight: 600, fontSize: '0.8125rem',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem',
-                }}
+                className="invite-modal__btn-submit"
               >
                 {loading ? 'Creating link…' : (
                   <><svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="1.8"><path d="M13 4l-5 5-2-2M8 14A6 6 0 108 2"/></svg>Generate Invite Link</>
@@ -270,7 +223,7 @@ export const Employees: React.FC = () => {
   const [confirmModalTarget, setConfirmModalTarget] = useState<{ id: string; name: string; isRowDisabled: boolean } | null>(null);
   const pageSize = 10;
 
-  const { data: employeesData = [], isLoading, isError, refetch } = useEmployees({
+  const { data: employeesData = [], isLoading, isFetching, isError, refetch } = useEmployees({
     search: search || undefined,
     department: dept === 'All' ? undefined : dept,
   });
@@ -295,10 +248,10 @@ export const Employees: React.FC = () => {
 
   if (isLoading && employees.length === 0 && !search) {
     return (
-      <div className="page-inner" style={{ animation: 'fadeIn 0.2s ease' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+      <div className="page-inner employees__loading">
+        <div className="employees__loading-header">
           <div>
-            <Skeleton width="180px" height="2rem" style={{ marginBottom: '0.375rem' }} />
+            <Skeleton width="180px" height="2rem" className="employees__loading-title" />
             <Skeleton width="280px" height="0.875rem" />
           </div>
           <Skeleton width="130px" height="2.25rem" borderRadius="0.5rem" />
@@ -310,27 +263,13 @@ export const Employees: React.FC = () => {
 
   if (isError && employees.length === 0) {
     return (
-      <div className="page-inner" style={{ padding: '2.5rem', textAlign: 'center' }}>
-        <div style={{ color: '#ef4444', fontWeight: 600, fontSize: '1rem', marginBottom: '0.5rem'}}>
-          Failed to load team members
-        </div>
-        <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '1rem'}}>
-          An error occurred while connecting to the server.
-        </p>
-        <button
-          onClick={() => refetch()}
-          style={{
-            padding: '0.5rem 1rem',
-            borderRadius: 8,
-            background: '#2563eb',
-            color: '#fff',
-            border: 'none',
-            fontWeight: 600,
-            cursor: 'pointer',
-          }}
-        >
-          Try Again
-        </button>
+      <div className="page-inner">
+        <EmptyState
+          icon="error"
+          title="Failed to load team members"
+          subtitle="An error occurred while connecting to the server. Check your connection and try again."
+          action={{ label: isFetching ? 'Retrying…' : 'Try again', onClick: () => void refetch() }}
+        />
       </div>
     );
   }
@@ -345,11 +284,11 @@ export const Employees: React.FC = () => {
               {employees.length} team members
             </div>
           </div>
-          <div style={{ display: 'flex', gap: '0.625rem'}}>
+          <div className="employees__header-actions">
             <button
-              className="btn btn--ghost btn--sm"
+              type="button"
+              className="btn btn--ghost btn--sm employees__invite-btn"
               onClick={() => setShowInviteModal(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: '0.375rem', fontWeight: 600 }}
             >
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
                 <path d="M1 8.5A5.5 5.5 0 0112 5M8 1l2.5 2.5L8 6"/>
@@ -358,6 +297,15 @@ export const Employees: React.FC = () => {
               </svg>
               Invite Member
             </button>
+            {(role === 'admin' || role === 'manager' || role === 'hr') && (
+              <button
+                type="button"
+                className="btn btn--primary btn--sm"
+                onClick={() => setShowCreateModal(true)}
+              >
+                + Add Employee
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -405,49 +353,39 @@ export const Employees: React.FC = () => {
                 <th scope="col">Status</th>
                 <th scope="col">Projects</th>
                 <th scope="col">Week Hours</th>
-                <th scope="col" style={{ textAlign: 'right' }}>Actions</th>
+                <th scope="col" className="employees__th-right">Actions</th>
               </tr>
             </thead>
             <tbody>
               {paginated.map((row: any) => (
                 <tr key={row.id}>
                   <td>
-                    <div className="employees__employee-cell" style={{ display: 'flex', alignItems: 'center', gap: '0.75rem'}}>
+                    <div className="employees__employee-cell">
                       <Avatar initials={row.initials} color={row.color} size="md" />
                       <div>
-                        <div className="employees__employee-name" style={{ fontWeight: 600, color: '#0f172a' }}>
+                        <div className="employees__employee-name">
                           {row.name}
                         </div>
                         {row.designation && (
-                          <div style={{ fontSize: '0.75rem', color: '#64748b', fontWeight: 400 }}>{row.designation}</div>
+                          <div className="employees__employee-designation">{row.designation}</div>
                         )}
                       </div>
                     </div>
                   </td>
                   <td>
-                    <div className="employees__dept-cell-role" style={{ fontWeight: 500, color: '#334155' }}>
+                    <div className="employees__dept-cell-role">
                       {row.department || 'General'}
                     </div>
                   </td>
                   <td><Badge variant={statusVariant(row.status as any)} dot>{row.status}</Badge></td>
-                  <td style={{ textAlign: 'left' }}>{row.projectCount || 0}</td>
-                  <td style={{ fontWeight: 600 }}>{row.weekHours || 0}h</td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '0.5rem'}}>
+                  <td className="employees__td-left">{row.projectCount || 0}</td>
+                  <td className="employees__td-bold">{row.weekHours || 0}h</td>
+                  <td className="employees__td-right">
+                    <div className="employees__row-actions">
                       {role === 'admin' && (
                         <button
                           type="button"
-                          style={{
-                            padding: '0.25rem 0.625rem',
-                            fontSize: '0.6875rem',
-                            fontWeight: 600,
-                            borderRadius: 6,
-                            color: row.status === 'Disabled' ? '#047857' : '#b91c1c',
-                            background: row.status === 'Disabled' ? '#ecfdf5' : '#fef2f2',
-                            border: `1px solid ${row.status === 'Disabled' ? '#a7f3d0' : '#fecaca'}`,
-                            cursor: 'pointer',
-                            transition: 'all 0.15s ease'
-                          }}
+                          className={`employees__status-btn ${row.status === 'Disabled' ? 'employees__status-btn--enable' : 'employees__status-btn--disable'}`}
                           disabled={updateEmployeeMutation.isPending}
                           onClick={() => {
                             setConfirmModalTarget({
@@ -466,8 +404,13 @@ export const Employees: React.FC = () => {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} style={{ textAlign: 'center', padding: '1.5rem', color: '#6b7280' }}>
-                    No employees found matching your search or department filter.
+                  <td colSpan={6} className="employees__empty-cell">
+                    <EmptyState
+                      icon="users"
+                      title="No employees found"
+                      subtitle="No team members match your search or department filter."
+                      compact
+                    />
                   </td>
                 </tr>
               )}
@@ -482,33 +425,24 @@ export const Employees: React.FC = () => {
         </div>
       ) : (
         <div>
-          <div className="employees__card-grid" style={{ marginBottom: '1.5rem'}}>
+          <div className="employees__card-grid">
             {paginated.map((row: any) => (
               <div className="employees__card" key={row.id}>
-                <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div className="employees__card-avatar-wrap">
                   <Avatar initials={row.initials} color={row.color} size="lg" />
                 </div>
-                <div className="employees__card-name" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 600, color: '#0f172a' }}>
+                <div className="employees__card-name">
                   {row.name}
                 </div>
-                <div className="employees__card-role" style={{ color: '#475569', fontWeight: 500 }}>{row.designation || row.department || 'Team Member'}</div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.75rem', borderTop: '1px solid #f1f5f9', paddingTop: '0.625rem'}}>
-                  <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
-                    <div>Hours: <strong style={{ color: '#0f172a' }}>{row.weekHours || 0}h</strong></div>
+                <div className="employees__card-role">{row.designation || row.department || 'Team Member'}</div>
+                <div className="employees__card-footer">
+                  <div className="employees__card-hours">
+                    <div>Hours: <strong>{row.weekHours || 0}h</strong></div>
                   </div>
                   {role === 'admin' && (
                     <button
                       type="button"
-                      style={{
-                        padding: '0.1875rem 0.5rem',
-                        fontSize: '0.6875rem',
-                        fontWeight: 600,
-                        borderRadius: 6,
-                        color: row.status === 'Disabled' ? '#047857' : '#b91c1c',
-                        background: row.status === 'Disabled' ? '#ecfdf5' : '#fef2f2',
-                        border: `1px solid ${row.status === 'Disabled' ? '#a7f3d0' : '#fecaca'}`,
-                        cursor: 'pointer'
-                      }}
+                      className={`employees__status-btn employees__status-btn--sm ${row.status === 'Disabled' ? 'employees__status-btn--enable' : 'employees__status-btn--disable'}`}
                       disabled={updateEmployeeMutation.isPending}
                       onClick={() => {
                         setConfirmModalTarget({
@@ -525,8 +459,12 @@ export const Employees: React.FC = () => {
               </div>
             ))}
             {filtered.length === 0 && (
-              <div style={{ gridColumn: '1 / -1', padding: '2.5rem', textAlign: 'center', color: '#6b7280', background: '#fff', borderRadius: 12, border: '1px solid #e5e7eb' }}>
-                No employees found matching your search or department filter.
+              <div className="employees__empty-grid">
+                <EmptyState
+                  icon="users"
+                  title="No employees found"
+                  subtitle="No team members match your search or department filter."
+                />
               </div>
             )}
           </div>

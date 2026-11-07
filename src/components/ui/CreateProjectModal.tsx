@@ -46,14 +46,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
     }
   }, [currentUser?.id, currentUser?.role]);
 
-  const handleToggleManager = (id: string) => {
-    setSelectedManagers(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
-  };
-
-  const handleToggleEmployee = (id: string) => {
-    setSelectedEmployees(prev => prev.includes(id) ? prev.filter(m => m !== id) : [...prev, id]);
-  };
-
   const isDuplicate = existingProjects?.some((p: { name: string }) => p.name.trim().toLowerCase() === name.trim().toLowerCase());
 
   const fieldErrors = {
@@ -109,8 +101,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
   const renderFieldError = (message?: string) => {
     if (!message) return null;
     return (
-      <div style={{ fontSize: '0.75rem', color: '#ef4444', marginTop: '0.3125rem', display: 'flex', alignItems: 'center', gap: '0.375rem', fontWeight: 500 }}>
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" style={{ width: 14, height: 14, flexShrink: 0 }}>
+      <div className="modal__field-error">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
           <circle cx="8" cy="8" r="6.25" />
           <path d="M8 5v3.5M8 11h.01" strokeLinecap="round" strokeLinejoin="round" />
         </svg>
@@ -121,7 +113,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
 
   return ReactDOM.createPortal(
     <div className="modal-overlay" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
-      <section ref={dialogRef} className="modal" style={{ width: 520 }} role="dialog" aria-modal="true" aria-labelledby="create-project-title" aria-describedby="create-project-description" tabIndex={-1}>
+      <section ref={dialogRef} className="modal modal--md" role="dialog" aria-modal="true" aria-labelledby="create-project-title" aria-describedby="create-project-description" tabIndex={-1}>
         <div className="modal__header">
           <div>
             <h2 id="create-project-title" className="modal__header-title">Create New Project</h2>
@@ -133,15 +125,15 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
             </svg>
           </button>
         </div>
-        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'hidden' }}>
+        <form onSubmit={handleSubmit} className="modal__form">
           <div className="modal__body">
-            {error && <div role="alert" aria-live="assertive" style={{ background: '#fef2f2', border: '1px solid #f87171', color: '#b91c1c', padding: '0.625rem 0.875rem', borderRadius: 8, fontSize: '0.8125rem', marginBottom: '1rem'}}>{error}</div>}
+            {error && <div role="alert" aria-live="assertive" className="modal__error-banner">{error}</div>}
             <div className="form-group">
               <label className="form-group__label" htmlFor="project-name">
-                Project Name <span style={{ color: '#ef4444' }}>*</span>
+                Project Name <span className="form-group__required">*</span>
               </label>
               <input
-                className="form-group__input"
+                className={`form-group__input ${touched.name && fieldErrors.name ? 'form-group__input--error' : ''}`}
                 id="project-name"
                 name="name"
                 required
@@ -153,7 +145,6 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
                 onBlur={() => handleBlur('name')}
                 onFocus={() => handleFocus('name')}
                 autoFocus
-                style={{ borderColor: touched.name && fieldErrors.name ? '#ef4444' : undefined }}
               />
               {touched.name && fieldErrors.name && <div id="project-name-error">{renderFieldError(fieldErrors.name)}</div>}
             </div>
@@ -162,20 +153,19 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
                 Description
               </label>
               <textarea
-                className="form-group__input"
+                className="form-group__input modal__textarea"
                 id="project-description"
                 name="description"
                 placeholder="Brief summary of project goals and scope..."
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 onBlur={() => handleBlur('description')}
-                style={{ minHeight: 84, padding: '0.75rem 0.875rem', lineHeight: '1.5', resize: 'vertical' }}
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '0.75rem'}}>
+            <div className="modal__grid-3">
               <div className="form-group">
                 <label className="form-group__label" htmlFor="project-type">
-                  Project Type <span style={{ color: '#ef4444' }}>*</span>
+                  Project Type <span className="form-group__required">*</span>
                 </label>
                 <select id="project-type" name="type" className="form-group__select" value={type} onChange={e => setType(e.target.value as 'Billable' | 'Internal')} required>
                   <option value="Billable">Billable</option>
@@ -184,7 +174,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
               </div>
               <div className="form-group">
                 <label className="form-group__label" htmlFor="project-status">
-                  Status <span style={{ color: '#ef4444' }}>*</span>
+                  Status <span className="form-group__required">*</span>
                 </label>
                 <select id="project-status" name="status" className="form-group__select" value={status} onChange={e => setStatus(e.target.value)}>
                   <option value="Not Started">Not Started</option>
@@ -194,7 +184,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
               </div>
               <div className="form-group">
                 <label className="form-group__label" htmlFor="project-priority">
-                  Priority <span style={{ color: '#ef4444' }}>*</span>
+                  Priority <span className="form-group__required">*</span>
                 </label>
                 <select id="project-priority" name="priority" className="form-group__select" value={priority} onChange={e => setPriority(e.target.value)}>
                   <option value="High">High</option>
@@ -203,7 +193,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
                 </select>
               </div>
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem'}}>
+            <div className="modal__grid-2">
               <div className="form-group">
                 <label className="form-group__label" htmlFor="project-hours">
                   Estimated Budget Hours
@@ -235,9 +225,9 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
               </div>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', marginTop: '0.5rem'}}>
+            <div className="modal__grid-2 modal__grid-2--spaced">
               <div className="form-group">
-                <label className="form-group__label">
+                <label className="form-group__label" htmlFor="project-managers">
                   Managers
                 </label>
                 <Select
@@ -265,7 +255,7 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
               </div>
 
               <div className="form-group">
-                <label className="form-group__label">
+                <label className="form-group__label" htmlFor="project-employees">
                   Employees
                 </label>
                 <Select
@@ -299,9 +289,8 @@ export const CreateProjectModal: React.FC<CreateProjectModalProps> = ({ onClose 
             </button>
             <button
               type="submit"
-              className="btn btn--primary"
+              className="btn btn--primary modal__submit-btn"
               disabled={isSubmitDisabled}
-              style={{ opacity: isSubmitDisabled ? 0.5 : 1, cursor: isSubmitDisabled ? 'not-allowed' : 'pointer' }}
             >
               {createProjectMutation.isPending ? 'Creating…' : 'Create Project'}
             </button>

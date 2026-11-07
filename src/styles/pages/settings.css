@@ -164,7 +164,7 @@ input:checked ~ .settings__toggle-track .settings__toggle-thumb {
   padding: 1.25rem;
 }
 .settings__danger-title {
-  font-size: 0.875rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   color: #dc2626;
   margin-bottom: 0.25rem;

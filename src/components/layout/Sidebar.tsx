@@ -109,7 +109,7 @@ export const Sidebar: React.FC<{ inert?: boolean }> = ({ inert = false }) => {
         )}
         {!isSidebarCollapsed && (
           <button type="button" className="sidebar__logo-toggle" onClick={toggleSidebar} aria-label="Collapse sidebar">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ width: 20, height: 20 }}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" width="20" height="20">
               <rect x="3" y="4" width="18" height="16" rx="2.5" />
               <path d="M9 4v16" />
               <path d="m16 9-3 3 3 3" />

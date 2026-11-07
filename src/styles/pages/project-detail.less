@@ -29,9 +29,143 @@
 
 	&__breadcrumb-sep {
 		color: @color-text-secondary;
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0;
+		font-family: inherit;
+		font-size: inherit;
+	}
+	&__breadcrumb-chevron {
+		color: #6b7280;
 	}
 	&__breadcrumb-current {
 		color: @color-text-muted;
+	}
+
+	&__skeleton-back {
+		margin-bottom: 1.25rem;
+	}
+	&__skeleton-card {
+		padding: 1.75rem;
+		margin-bottom: 1.5rem;
+	}
+	&__skeleton-row {
+		display: flex;
+		gap: 1rem;
+		align-items: center;
+		margin-bottom: 1.5rem;
+	}
+	&__skeleton-info {
+		flex: 1;
+	}
+	&__skeleton-title {
+		margin-bottom: 0.5rem;
+	}
+	&__edit-btn {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.375rem;
+		padding: 0.3125rem 0.75rem;
+		font-size: 0.8125rem;
+		font-weight: 600;
+		color: #374151;
+		background: #f9fafb;
+		border: 0.0625rem solid #d1d5db;
+		border-radius: 0.375rem;
+		cursor: pointer;
+	}
+	&__lead-banner {
+		display: flex;
+		align-items: center;
+		gap: 0.625rem;
+		padding: 0.625rem 1rem;
+		background: #f8fafc;
+		border: 0.0625rem solid #cbd5e1;
+		border-radius: 0.5rem;
+		font-size: 0.8125rem;
+		margin: 1rem 0;
+		color: #334155;
+		svg {
+			flex-shrink: 0;
+		}
+		&-label {
+			font-weight: 600;
+			color: #0f172a;
+		}
+		&-value {
+			font-weight: 500;
+			color: #1e293b;
+		}
+	}
+	&__budget-svg {
+		display: block;
+		margin-top: 0.75rem;
+	}
+	&__no-budget-card {
+		padding: 1.5rem 0.75rem;
+		text-align: center;
+	}
+	&__no-budget-val {
+		font-size: 2rem;
+		font-weight: 700;
+		color: #0f172a;
+	}
+	&__no-budget-sub {
+		font-size: 0.8125rem;
+		color: #64748b;
+		margin-top: 0.25rem;
+	}
+	&__no-budget-pill {
+		display: inline-block;
+		margin-top: 0.75rem;
+		padding: 0.25rem 0.75rem;
+		background: #f1f5f9;
+		border-radius: 0.375rem;
+		font-size: 0.75rem;
+		color: #475569;
+		font-weight: 500;
+	}
+	&__section-label {
+		font-size: 0.8125rem;
+		font-weight: 700;
+		color: #475569;
+		text-transform: uppercase;
+		letter-spacing: 0.03125rem;
+		margin-bottom: 0.75rem;
+		display: flex;
+		align-items: center;
+		gap: 0.375rem;
+	}
+	&__team-grid--managers {
+		margin-bottom: 2rem;
+	}
+	&__team-card--manager {
+		border: 0.125rem solid #cbd5e1;
+		background: #f8fafc;
+	}
+	&__team-role--manager {
+		font-weight: 600;
+		color: #334155;
+	}
+	&__team-timesheet-btn {
+		margin-top: 0.625rem;
+		padding: 0.3125rem 0.625rem;
+		font-size: 0.75rem;
+		font-weight: 600;
+		color: #2563eb;
+		background: #eff6ff;
+		border: 0.0625rem solid #bfdbfe;
+		border-radius: 0.375rem;
+		cursor: pointer;
+		display: inline-flex;
+		align-items: center;
+		gap: 0.3125rem;
+	}
+	&__team-empty {
+		color: #6b7280;
+		font-size: 0.8125rem;
+		padding: 1rem 0;
 	}
 
 	// ── Header Card ───────────────────────────────────────────────────────────
@@ -423,13 +557,40 @@
 			width: 6.875rem;
 			flex-shrink: 0;
 		}
+		&--approval {
+			width: 5.9375rem;
+			flex-shrink: 0;
+		}
+		&--progress {
+			width: 6.875rem;
+			flex-shrink: 0;
+		}
 		&--est {
 			width: 3.75rem;
 			flex-shrink: 0;
 		}
 		&--due {
-			width: 4.375rem;
+			width: 5rem;
 			flex-shrink: 0;
+		}
+		&--view {
+			width: 2.8125rem;
+			flex-shrink: 0;
+			text-align: center;
+			display: flex;
+			justify-content: center;
+		}
+	}
+
+	&__view-btn {
+		background: transparent;
+		border: none;
+		cursor: pointer;
+		padding: 0.25rem;
+		color: #475569;
+		border-radius: 0.25rem;
+		&:hover {
+			background: @gray-100;
 		}
 	}
 
