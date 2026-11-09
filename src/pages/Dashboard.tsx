@@ -18,67 +18,8 @@ import { resetMockApprovals } from "../api/mockData";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogTaskDrawer } from "../components/ui/LogTaskDrawer";
 import { DashboardSkeleton } from "../components/ui/LoadingState";
-import { WeekBars } from "../components/ui/Charts";
 import { EmptyState } from "../components/ui/EmptyState";
 import { DEFAULT_HR_USER, getSystemAuditLogs } from "../data/dummy";
-
-// ─── SVG Progress Ring ──────────────────────────────────────────────────────────
-const ProjectProgressRing: React.FC<{
-	progress: number;
-	progressMode: "budget" | "activity" | "none";
-	status: string;
-	size?: number;
-}> = ({ progress, progressMode, status, size = 56 }) => {
-	const strokeWidth = 4;
-	const radius = (size - strokeWidth) / 2;
-	const circumference = 2 * Math.PI * radius;
-	const safeProgress = Math.max(0, Math.min(100, progress));
-	const offset = circumference - (safeProgress / 100) * circumference;
-
-	const getStrokeColor = () => {
-		if (status === "Completed") return "#15803d";
-		if (status === "At Risk") return "#c2410c";
-		if (progressMode === "activity") return "#4f46e5";
-		return "#2563eb";
-	};
-
-	const strokeColor = getStrokeColor();
-	const isUnmeasured = progressMode === "activity";
-
-	return (
-		<div
-			className={`dashboard__project-ring${isUnmeasured ? " dashboard__project-ring--activity" : ""}`}
-		>
-			<svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-				{/* Track */}
-				<circle
-					cx={size / 2}
-					cy={size / 2}
-					r={radius}
-					fill="none"
-					stroke="#f3f4f6"
-					strokeWidth={strokeWidth}
-				/>
-				{/* Fill */}
-				<circle
-					cx={size / 2}
-					cy={size / 2}
-					r={radius}
-					fill="none"
-					stroke={strokeColor}
-					strokeWidth={strokeWidth}
-					strokeLinecap="round"
-					strokeDasharray={circumference}
-					strokeDashoffset={offset}
-					className="dashboard__project-ring-fill"
-				/>
-			</svg>
-			<span className="dashboard__project-ring-label" style={{ color: strokeColor }}>
-				{safeProgress}%
-			</span>
-		</div>
-	);
-};
 
 // ─── Project Type Definition ────────────────────────────────────────────────────
 interface DashboardProject {
@@ -92,107 +33,6 @@ interface DashboardProject {
 	totalHours: number;
 	hasBudget?: boolean;
 }
-
-// ─── Shared Project Card ────────────────────────────────────────────────────────
-const ProjectCard: React.FC<{
-	project: DashboardProject;
-	to: string;
-}> = ({ project: p, to }) => {
-	const accentColor =
-		p.status === "At Risk"
-			? "#f97316"
-			: p.status === "Completed"
-				? "#22c55e"
-				: "#3b82f6";
-
-	const progressMode = p.progressMode || (p.totalHours > 0 ? "budget" : p.loggedHours > 0 ? "activity" : "none");
-
-	const effectiveProgress = p.status === "Completed"
-		? 100
-		: (p.totalHours > 0 && p.hasBudget !== false)
-			? Math.min(100, Math.round((p.loggedHours / p.totalHours) * 100))
-			: p.loggedHours > 0
-				? Math.max(p.progress || 0, Math.min(95, Math.max(5, Math.round(p.loggedHours * 5))))
-				: (p.progress || 0);
-
-	const getProgressLabel = () => {
-		if (progressMode === "activity") {
-			return (
-				<span className="dashboard__project-card-activity-tag">
-					<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8">
-						<path d="M8 1.5a5 5 0 015 5v2.5l1 2H2l1-2V6.5a5 5 0 015-5z" />
-						<path d="M6.5 13.5a1.5 1.5 0 003 0" />
-					</svg>
-					Activity-based
-				</span>
-			);
-		}
-		return null;
-	};
-
-	return (
-		<Link
-			to={to}
-			className="dashboard__project-card"
-			style={{ "--accent-color": accentColor } as React.CSSProperties}
-		>
-			<div className="dashboard__project-card-body">
-				<div className="dashboard__project-card-info">
-					<div className="dashboard__project-card-header">
-						<span className="dashboard__project-card-name">{p.name}</span>
-						<Badge variant={statusVariant(p.status)} dot>
-							{p.status}
-						</Badge>
-					</div>
-					<div className="dashboard__project-card-meta">
-						<span className="dashboard__project-card-meta-item">
-							<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-								<rect x="2" y="2.5" width="12" height="11" rx="2" />
-								<path d="M2 6.5h12" />
-								<path d="M5.5 1v3M10.5 1v3" />
-							</svg>
-							{formatDisplayDate(p.dueDate) || "No due date"}
-						</span>
-						<span className="dashboard__project-card-meta-divider" />
-						<span className="dashboard__project-card-meta-item">
-							<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
-								<circle cx="8" cy="8" r="6.5" />
-								<polyline points="8 4.5 8 8 10.5 9.5" />
-							</svg>
-							{p.totalHours > 0
-								? `${p.loggedHours}h / ${p.totalHours}h`
-								: p.loggedHours > 0
-									? `${p.loggedHours}h logged`
-									: "No hours yet"}
-						</span>
-					</div>
-					{getProgressLabel()}
-				</div>
-				<ProjectProgressRing
-					progress={effectiveProgress}
-					progressMode={progressMode}
-					status={p.status}
-				/>
-			</div>
-			{/* Bottom progress bar as secondary indicator */}
-			<div className="dashboard__project-card-bar">
-				<ProgressBar
-					value={effectiveProgress}
-					color={
-						p.status === "At Risk"
-							? "orange"
-							: p.status === "Completed"
-								? "green"
-								: progressMode === "activity"
-									? "purple"
-									: "blue"
-					}
-					thickness="thin"
-				/>
-			</div>
-		</Link>
-	);
-};
 
 
 // ─── Shared Quick Actions Component ─────────────────────────────────────────────
@@ -333,6 +173,7 @@ const EmployeeDashboard: React.FC = () => {
 	const greeting =
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 	const [showLogTask, setShowLogTask] = useState(false);
+	const [selectedDayIdx, setSelectedDayIdx] = useState<number | null>(null);
 
 	if (isLoading) { return <DashboardSkeleton />; }
 	if (isError || !data) {
@@ -352,30 +193,68 @@ const EmployeeDashboard: React.FC = () => {
 	const weekHours = data.weekHours || [];
 	const todayHours = data.todayHours || 0;
 	const weekTotal =
-		data.weekHours?.reduce(
-			(acc: number, d: { hours: number }) => acc + d.hours,
-			0,
-		) || 0;
-	const todayProgress = Math.min(100, Math.round((todayHours / 8) * 100));
+		Math.round(
+			(data.weekHours?.reduce(
+				(acc: number, d: { hours: number }) => acc + d.hours,
+				0,
+			) || 0) * 10,
+		) / 10;
 	const weeklyProgress = Math.min(100, Math.round((weekTotal / 40) * 100));
-	const allProjects = data.projects || [];
-	const projectProgress = allProjects.length
-		? Math.min(
-				100,
-				Math.round(
-					allProjects.reduce(
-						(total: number, project: DashboardProject) => total + project.progress,
-						0,
-					) / allProjects.length,
-				),
-			)
-		: 0;
+	const remainingWeekHours = Math.max(0, Math.round((40 - weekTotal) * 10) / 10);
+	const daysAt8h = weekHours.filter(
+		(d: { hours: number; target?: number }) => d.hours >= (d.target || 8),
+	).length;
+	const entriesCount = data.entriesCount ?? 9;
+
+	const defaultDayIdx = (() => {
+		const idx = weekHours.findIndex((d: { isToday?: boolean }) => d.isToday);
+		return idx >= 0 ? idx : Math.max(0, weekHours.length - 1);
+	})();
+	const activeDayIdx =
+		selectedDayIdx !== null && weekHours[selectedDayIdx]
+			? selectedDayIdx
+			: defaultDayIdx;
+	const activeDay = weekHours[activeDayIdx] || {
+		day: "FRI",
+		fullDay: "Friday",
+		shortDateLabel: "Fri, Nov 6",
+		hours: todayHours || 4.0,
+		target: 8,
+		isToday: true,
+		taskSummary:
+			"Dashboard Analytics Card Refactor (2.5h) • Sprint Retro & Planning (1.5h)",
+	};
+	const currentWorkday = weekHours[defaultDayIdx] || activeDay;
+	const currentDayName = currentWorkday.fullDay || "Friday";
+	const currentDayShortLabel = currentWorkday.shortDateLabel || "Fri, Nov 6";
+	const currentDayHours = Number(currentWorkday.hours ?? todayHours ?? 4.0);
+	const currentDayProgress = Math.min(
+		100,
+		Math.round((currentDayHours / (currentWorkday.target || 8)) * 100),
+	);
+
+	const weekRangeShortUpper = (() => {
+		const now = new Date();
+		const day = now.getDay();
+		const diffToMon = day === 0 ? -6 : 1 - day;
+		const mon = new Date(now);
+		mon.setDate(now.getDate() + diffToMon);
+		const sun = new Date(mon);
+		sun.setDate(mon.getDate() + 6);
+		const sMonth = mon.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+		const eMonth = sun.toLocaleDateString("en-US", { month: "short" }).toUpperCase();
+		return sMonth === eMonth
+			? `${sMonth} ${mon.getDate()} – ${sun.getDate()}`
+			: `${sMonth} ${mon.getDate()} – ${eMonth} ${sun.getDate()}`;
+	})();
+
+	const pulseTones = ["indigo", "blue", "slate"] as const;
 
 	return (
 		<div className="page-inner dashboard">
 			<div className="dashboard__header-row">
 				<div>
-				<h1 className="dashboard__greeting">
+					<h1 className="dashboard__greeting">
 						{greeting}, {currentUser.name?.trim().split(/\s+/)[0] || "there"}
 					</h1>
 					<p className="dashboard__meta">
@@ -400,112 +279,270 @@ const EmployeeDashboard: React.FC = () => {
 
 			<section className="dashboard__week-hero" aria-labelledby="week-overview-title">
 				<div className="dashboard__week-hero-copy">
-					<p className="dashboard__week-hero-eyebrow">YOUR WEEK</p>
-					<h2 id="week-overview-title" className="dashboard__week-hero-title">A steady week, one day at a time.</h2>
-					<p className="dashboard__week-hero-description">Your logged time is building toward your 40-hour weekly target.</p>
-					<button
-						type="button"
-						className="btn btn--primary dashboard__week-log-task"
-						onClick={() => setShowLogTask(true)}
-					>
-						+ Log Task
-					</button>
+					<div className="dashboard__week-hero-eyebrow-row">
+						<p className="dashboard__week-hero-eyebrow">
+							YOUR WEEK • {weekRangeShortUpper}
+						</p>
+						<span className="dashboard__week-hero-pill">
+							{entriesCount} {entriesCount === 1 ? "entry" : "entries"} logged
+						</span>
+					</div>
+					<h2 id="week-overview-title" className="dashboard__week-hero-title">
+						A steady week, one day at a time.
+					</h2>
+					<p className="dashboard__week-hero-description">
+						Your logged time is building toward your 40-hour weekly target.{" "}
+						{remainingWeekHours > 0 ? (
+							<>
+								You have <strong>{remainingWeekHours}h left</strong> on{" "}
+								{currentDayName}.
+							</>
+						) : (
+							<>
+								You have reached your <strong>40h target</strong> for the week.
+							</>
+						)}
+					</p>
+					<div className="dashboard__week-hero-actions">
+						<button
+							type="button"
+							className="dashboard__week-hero-primary-btn"
+							onClick={() => setShowLogTask(true)}
+						>
+							<span aria-hidden="true">+</span> Log {currentDayName} Hours
+						</button>
+						<button
+							type="button"
+							className="dashboard__week-hero-secondary-btn"
+							onClick={() => navigate("/work-logs")}
+						>
+							<span className="dashboard__week-hero-check" aria-hidden="true">
+								✓
+							</span>{" "}
+							Week Submitted
+						</button>
+					</div>
 				</div>
 				<div className="dashboard__week-hero-progress">
-					<div className="dashboard__week-hero-total">
-						<strong>{weekTotal}h</strong>
-						<span>of 40h</span>
+					<div className="dashboard__week-hero-total-row">
+						<div className="dashboard__week-hero-total">
+							<strong>{weekTotal}h</strong>
+							<span>of 40h</span>
+						</div>
+						<span className="dashboard__week-hero-pct">{weeklyProgress}%</span>
 					</div>
-					<div className="dashboard__week-hero-track" role="progressbar" aria-label="Weekly hours logged" aria-valuemin={0} aria-valuemax={40} aria-valuenow={Math.min(40, weekTotal)} aria-valuetext={`${weekTotal} of 40 hours logged`}>
+					<div
+						className="dashboard__week-hero-track"
+						role="progressbar"
+						aria-label="Weekly hours logged"
+						aria-valuemin={0}
+						aria-valuemax={40}
+						aria-valuenow={Math.min(40, weekTotal)}
+						aria-valuetext={`${weekTotal} of 40 hours logged`}
+					>
 						<span style={{ width: `${Math.min(100, (weekTotal / 40) * 100)}%` }} />
 					</div>
-					<p className="dashboard__week-hero-footnote">{weekTotal >= 40 ? "Weekly target reached" : `${Math.max(0, 40 - weekTotal)}h remaining this week`}</p>
+					<div className="dashboard__week-hero-footnote-row">
+						<p className="dashboard__week-hero-footnote">
+							{weekTotal >= 40
+								? "Weekly target reached"
+								: `${remainingWeekHours}h remaining this week`}
+						</p>
+						<span className="dashboard__week-hero-days-target">
+							{daysAt8h}/5 days at 8h
+						</span>
+					</div>
 				</div>
 			</section>
 
-			<div className="dashboard__grid">
-				<div className="dashboard__grid-left">
-					<section className="dashboard__section" aria-labelledby="weekly-activity-title">
-						<div className="dashboard__section-header">
-							<h2 className="dashboard__section-title" id="weekly-activity-title">Hours this week</h2>
-							<button type="button" className="dashboard__section-link" onClick={() => navigate("/work-logs")}>View work log <span aria-hidden="true">→</span></button>
+			<div className="dashboard__emp-widgets">
+				<section
+					className="dashboard__section dashboard__emp-card"
+					aria-labelledby="weekly-activity-title"
+				>
+					<div className="dashboard__emp-card-header">
+						<div className="dashboard__emp-card-heading">
+							<h2 className="dashboard__section-title" id="weekly-activity-title">
+								Hours this week
+							</h2>
+							<p className="dashboard__emp-card-subtitle">
+								Daily target: 8.0h per day
+							</p>
 						</div>
-						{weekTotal === 0 ? (
-							<EmptyState icon="timesheets" title="No hours logged this week" subtitle="Start with a quick entry and your week will take shape here." action={{ label: "Log time", onClick: () => setShowLogTask(true) }} compact />
-						) : (
-							<>
-								<WeekBars data={weekHours} targetHours={8} />
-								<div className="dashboard__week-total">
-									<span className="dashboard__week-total-label">Logged this week</span>
-									<strong className="dashboard__week-total-val">{weekTotal}h <span>/ 40h</span></strong>
-								</div>
-							</>
-						)}
-					</section>
+						<button
+							type="button"
+							className="dashboard__section-link dashboard__emp-log-link"
+							onClick={() => setShowLogTask(true)}
+						>
+							+ Log entry <span aria-hidden="true">→</span>
+						</button>
+					</div>
+					{weekTotal === 0 ? (
+						<EmptyState
+							icon="timesheets"
+							title="No hours logged this week"
+							subtitle="Start with a quick entry and your week will take shape here."
+							action={{ label: "Log time", onClick: () => setShowLogTask(true) }}
+							compact
+						/>
+					) : (
+						<>
+							<div
+								className="dashboard__emp-buckets"
+								role="group"
+								aria-label="Daily logged hours"
+							>
+								{weekHours.map((d: any, idx: number) => {
+									const target = d.target || 8;
+									const isMet = d.hours >= target;
+									const isSelected = idx === activeDayIdx;
+									const fillPct = Math.min(
+										100,
+										Math.round((d.hours / target) * 100),
+									);
+									const formattedVal = Number(Number(d.hours || 0).toFixed(1));
 
-					{/* Assigned Projects */}
-					<section className="dashboard__section dashboard__section--flush" aria-labelledby="project-pulse-title">
-						<div className="dashboard__section-header">
-							<h2 className="dashboard__section-title" id="project-pulse-title">Project pulse</h2>
-							<button type="button" className="dashboard__section-link" onClick={() => navigate("/projects")}>All projects <span aria-hidden="true">→</span></button>
+									return (
+										<button
+											type="button"
+											key={d.day}
+											className={`dashboard__emp-bucket${isSelected ? " dashboard__emp-bucket--active" : ""}${isMet ? " dashboard__emp-bucket--met" : ""}`}
+											onClick={() => setSelectedDayIdx(idx)}
+											aria-pressed={isSelected}
+										>
+											<span
+												className={`dashboard__emp-bucket-hours${isMet ? " dashboard__emp-bucket-hours--met" : ""}`}
+											>
+												{formattedVal}h{isMet ? " ✓" : ""}
+											</span>
+											<span className="dashboard__emp-bucket-well">
+												<span
+													className={`dashboard__emp-bucket-fill ${isMet ? "dashboard__emp-bucket-fill--full" : "dashboard__emp-bucket-fill--partial"}`}
+													style={{ height: `${fillPct}%` }}
+												/>
+											</span>
+											<span
+												className={`dashboard__emp-bucket-day${d.isToday || isSelected ? " dashboard__emp-bucket-day--current" : ""}`}
+											>
+												{d.day}
+												{d.isToday ? " •" : ""}
+											</span>
+										</button>
+									);
+								})}
+							</div>
+							<div className="dashboard__emp-card-footer">
+								<p className="dashboard__emp-day-breakdown">
+									<strong>{activeDay.shortDateLabel || "Fri, Nov 6"}:</strong>{" "}
+									{activeDay.taskSummary ||
+										"Dashboard Analytics Card Refactor (2.5h) • Sprint Retro & Planning (1.5h)"}
+								</p>
+								<strong className="dashboard__emp-day-ratio">
+									{Number(activeDay.hours || 0).toFixed(1)}h /{" "}
+									{activeDay.target || 8}h
+								</strong>
+							</div>
+						</>
+					)}
+				</section>
+
+				<section
+					className="dashboard__section dashboard__emp-card"
+					aria-labelledby="project-pulse-title"
+				>
+					<div className="dashboard__emp-card-header">
+						<div className="dashboard__emp-card-heading">
+							<h2 className="dashboard__section-title" id="project-pulse-title">
+								Project pulse
+							</h2>
+							<p className="dashboard__emp-card-subtitle">
+								Clear breakdown of your assigned projects
+							</p>
 						</div>
+						<button
+							type="button"
+							className="dashboard__section-link dashboard__emp-log-link"
+							onClick={() => navigate("/projects")}
+						>
+							All projects <span aria-hidden="true">→</span>
+						</button>
+					</div>
 
-						<div className="dashboard__project-card-list">
-							{myProjects.length === 0 ? (
-								<EmptyState
-									icon="projects"
-									title="No Assigned Projects"
-									subtitle="You are not currently assigned to any active projects."
-									compact
-								/>
-							) : (
-								myProjects.map((p: DashboardProject) => (
-									<ProjectCard
+					{myProjects.length === 0 ? (
+						<EmptyState
+							icon="projects"
+							title="No Assigned Projects"
+							subtitle="You are not currently assigned to any active projects."
+							compact
+						/>
+					) : (
+						<div className="dashboard__emp-split-list">
+							{myProjects.map((p: DashboardProject, idx: number) => {
+								const pct =
+									p.status === "Completed"
+										? 100
+										: p.totalHours > 0 && p.hasBudget !== false
+											? Math.min(
+													100,
+													Math.round((p.loggedHours / p.totalHours) * 100),
+												)
+											: p.loggedHours > 0
+												? Math.max(
+														p.progress || 0,
+														Math.min(
+															95,
+															Math.max(5, Math.round(p.loggedHours * 5)),
+														),
+													)
+												: p.progress || 0;
+								const tone = pulseTones[idx % pulseTones.length];
+								const hoursLabel =
+									p.totalHours > 0
+										? `${p.loggedHours}h / ${p.totalHours}h (${pct}%)`
+										: `${p.loggedHours}h (${pct}%)`;
+
+								return (
+									<Link
+										to={`/projects/${p.id}`}
+										className="dashboard__emp-split-item dashboard__emp-split-item--link"
 										key={p.id}
-										project={p}
-									to={`/projects/${p.id}`}
-									/>
-								))
-							)}
-						</div>
-					</section>
-				</div>
-
-				<div className="dashboard__grid-right">
-					<section className="dashboard__section dashboard__progress-statistics" aria-labelledby="attention-title">
-						<div className="dashboard__section-header">
-							<h2 className="dashboard__section-title" id="attention-title">Progress statistics</h2>
-						</div>
-						<div className="dashboard__activity-summary">
-							<strong>{weeklyProgress}%</strong>
-							<span>Weekly<br />goal<small>{weekTotal}h of 40h</small></span>
-						</div>
-						<div className="dashboard__activity-metrics">
-							{[
-								{ label: "Today", value: todayProgress, tone: "purple" },
-								{ label: "This week", value: weeklyProgress, tone: "green" },
-								{ label: "Projects", value: projectProgress, tone: "orange" },
-							].map((metric) => (
-								<div className="dashboard__activity-metric" key={metric.label}>
-									<div
-										className="dashboard__activity-track"
-										role="progressbar"
-										aria-label={`${metric.label} progress`}
-										aria-valuemin={0}
-										aria-valuemax={100}
-										aria-valuenow={metric.value}
 									>
-										<span className={`dashboard__activity-fill dashboard__activity-fill--${metric.tone}`} style={{ width: `${metric.value}%` }} />
-									</div>
-									<div className="dashboard__activity-caption">
-										<span className="dashboard__activity-percent">{metric.value}%</span>
-										<span className="dashboard__activity-label">{metric.label}</span>
-									</div>
-								</div>
-							))}
+										<div className="dashboard__emp-split-top">
+											<span className="dashboard__emp-split-name">
+												{p.name}
+											</span>
+											<span className="dashboard__emp-split-stat">
+												{hoursLabel}
+											</span>
+										</div>
+										<div
+											className="dashboard__emp-split-track"
+											role="progressbar"
+											aria-label={`${p.name} progress`}
+											aria-valuemin={0}
+											aria-valuemax={100}
+											aria-valuenow={pct}
+										>
+											<span
+												className={`dashboard__emp-split-fill dashboard__emp-split-fill--${tone}`}
+												style={{ width: `${pct}%` }}
+											/>
+										</div>
+									</Link>
+								);
+							})}
 						</div>
-					</section>
-				</div>
+					)}
+
+					<div className="dashboard__emp-card-footer">
+						<span className="dashboard__emp-pace-label">
+							Today&apos;s Pace ({currentDayShortLabel})
+						</span>
+						<strong className="dashboard__emp-pace-val">
+							{currentDayHours.toFixed(1)}h of 8.0h ({currentDayProgress}%)
+						</strong>
+					</div>
+				</section>
 			</div>
 			{showLogTask && <LogTaskDrawer onClose={() => setShowLogTask(false)} />}
 		</div>
