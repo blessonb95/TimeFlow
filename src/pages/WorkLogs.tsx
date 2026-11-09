@@ -326,6 +326,9 @@ export const WorkLogs: React.FC = () => {
                     >Week</button>
                   </div>
                 )}
+                <div className="worklogs__hero-entries-pill" aria-live="polite" aria-atomic="true">
+                  {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'} logged
+                </div>
               </div>
 
               {/* Date Title & Count */}
@@ -336,13 +339,6 @@ export const WorkLogs: React.FC = () => {
                 <div className="worklogs__hero-subtitle" aria-live="polite" aria-atomic="true">
                   {filtered.length} {filtered.length === 1 ? 'entry' : 'entries'} logged
                 </div>
-                <button
-                  type="button"
-                  className="btn btn--primary worklogs__log-task-btn worklogs__log-task-btn--mobile"
-                  onClick={() => { setEditingLog(null); setIsReadOnlyDrawer(false); setShowDrawer(true); }}
-                >
-                  + Log Task
-                </button>
               </div>
             </div>
 
@@ -352,11 +348,18 @@ export const WorkLogs: React.FC = () => {
               {/* Circular Progress Indicator */}
               <div className="worklogs__circular-ring">
                 <svg width="60" height="60" viewBox="0 0 60 60">
-                  <circle cx="30" cy="30" r="25" stroke="#f1f5f9" strokeWidth="6" fill="none" />
-                  <circle cx="30" cy="30" r="25" stroke={barColor} strokeWidth="6" fill="none" 
-                    strokeDasharray={157.08} 
-                    strokeDashoffset={157.08 - (pct / 100) * 157.08} 
-                    strokeLinecap="round" 
+                  <circle className="worklogs__circular-track" cx="30" cy="30" r="25" stroke="#f1f5f9" strokeWidth="6" fill="none" />
+                  <circle
+                    className={`worklogs__circular-progress${isOver ? ' worklogs__circular-progress--over' : ''}`}
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke={barColor}
+                    strokeWidth="6"
+                    fill="none"
+                    strokeDasharray={157.08}
+                    strokeDashoffset={157.08 - (pct / 100) * 157.08}
+                    strokeLinecap="round"
                   />
                 </svg>
                 <div className="worklogs__circular-val">
@@ -368,7 +371,7 @@ export const WorkLogs: React.FC = () => {
               <div className="worklogs__hero-divider" />
 
               {/* LOGGED STAT (Primary Highlight Metric) */}
-              <div className="worklogs__hero-stat">
+              <div className="worklogs__hero-stat worklogs__hero-stat--logged">
                 <div className="worklogs__stat-label">
                   LOGGED
                 </div>
@@ -378,7 +381,7 @@ export const WorkLogs: React.FC = () => {
               </div>
 
               {/* TARGET STAT */}
-              <div className="worklogs__hero-stat">
+              <div className="worklogs__hero-stat worklogs__hero-stat--target">
                 <div className="worklogs__stat-label">
                   TARGET
                 </div>
@@ -388,9 +391,10 @@ export const WorkLogs: React.FC = () => {
               </div>
 
               {/* REMAINING / OVER STAT */}
-              <div className="worklogs__hero-stat">
+              <div className={`worklogs__hero-stat ${isOver ? 'worklogs__hero-stat--over' : 'worklogs__hero-stat--remaining'}`}>
                 <div className="worklogs__stat-label">
-                  {isOver ? 'OVER TARGET' : 'REMAINING'}
+                  <span className="worklogs__stat-label-desktop">{isOver ? 'OVER TARGET' : 'REMAINING'}</span>
+                  <span className="worklogs__stat-label-mobile">{isOver ? 'OVER' : 'LEFT'}</span>
                 </div>
                 <div className={`worklogs__stat-val ${isOver ? 'worklogs__stat-val--over' : 'worklogs__stat-val--remaining'}`}>
                   {isOver ? `+${(totalHours - target).toFixed(1)}` : remaining.toFixed(1)}<span className={`worklogs__stat-unit ${isOver ? 'worklogs__stat-unit--over' : 'worklogs__stat-unit--remaining'}`}>h</span>
@@ -398,6 +402,17 @@ export const WorkLogs: React.FC = () => {
               </div>
 
             </div>
+
+            <button
+              type="button"
+              className="btn btn--primary worklogs__log-task-btn worklogs__log-task-btn--mobile"
+              onClick={() => { setEditingLog(null); setIsReadOnlyDrawer(false); setShowDrawer(true); }}
+            >
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" aria-hidden="true">
+                <path d="M8 2.5v11M2.5 8h11" />
+              </svg>
+              <span>Log Task</span>
+            </button>
           </div>
         );
       })()}

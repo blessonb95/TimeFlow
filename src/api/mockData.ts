@@ -592,34 +592,51 @@ export const updateMockSettings = (payload: Record<string, unknown>) => {
 
 export const getMockEmployeeDashboard = () => {
   const days = ['MON', 'TUE', 'WED', 'THU', 'FRI'];
+  const fullDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday'];
   const now = new Date();
   const dayOfWeek = now.getDay();
   const todayIdx = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  const activeWorkdayIdx = Math.min(4, todayIdx);
 
   const weekHours = days.map((day, i) => {
     const dateStr = getCurrentWeekDay(i);
-    const dayTotal = mockWorkLogsState
-      .filter((w) => String(w.date).split('T')[0] === dateStr)
-      .reduce((sum, w) => sum + (Number(w.hours) || 0), 0);
+    const dayLogs = mockWorkLogsState.filter((w) => String(w.date).split('T')[0] === dateStr);
+    const dayTotal = dayLogs.reduce((sum, w) => sum + (Number(w.hours) || 0), 0);
+    const dateObj = new Date(dateStr + 'T12:00:00');
+    const shortDateLabel = dateObj.toLocaleDateString('en-US', {
+      weekday: 'short',
+      month: 'short',
+      day: 'numeric',
+    });
+    const taskSummary =
+      i === 4 && dayLogs.length === 1 && dayLogs[0]?.id === 'wl-demo-9'
+        ? 'Dashboard Analytics Card Refactor (2.5h) • Sprint Retro & Planning (1.5h)'
+        : dayLogs.length > 0
+          ? dayLogs.map((w) => `${w.taskName} (${w.hours}h)`).join(' • ')
+          : 'No tasks logged yet';
+
     return {
       day,
+      fullDay: fullDays[i],
+      fullDate: dateStr,
+      shortDateLabel,
       date: dateStr.slice(5),
       hours: dayTotal,
       target: 8,
-      isToday: i === todayIdx,
+      isToday: i === activeWorkdayIdx,
+      taskSummary,
     };
   });
 
   const weekTotal = Math.round(weekHours.reduce((sum, d) => sum + d.hours, 0) * 10) / 10;
-  const todayStr = now.toISOString().slice(0, 10);
-  const todayHours = mockWorkLogsState
-    .filter((w) => String(w.date).split('T')[0] === todayStr)
-    .reduce((sum, w) => sum + (Number(w.hours) || 0), 0) || 7.5;
+  const activeDayHours = weekHours[activeWorkdayIdx]?.hours ?? 4.0;
 
   return {
-    todayHours,
+    todayHours: activeDayHours,
     weekTotal,
     weekHours,
+    entriesCount: mockWorkLogsState.length,
+    weekSubmitted: true,
     activeProjects: mockProjectsState.length,
     projects: getMockProjects().slice(0, 3).map((p) => ({
       id: p.id,
