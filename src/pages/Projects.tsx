@@ -400,13 +400,15 @@ export const Projects: React.FC = () => {
 										}[];
 									}) => {
 										const badgeVariant =
-											p.status === "On Track"
+											p.status === "Completed"
 												? "green"
-												: p.status === "At Risk"
-													? "orange"
-													: p.status === "Over Budget"
-														? "red"
-														: "gray";
+												: p.status === "Ongoing" || p.status === "On Track"
+													? "blue"
+													: p.status === "At Risk"
+														? "orange"
+														: p.status === "Over Budget"
+															? "red"
+															: "gray";
 										const ex = PROJECT_EXTRAS[p.id];
 										const dotColor = ex?.color || "blue";
 										const barColor =

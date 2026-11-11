@@ -182,6 +182,23 @@ const createInitialWorkLogs = () => [
   },
 ];
 
+/**
+ * Maps any project status (including legacy health labels such as
+ * "On Track", "At Risk" or "Over Budget") onto the lifecycle statuses used by
+ * the Projects screen filter tabs: Not Started / Ongoing / Completed.
+ */
+export const toLifecycleStatus = (
+  status: string | undefined,
+  loggedHours = 0,
+  progress = 0,
+): 'Not Started' | 'Ongoing' | 'Completed' => {
+  const s = String(status || '').trim().toLowerCase();
+  if (s === 'completed' || progress >= 100) return 'Completed';
+  if (s === 'not started') return 'Not Started';
+  if (s === 'ongoing') return 'Ongoing';
+  return loggedHours > 0 || progress > 0 ? 'Ongoing' : 'Not Started';
+};
+
 const createInitialProjects = () =>
   PROJECTS.map((p) => {
     const memberObjs = (p.teamMembers || []).map((mId) => {
@@ -193,6 +210,7 @@ const createInitialProjects = () =>
 
     return {
       ...p,
+      status: toLifecycleStatus(p.status, p.loggedHours, p.progress) as string,
       teamMembers: [
         { id: 'u1', name: 'Arun Singh', initials: 'AS', color: '#9333EA', role: 'manager', designation: 'Engineering Manager' },
         ...memberObjs,
