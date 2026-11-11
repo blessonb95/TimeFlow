@@ -1409,55 +1409,59 @@ export const Reports: React.FC = () => {
 									<div className="reports__export-row-desc">{item.desc}</div>
 								</div>
 								<span className="reports__export-fmt">{item.fmt}</span>
-								{/* Preview button */}
-								<button
-									className="reports__export-preview-btn"
-									onClick={handlePreview}
-									disabled={!exportFrom || !exportTo}
-									title="Preview before exporting"
-								>
-									<svg
-										width="13"
-										height="13"
-										viewBox="0 0 16 16"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="1.8"
+								<div className="reports__export-row-actions">
+									{/* Preview button */}
+									<button
+										type="button"
+										className="reports__export-preview-btn"
+										onClick={handlePreview}
+										disabled={!exportFrom || !exportTo}
+										title="Preview before exporting"
 									>
-										<ellipse cx="8" cy="8" rx="7" ry="4.5" />
-										<circle
-											cx="8"
-											cy="8"
-											r="2"
-											fill="currentColor"
-											stroke="none"
-										/>
-									</svg>
-									Preview
-								</button>
-								{/* Download button */}
-								<button
-									className="reports__export-dl-btn"
-									onClick={() =>
-										item.fmt === "CSV"
-											? handleDownloadCsv()
-											: handleDownloadPdf()
-									}
-									disabled={!exportFrom || !exportTo}
-								>
-									<svg
-										width="13"
-										height="13"
-										viewBox="0 0 16 16"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
+										<svg
+											width="13"
+											height="13"
+											viewBox="0 0 16 16"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="1.8"
+										>
+											<ellipse cx="8" cy="8" rx="7" ry="4.5" />
+											<circle
+												cx="8"
+												cy="8"
+												r="2"
+												fill="currentColor"
+												stroke="none"
+											/>
+										</svg>
+										Preview
+									</button>
+									{/* Download button */}
+									<button
+										type="button"
+										className="reports__export-dl-btn"
+										onClick={() =>
+											item.fmt === "CSV"
+												? handleDownloadCsv()
+												: handleDownloadPdf()
+										}
+										disabled={!exportFrom || !exportTo}
 									>
-										<path d="M8 2v8M4 8l4 4 4-4" />
-										<path d="M2 14h12" />
-									</svg>
-									Download {item.fmt}
-								</button>
+										<svg
+											width="13"
+											height="13"
+											viewBox="0 0 16 16"
+											fill="none"
+											stroke="currentColor"
+											strokeWidth="2"
+										>
+											<path d="M8 2v8M4 8l4 4 4-4" />
+											<path d="M2 14h12" />
+										</svg>
+										Download {item.fmt}
+									</button>
+								</div>
 							</div>
 						))}
 					</div>

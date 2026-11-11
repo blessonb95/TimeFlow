@@ -27,6 +27,7 @@ import {
   getMockEmployeeDashboard,
   getMockManagerDashboard,
   getMockReports,
+  toLifecycleStatus,
 } from './mockData';
 
 const BASE_URL = import.meta.env.MODE === 'vercel'
@@ -106,8 +107,9 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
           );
         }
         if (params.status && params.status !== 'All') {
+          const wanted = String(params.status).toLowerCase();
           allProjects = allProjects.filter(
-            (p) => p.status.toLowerCase() === String(params.status).toLowerCase()
+            (p) => toLifecycleStatus(p.status, p.loggedHours, p.progress).toLowerCase() === wanted
           );
         }
         data = allProjects;

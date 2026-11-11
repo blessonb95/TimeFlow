@@ -462,7 +462,7 @@ export const WorkLogs: React.FC = () => {
             </div>
           )}
           {/* Column headers */}
-          <div role="table" aria-label="Logged work tasks">
+          <div className="wl-panel__table" role="table" aria-label="Logged work tasks">
           <div role="rowgroup">
           <div className="wl-panel__header" role="row">
             <div className="wl-panel__col wl-panel__col--task" role="columnheader">TASK</div>

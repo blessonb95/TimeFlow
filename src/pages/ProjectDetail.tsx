@@ -149,7 +149,7 @@ export const ProjectDetail: React.FC = () => {
             </div>
           </div>
           <div className="proj-detail__header-badges">
-            <Badge variant={project.status === 'On Track' ? 'green' : project.status === 'At Risk' ? 'orange' : 'red'} dot>{project.status}</Badge>
+            <Badge variant={statusVariant(project.status)} dot>{project.status}</Badge>
             <Badge variant={project.priority === 'High' || project.priority === 'Critical' ? 'orange' : 'blue'}>{project.priority || 'Medium'}</Badge>
             { (role === 'manager' || role === 'admin') && (
               <button
