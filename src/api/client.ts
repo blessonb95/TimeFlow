@@ -1,6 +1,7 @@
 import axios, { type InternalAxiosRequestConfig, type AxiosResponse } from 'axios';
 import { useAppStore } from '../store/useAppStore';
 import { clearStoredAuthToken, getStoredAuthToken } from '../utils/authTokenStorage';
+import { isNetworkOnline } from '../utils/offlineQueue';
 import {
   GUEST_USER,
   getMockProjects,
@@ -28,6 +29,10 @@ import {
   getMockManagerDashboard,
   getMockReports,
   toLifecycleStatus,
+  draftMockAiTask,
+  draftMockAiWeeklySummary,
+  getMockDashboardAiWeeklySummary,
+  getMockDashboardAiChat,
 } from './mockData';
 
 const BASE_URL = import.meta.env.MODE === 'vercel'
@@ -54,6 +59,14 @@ const parseBody = (raw: unknown): Record<string, any> => {
 
 // ─── Guest / Demo Mode Mock Adapter ──────────────────────────────────────────
 const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<AxiosResponse> => {
+  if (!isNetworkOnline()) {
+    const netErr: any = new Error('Network unavailable');
+    netErr.code = 'ERR_NETWORK';
+    netErr.isOfflineError = true;
+    netErr.config = config;
+    throw netErr;
+  }
+
   const url = (config.url || '').replace(/^\/api/, '');
   const cleanUrl = url.split('?')[0];
   const parts = cleanUrl.split('/').filter(Boolean);
@@ -61,6 +74,8 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
   const params = config.params || {};
   const body = parseBody(config.data);
   let data: any = { status: 'ok' };
+
+  try {
 
   if (cleanUrl.includes('/auth/me')) {
     data = GUEST_USER;
@@ -242,6 +257,80 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
     } else {
       data = getMockSettings();
     }
+  } else if (cleanUrl.includes('/ai')) {
+    if (cleanUrl.includes('/status')) {
+      data = { available: true, configured: true, provider: 'timeflow-assistant' };
+    } else if (cleanUrl.includes('/draft-task')) {
+      data = draftMockAiTask({
+        notes: typeof body.notes === 'string' ? body.notes : '',
+        projectName: typeof body.projectName === 'string' ? body.projectName : undefined,
+      });
+    } else if (cleanUrl.includes('/weekly-summary')) {
+      data = draftMockAiWeeklySummary({
+        weekStart: typeof body.weekStart === 'string' ? body.weekStart : '',
+        weekEnd: typeof body.weekEnd === 'string' ? body.weekEnd : '',
+        weekLabel: typeof body.weekLabel === 'string' ? body.weekLabel : undefined,
+        hasUnsyncedEntries: Boolean(body.hasUnsyncedEntries),
+        entries: Array.isArray(body.entries) ? body.entries : [],
+      });
+    } else if (cleanUrl.includes('/dashboard-summary')) {
+      const storeState = useAppStore.getState();
+      const activeRole =
+        typeof params.role === 'string'
+          ? params.role
+          : typeof body.role === 'string'
+            ? body.role
+            : storeState.role || 'employee';
+      const weekStartParam =
+        typeof params.weekStart === 'string'
+          ? params.weekStart
+          : typeof body.weekStart === 'string'
+            ? body.weekStart
+            : undefined;
+      data = getMockDashboardAiWeeklySummary({
+        weekStart: weekStartParam,
+        role: activeRole,
+        userId: storeState.currentUser?.id,
+      });
+    } else if (cleanUrl.includes('/dashboard-chat')) {
+      const storeState = useAppStore.getState();
+      const activeRole =
+        typeof params.role === 'string'
+          ? params.role
+          : typeof body.role === 'string'
+            ? body.role
+            : storeState.role || 'manager';
+      const weekStartParam =
+        typeof params.weekStart === 'string'
+          ? params.weekStart
+          : typeof body.weekStart === 'string'
+            ? body.weekStart
+            : undefined;
+      data = getMockDashboardAiChat({
+        message: typeof body.message === 'string' ? body.message : '',
+        weekStart: weekStartParam,
+        role: activeRole,
+        userId: storeState.currentUser?.id,
+        history: Array.isArray(body.history) ? body.history : undefined,
+      });
+    }
+  }
+
+  } catch (err: any) {
+    const status = err?.status || 400;
+    const axiosErr: any = new Error(err?.message || 'Request failed');
+    axiosErr.config = config;
+    axiosErr.response = {
+      status,
+      statusText: 'Bad Request',
+      data: {
+        error: err?.message || 'Request failed',
+        code: err?.code || 'VALIDATION_ERROR',
+      },
+      headers: {},
+      config,
+    };
+    throw axiosErr;
   }
 
   // Artificial short delay to feel realistic and snappy
@@ -258,6 +347,14 @@ const mockGuestAdapter = async (config: InternalAxiosRequestConfig): Promise<Axi
 
 // ─── Request interceptor: attach JWT & handle Demo Mode ───────────────────────
 apiClient.interceptors.request.use((config) => {
+  if (!isNetworkOnline()) {
+    const netErr: any = new Error('Network unavailable');
+    netErr.code = 'ERR_NETWORK';
+    netErr.isOfflineError = true;
+    netErr.config = config;
+    return Promise.reject(netErr);
+  }
+
   const url = config.url || '';
   const isAuthEndpoint =
     url.includes('/auth/login') ||
@@ -302,11 +399,12 @@ apiClient.interceptors.response.use(
   (error) => {
     if (error.response?.status === 401) {
       const reqUrl = error.config?.url || '';
+      const isBackgroundSync = error.config?.headers?.['X-Background-Sync'] === 'true';
       const isAuthRequest =
         reqUrl.includes('/auth/login') ||
         reqUrl.includes('/auth/register');
       const isGuest = getStoredAuthToken() === 'demo-guest-token' || localStorage.getItem('is_guest') === 'true';
-      if (!isGuest && !isAuthRequest) {
+      if (!isGuest && !isAuthRequest && !isBackgroundSync) {
         clearStoredAuthToken();
         const loginUrl = (import.meta.env.BASE_URL || '/') + 'login';
         const cleanLoginUrl = loginUrl.replace('//', '/');

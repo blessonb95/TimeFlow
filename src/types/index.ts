@@ -18,6 +18,8 @@ export interface User {
   avatar: string;
   initials: string;
   color: string;
+  status?: Status;
+  hoursThisWeek?: number;
 }
 
 export interface Project {

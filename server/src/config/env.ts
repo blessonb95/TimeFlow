@@ -32,4 +32,18 @@ export const env = {
 	},
 	clientUrl: process.env.CLIENT_URL || "http://localhost:5173",
 	encryptionKey: process.env.ENCRYPTION_KEY || "supersecret_aes_key_2026",
+	ai: {
+		enabled: process.env.AI_ENABLED !== "false",
+		provider: (
+			process.env.AI_PROVIDER ||
+			(process.env.OPENAI_API_KEY ? "openai" : "gemini")
+		).toLowerCase(),
+		apiKey:
+			process.env.AI_API_KEY ||
+			process.env.GEMINI_API_KEY ||
+			process.env.OPENAI_API_KEY ||
+			"",
+		model: process.env.AI_MODEL || "",
+		baseUrl: process.env.AI_BASE_URL || "",
+	},
 } as const;

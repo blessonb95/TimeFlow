@@ -2,7 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { authApi } from '../api/auth';
 import { useAppStore } from '../store/useAppStore';
 import { useNavigate } from 'react-router-dom';
-import { clearStoredAuthToken, getStoredAuthToken, storeAuthToken } from '../utils/authTokenStorage';
+import { clearStoredAuthToken, storeAuthToken } from '../utils/authTokenStorage';
+import { getQueuedWorkLogsForUser } from '../utils/offlineQueue';
 
 export const useCurrentUser = () => {
   const { authToken, isGuest } = useAppStore();
@@ -57,10 +58,24 @@ export const useRegister = () => {
 };
 
 export const useLogout = () => {
-  const { clearAuth } = useAppStore();
+  const { currentUser, clearAuth } = useAppStore();
   const navigate = useNavigate();
   const qc = useQueryClient();
-  return () => {
+  return async () => {
+    const userId = currentUser?.id || localStorage.getItem('active_user_id') || '';
+    if (userId) {
+      const queued = await getQueuedWorkLogsForUser(userId);
+      if (queued.length > 0) {
+        const proceed = window.confirm(
+          `You have ${queued.length} unsynced offline work log entr${
+            queued.length === 1 ? 'y' : 'ies'
+          }.\n\nIf you sign out now, your queued entries will remain safely saved for your account (${
+            currentUser?.email || currentUser?.name || 'current user'
+          }) on this device, hidden from other users, and will sync when you sign back in.\n\nDo you want to sign out?`
+        );
+        if (!proceed) return;
+      }
+    }
     clearStoredAuthToken();
     clearAuth();
     qc.clear();

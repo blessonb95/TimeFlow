@@ -104,14 +104,22 @@ export const workLogsService = {
   },
 
   async create(userId: string, data: {
+    clientId?: string;
     projectId: string; taskName: string; taskDescription?: string;
     hours: number; date: string; status: string; taskStatus?: string;
     tickets?: { ticketNumber: string; ticketUrl?: string; provider?: string }[];
   }) {
+    if (!data.taskName || !String(data.taskName).trim()) {
+      throw createError('Task name is required.', 400, 'VALIDATION_ERROR');
+    }
+    const numericHours = Number(data.hours);
+    if (!Number.isFinite(numericHours) || numericHours <= 0 || numericHours > 24) {
+      throw createError('Hours must be between 0.08 and 24.', 400, 'VALIDATION_ERROR');
+    }
     if (data.date) {
       const today = new Date().toISOString().slice(0, 10);
       if (String(data.date).split('T')[0] > today) {
-        throw createError('Cannot log tasks for future dates.', 400, 'BAD_REQUEST');
+        throw createError('Cannot log tasks for future dates.', 400, 'VALIDATION_ERROR');
       }
     }
     return withTransaction(async (client) => {
@@ -134,6 +142,27 @@ export const workLogsService = {
         }
       }
 
+      // Idempotency check: if a client-generated ID was supplied and already saved for this user,
+      // return the existing work log instead of inserting a duplicate.
+      const sanitizedClientId =
+        typeof data.clientId === 'string' && data.clientId.trim().length > 0
+          ? data.clientId.trim().slice(0, 36)
+          : undefined;
+
+      if (sanitizedClientId) {
+        const existingRes = await client.query(
+          `SELECT wl.*, COALESCE(p.name, CASE WHEN wl.project_id = 'internal' THEN 'Internal' ELSE 'General' END) AS project_name
+           FROM work_logs wl LEFT JOIN projects p ON p.id = wl.project_id
+           WHERE wl.id = $1 AND wl.user_id = $2 LIMIT 1`,
+          [sanitizedClientId, resolvedUserId]
+        );
+        if (existingRes.rows[0]) {
+          const existingRow = existingRes.rows[0] as Record<string, unknown>;
+          const existingTickets = await getTickets(sanitizedClientId);
+          return formatLog(existingRow, existingTickets);
+        }
+      }
+
       // 2. Resolve Project ID (Internal or custom ID)
       let resolvedProjectId = data.projectId;
       const isInternal = !resolvedProjectId || resolvedProjectId === 'internal' || resolvedProjectId === 'internal-project' || resolvedProjectId.toLowerCase() === 'internal';
@@ -151,18 +180,13 @@ export const workLogsService = {
           );
         }
       } else {
-        const pCheck = await client.query('SELECT id FROM projects WHERE id = $1 LIMIT 1', [resolvedProjectId]);
+        const pCheck = await client.query('SELECT id, status FROM projects WHERE id = $1 LIMIT 1', [resolvedProjectId]);
         if (!pCheck.rows[0]) {
-          const intCheck = await client.query("SELECT id FROM projects WHERE id = 'internal' OR LOWER(TRIM(name)) = 'internal' LIMIT 1");
-          if (intCheck.rows[0]) {
-            resolvedProjectId = (intCheck.rows[0] as Record<string, unknown>)['id'] as string;
-          } else {
-            throw createError(`Project not found: ${resolvedProjectId}. Please create the project first or use a valid project ID.`, 400, 'BAD_REQUEST');
-          }
+          throw createError(`Project is no longer available or was deleted. Please select an active project.`, 400, 'PROJECT_UNAVAILABLE');
         }
       }
 
-      const wlId = crypto.randomUUID();
+      const wlId = sanitizedClientId || crypto.randomUUID();
       await client.query(
         `INSERT INTO work_logs (id, user_id, project_id, task_name, task_description, hours, date, status, task_status)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9)`,

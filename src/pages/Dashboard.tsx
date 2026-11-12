@@ -17,9 +17,43 @@ import {
 import { resetMockApprovals } from "../api/mockData";
 import { useQueryClient } from "@tanstack/react-query";
 import { LogTaskDrawer } from "../components/ui/LogTaskDrawer";
+import { DashboardWeeklySummaryModal } from "../components/ui/DashboardWeeklySummaryModal";
 import { DashboardSkeleton } from "../components/ui/LoadingState";
 import { EmptyState } from "../components/ui/EmptyState";
 import { DEFAULT_HR_USER, getSystemAuditLogs } from "../data/dummy";
+
+// ─── AI Weekly Summary Top-Right Button & Modal Trigger ──────────────────────
+const AiWeeklySummaryButton: React.FC = () => {
+	const [open, setOpen] = useState(false);
+
+	return (
+		<>
+			<button
+				type="button"
+				className="btn btn--secondary dashboard__ai-summary-btn"
+				onClick={() => setOpen(true)}
+				title="Ask Flow"
+			>
+				<svg
+					width="15"
+					height="15"
+					viewBox="0 0 16 16"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.6"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					aria-hidden="true"
+				>
+					<path d="M8 1.5l1.6 3.7L13.3 6.8l-3.7 1.6L8 12.1 6.4 8.4 2.7 6.8l3.7-1.6L8 1.5z" />
+					<path d="M13 10.5l.7 1.6 1.6.7-1.6.7-.7 1.6-.7-1.6-1.6-.7 1.6-.7.7-1.6z" />
+				</svg>
+				<span>Ask Flow</span>
+			</button>
+			{open && <DashboardWeeklySummaryModal onClose={() => setOpen(false)} />}
+		</>
+	);
+};
 
 // ─── Project Type Definition ────────────────────────────────────────────────────
 interface DashboardProject {
@@ -266,14 +300,8 @@ const EmployeeDashboard: React.FC = () => {
 						})}
 					</p>
 				</div>
-				<div className="dashboard__header-actions dashboard__header-actions--log-task">
-					<button
-						type="button"
-						className="btn btn--primary dashboard__log-task-top-action"
-						onClick={() => setShowLogTask(true)}
-					>
-						+ Log Task
-					</button>
+				<div className="dashboard__header-actions">
+					<AiWeeklySummaryButton />
 				</div>
 			</div>
 
@@ -310,16 +338,6 @@ const EmployeeDashboard: React.FC = () => {
 							onClick={() => setShowLogTask(true)}
 						>
 							<span aria-hidden="true">+</span> Log {currentDayName} Hours
-						</button>
-						<button
-							type="button"
-							className="dashboard__week-hero-secondary-btn"
-							onClick={() => navigate("/work-logs")}
-						>
-							<span className="dashboard__week-hero-check" aria-hidden="true">
-								✓
-							</span>{" "}
-							Week Submitted
 						</button>
 					</div>
 				</div>
@@ -588,6 +606,7 @@ const ManagerDashboard: React.FC = () => {
 	const [showAllRows, setShowAllRows] = useState(false);
 	const [activeFilter, setActiveFilter] = useState<"all" | "pending" | "approved">("all");
 	const [locallyApprovedIds, setLocallyApprovedIds] = useState<string[]>([]);
+	const [showLogTask, setShowLogTask] = useState(false);
 
 	const hour = new Date().getHours();
 	const greeting =
@@ -747,6 +766,9 @@ const ManagerDashboard: React.FC = () => {
 		day: "numeric",
 		year: "numeric",
 	});
+	const currentDayName = new Date().toLocaleDateString("en-US", {
+		weekday: "long",
+	});
 
 	// Sort so pending items are prioritized at the top
 	const sortedMembers = [...members].sort((a, b) => {
@@ -814,6 +836,7 @@ const ManagerDashboard: React.FC = () => {
 					<p className="dashboard__meta">{formattedToday}</p>
 				</div>
 				<div className="dashboard__header-actions">
+					<AiWeeklySummaryButton />
 					{hasApprovedInSession && (
 						<button
 							type="button"
@@ -840,7 +863,7 @@ const ManagerDashboard: React.FC = () => {
 					{role !== "admin" && (
 						<button
 							type="button"
-							className="btn btn--primary"
+							className="btn btn--secondary"
 							onClick={() => navigate("/approvals")}
 						>
 							Review approvals ({pendingCount})
@@ -886,6 +909,15 @@ const ManagerDashboard: React.FC = () => {
 						<p className="dashboard__mgr-banner-desc">
 							Track logged time, review submissions, and spot gaps across your team.
 						</p>
+						<div className="dashboard__week-hero-actions">
+							<button
+								type="button"
+								className="dashboard__week-hero-primary-btn"
+								onClick={() => setShowLogTask(true)}
+							>
+								<span aria-hidden="true">+</span> Log {currentDayName} Hours
+							</button>
+						</div>
 					</div>
 
 					<div className="dashboard__mgr-week-pill">
@@ -1636,6 +1668,7 @@ const ManagerDashboard: React.FC = () => {
 					</div>
 				)}
 			</section>
+			{showLogTask && <LogTaskDrawer onClose={() => setShowLogTask(false)} />}
 		</div>
 	);
 };
@@ -1689,6 +1722,7 @@ const CEODashboard: React.FC = () => {
 					</p>
 				</div>
 				<div className="dashboard__header-actions">
+					<AiWeeklySummaryButton />
 					<button
 						type="button"
 						className="btn btn--ghost"
@@ -2050,6 +2084,7 @@ const HRDashboard: React.FC = () => {
 					</p>
 				</div>
 				<div className="dashboard__header-actions">
+					<AiWeeklySummaryButton />
 					<button
 						type="button"
 						className="btn btn--ghost"
@@ -2312,6 +2347,7 @@ const AdminDashboard: React.FC = () => {
 					</p>
 				</div>
 				<div className="dashboard__header-actions">
+					<AiWeeklySummaryButton />
 					<button
 						type="button"
 						className="btn btn--ghost dashboard__admin-btn"
