@@ -14,6 +14,7 @@ import dashboardRouter     from './modules/dashboard/dashboard.router';
 import reportsRouter       from './modules/reports/reports.router';
 import settingsRouter      from './modules/settings/settings.router';
 import invitesRouter       from './modules/invites/invites.router';
+import aiRouter            from './modules/ai/ai.router';
 import { errorHandler, notFound } from './middleware/errorHandler';
 
 const app = express();
@@ -52,6 +53,7 @@ app.use('/api/dashboard',     dashboardRouter);
 app.use('/api/reports',       reportsRouter);
 app.use('/api/settings',      settingsRouter);
 app.use('/api/invites',       invitesRouter);
+app.use('/api/ai',            aiRouter);
 
 // ─── Error Handling ───────────────────────────────────────────────────────────
 app.use(notFound);

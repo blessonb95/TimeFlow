@@ -2,19 +2,32 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNotifications, useMarkRead, useMarkAllRead } from "../../hooks/useNotifications";
 import { useLogout } from "../../hooks/useAuth";
 import { useAppStore } from "../../store/useAppStore";
+import { useOfflineSync } from "../../hooks/useOfflineSync";
 import { Link } from "react-router-dom";
 import { SearchModal } from "../ui/SearchModal";
-import { SparkleButton } from "../ui/SparkleButton";
 
 export const Topbar: React.FC = () => {
 	const logout = useLogout();
-	const { isSidebarCollapsed, toggleSidebar } = useAppStore();
+	const { isSidebarCollapsed, toggleSidebar, currentUser } = useAppStore();
 	const { data: notificationsList = [] } = useNotifications();
 	const markReadMutation = useMarkRead();
 	const markAllReadMutation = useMarkAllRead();
+	const {
+		isOnline,
+		simulatedOffline,
+		toggleSimulatedOffline,
+		waitingCount,
+		failedCount,
+		totalUnsyncedCount,
+		isSyncing,
+		syncNow,
+	} = useOfflineSync();
+
 	const [showNotif, setShowNotif] = useState(false);
+	const [showSyncMenu, setShowSyncMenu] = useState(false);
 	const [showSearch, setShowSearch] = useState(false);
 	const notifRef = useRef<HTMLDivElement>(null);
+	const syncRef = useRef<HTMLDivElement>(null);
 
 	const unreadCount = notificationsList.filter(
 		(n: { read?: boolean }) => !n.read,
@@ -54,10 +67,42 @@ export const Topbar: React.FC = () => {
 		return () => document.removeEventListener("mousedown", handler);
 	}, [showNotif]);
 
+	// Close sync popup on outside click
+	useEffect(() => {
+		if (!showSyncMenu) return;
+		const handler = (e: MouseEvent) => {
+			if (syncRef.current && !syncRef.current.contains(e.target as Node)) {
+				setShowSyncMenu(false);
+			}
+		};
+		document.addEventListener("mousedown", handler);
+		return () => document.removeEventListener("mousedown", handler);
+	}, [showSyncMenu]);
+
 	const isMac =
 		typeof window !== "undefined" &&
 		/mac/i.test(navigator.userAgent || navigator.platform);
 	const shortcutLabel = isMac ? "⌘K" : "Ctrl+K";
+
+	const syncStateVariant = !isOnline
+		? "offline"
+		: failedCount > 0
+		? "error"
+		: isSyncing || waitingCount > 0
+		? "pending"
+		: "online";
+
+	const syncLabel = !isOnline
+		? totalUnsyncedCount > 0
+			? `Offline · ${totalUnsyncedCount} queued`
+			: "Offline"
+		: isSyncing
+		? "Syncing…"
+		: failedCount > 0
+		? `${failedCount} sync failed`
+		: waitingCount > 0
+		? `${waitingCount} waiting to sync`
+		: "Online";
 
 	return (
 		<header className="topbar">
@@ -106,6 +151,93 @@ export const Topbar: React.FC = () => {
 				</button>
 			</div>
 			<div className="topbar__right">
+				{/* Connection & Offline Sync Status Pill */}
+				<div ref={syncRef} className="topbar__sync-wrap">
+					<button
+						type="button"
+						className={`topbar__sync-pill topbar__sync-pill--${syncStateVariant}`}
+						onClick={() => setShowSyncMenu((v) => !v)}
+						aria-label={`Connection and sync status: ${syncLabel}`}
+						aria-expanded={showSyncMenu}
+						aria-controls="topbar-sync-popover"
+						title="Connection & offline sync status"
+					>
+						<span className="topbar__sync-dot" aria-hidden="true" />
+						<span className="topbar__sync-text">{syncLabel}</span>
+					</button>
+
+					{showSyncMenu && (
+						<div
+							id="topbar-sync-popover"
+							role="region"
+							aria-label="Connection and offline sync details"
+							className="topbar__sync-dropdown"
+						>
+							<div className="topbar__sync-dropdown-header">
+								<div>
+									<div className="topbar__sync-dropdown-title">
+										{isOnline ? "Connected to TimeFlow" : "Working Offline"}
+									</div>
+									<div className="topbar__sync-dropdown-subtitle">
+										{isOnline
+											? "Queued work logs sync automatically."
+											: "New task logs are saved locally and will sync when back online."}
+									</div>
+								</div>
+							</div>
+
+							<div className="topbar__sync-stats">
+								<div className="topbar__sync-stat-row">
+									<span>Waiting to sync</span>
+									<strong>{waitingCount}</strong>
+								</div>
+								<div className="topbar__sync-stat-row">
+									<span>Needs attention</span>
+									<strong className={failedCount > 0 ? "topbar__sync-stat-error" : ""}>
+										{failedCount}
+									</strong>
+								</div>
+								<div className="topbar__sync-stat-row">
+									<span>Scoped account</span>
+									<span className="topbar__sync-user">
+										{currentUser?.email || currentUser?.name || "Signed-in user"}
+									</span>
+								</div>
+							</div>
+
+							<div className="topbar__sync-actions">
+								{isOnline && totalUnsyncedCount > 0 && (
+									<button
+										type="button"
+										className="btn btn--primary btn--sm"
+										onClick={() => syncNow()}
+										disabled={isSyncing}
+									>
+										{isSyncing ? "Syncing…" : "Sync queued logs now"}
+									</button>
+								)}
+								{totalUnsyncedCount > 0 && (
+									<Link
+										to="/work-logs"
+										className="btn btn--secondary btn--sm"
+										onClick={() => setShowSyncMenu(false)}
+									>
+										View in Work Logs
+									</Link>
+								)}
+								<label className="topbar__offline-toggle">
+									<input
+										type="checkbox"
+										checked={simulatedOffline}
+										onChange={(e) => toggleSimulatedOffline(e.target.checked)}
+									/>
+									<span>Work offline mode (simulate offline)</span>
+								</label>
+							</div>
+						</div>
+					)}
+				</div>
+
 				<div ref={notifRef} className="topbar__notif-wrap">
 					<button
 						type="button"

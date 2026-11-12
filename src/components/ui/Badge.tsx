@@ -27,6 +27,9 @@ export const statusVariant = (status: string): BadgeVariant => {
     case 'Awaiting submission': return 'yellow';
     case 'Submitted':    return 'blue';
     case 'In Progress':  return 'blue';
+    case 'Waiting to sync': return 'orange';
+    case 'Syncing…':     return 'blue';
+    case 'Sync Failed':  return 'red';
     case 'At Risk':      return 'orange';
     case 'Delayed':      return 'red';
     case 'Rejected':     return 'red';

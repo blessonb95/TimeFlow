@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppStore } from '../store/useAppStore';
 import { useWorkLogs, useSubmitWeek, useDeleteWorkLog } from '../hooks/useWorkLogs';
+import { useOfflineSync } from '../hooks/useOfflineSync';
 import { useProjects } from '../hooks/useProjects';
 import { LogTaskDrawer } from '../components/ui/LogTaskDrawer';
+import { WeeklySummaryModal } from '../components/ui/WeeklySummaryModal';
 import { TaskDescriptionModal } from '../components/ui/TaskDescriptionModal';
 import { LoadingSpinner } from '../components/ui/LoadingSpinner';
 import { TableSkeleton, Skeleton } from '../components/ui/LoadingState';
@@ -81,12 +83,24 @@ export const WorkLogs: React.FC = () => {
   const [page, setPage]               = useState(1);
   const [gridProjectIds, setGridProjectIds] = useState<string[]>([]);
   const [showAddMenu, setShowAddMenu] = useState(false);
+  const [showWeeklySummaryModal, setShowWeeklySummaryModal] = useState(false);
   const pageSize = 10;
   const todayStr = new Date().toISOString().slice(0, 10);
   const [modalConfig, setModalConfig] = useState<{ isOpen: boolean; title: string; message: string; type: 'alert' | 'confirm'; onConfirm: () => void } | null>(null);
 
   const { data: workLogs = [], isLoading, isFetching, isError, refetch } = useWorkLogs({ search });
   const { data: projects = [] } = useProjects();
+  const {
+    isOnline,
+    queuedLogs,
+    waitingCount,
+    failedCount,
+    totalUnsyncedCount,
+    isSyncing,
+    syncNow,
+    retryEntry,
+    discardEntry,
+  } = useOfflineSync();
   const submitWeekMutation = useSubmitWeek();
   const deleteWorkLogMutation = useDeleteWorkLog();
 
@@ -153,6 +167,39 @@ export const WorkLogs: React.FC = () => {
 
   const totalHours = filtered.reduce((s: number, l: { hours: number }) => s + (l.hours || 0), 0);
 
+  const selectedWeekRange = React.useMemo(
+    () => getWeekRangeForDateString(selectedDate),
+    [selectedDate]
+  );
+
+  const selectedWeekLogs = React.useMemo(() => {
+    return workLogs.filter((l: any) => {
+      if (!l.date) return false;
+      const logDate = String(l.date).split('T')[0];
+      return logDate >= selectedWeekRange.start && logDate <= selectedWeekRange.end;
+    });
+  }, [workLogs, selectedWeekRange]);
+
+  const selectedWeekUnsyncedLogs = React.useMemo(
+    () => selectedWeekLogs.filter((l: any) => Boolean(l.isOfflineQueued)),
+    [selectedWeekLogs]
+  );
+
+  const failedQueuedLogs = React.useMemo(
+    () => queuedLogs.filter((q) => q.syncState === 'failed'),
+    [queuedLogs]
+  );
+
+  const isSubmitBlockedByOffline = !isOnline;
+  const isSubmitBlockedByUnsynced = selectedWeekUnsyncedLogs.length > 0;
+  const submitBlockReason = isSubmitBlockedByOffline
+    ? 'Timesheet submission requires an active internet connection.'
+    : isSubmitBlockedByUnsynced
+    ? `Cannot submit week while ${selectedWeekUnsyncedLogs.length} offline entr${
+        selectedWeekUnsyncedLogs.length === 1 ? 'y is' : 'ies are'
+      } waiting to sync.`
+    : '';
+
   const displayedProjects = React.useMemo(() => {
     if (gridProjectIds.length > 0) {
       return gridProjectIds
@@ -188,6 +235,28 @@ export const WorkLogs: React.FC = () => {
   };
 
   const handleSubmitWeek = () => {
+    if (!isOnline) {
+      setModalConfig({
+        isOpen: true,
+        title: 'Offline Mode',
+        message: 'Timesheet submission is online-only. Please reconnect to the internet and allow queued entries to sync before submitting your week.',
+        type: 'alert',
+        onConfirm: () => setModalConfig(null),
+      });
+      return;
+    }
+    if (selectedWeekUnsyncedLogs.length > 0) {
+      setModalConfig({
+        isOpen: true,
+        title: 'Unsynced Offline Entries',
+        message: `This week has ${selectedWeekUnsyncedLogs.length} unsynced offline entr${
+          selectedWeekUnsyncedLogs.length === 1 ? 'y' : 'ies'
+        }. Please sync or resolve all queued entries before submitting the week.`,
+        type: 'alert',
+        onConfirm: () => setModalConfig(null),
+      });
+      return;
+    }
     const { start } = getWeekRangeForDateString(selectedDate);
     submitWeekMutation.mutate(start, {
       onSuccess: (data: Record<string, unknown>) => {
@@ -417,6 +486,128 @@ export const WorkLogs: React.FC = () => {
         );
       })()}
 
+      {/* ── Offline & Sync Queue Status Banner ── */}
+      {(!isOnline || totalUnsyncedCount > 0) && (
+        <div
+          className={`worklogs__sync-banner${
+            failedCount > 0
+              ? ' worklogs__sync-banner--error'
+              : !isOnline
+              ? ' worklogs__sync-banner--offline'
+              : ' worklogs__sync-banner--pending'
+          }`}
+          role="region"
+          aria-label="Offline and sync queue status"
+        >
+          <div className="worklogs__sync-banner-main">
+            <div className="worklogs__sync-banner-info">
+              <span className="worklogs__sync-banner-dot" aria-hidden="true" />
+              <div>
+                <div className="worklogs__sync-banner-title">
+                  {!isOnline
+                    ? 'You are working offline'
+                    : isSyncing
+                    ? 'Syncing queued offline entries…'
+                    : failedCount > 0
+                    ? `${failedCount} queued entr${failedCount === 1 ? 'y could' : 'ies could'} not be synced`
+                    : `${waitingCount} offline entr${waitingCount === 1 ? 'y' : 'ies'} waiting to sync`}
+                </div>
+                <div className="worklogs__sync-banner-desc">
+                  {!isOnline
+                    ? `You can continue logging tasks offline. ${
+                        totalUnsyncedCount > 0
+                          ? `${totalUnsyncedCount} queued entr${totalUnsyncedCount === 1 ? 'y is' : 'ies are'} stored safely on your device and will sync automatically when your connection returns.`
+                          : 'New entries will be saved locally and synced when you reconnect.'
+                      }`
+                    : failedCount > 0
+                    ? 'Review the explanation below to edit the entry, retry sync, or sign in again. Queued entries are kept safely until resolved.'
+                    : 'Your connection is active. Queued entries are removed from local storage only after the server confirms they are saved.'}
+                </div>
+              </div>
+            </div>
+            {isOnline && totalUnsyncedCount > 0 && (
+              <div className="worklogs__sync-banner-actions">
+                <button
+                  type="button"
+                  className="btn btn--secondary btn--sm"
+                  onClick={() => void syncNow()}
+                  disabled={isSyncing}
+                >
+                  {isSyncing ? 'Syncing…' : 'Sync All Now'}
+                </button>
+              </div>
+            )}
+          </div>
+
+          {failedQueuedLogs.length > 0 && (
+            <div className="worklogs__sync-failures" role="list" aria-label="Entries requiring attention">
+              {failedQueuedLogs.map((item) => (
+                <div key={item.clientId} className="worklogs__sync-failure-item" role="listitem">
+                  <div className="worklogs__sync-failure-text">
+                    <strong>{item.taskName}</strong> ({item.projectName || 'Project'} · {item.hours}h on {item.date}):{' '}
+                    <span>{item.syncError || 'Sync failed. Please review or retry.'}</span>
+                  </div>
+                  <div className="worklogs__sync-failure-btns">
+                    {item.syncErrorCode === 'AUTH_EXPIRED' ? (
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--sm"
+                        onClick={() => navigate('/login')}
+                      >
+                        Sign in again
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        className="btn btn--primary btn--sm"
+                        onClick={() => {
+                          const matchingRow = workLogs.find((w: any) => w.id === item.clientId) || {
+                            ...item,
+                            id: item.clientId,
+                            isOfflineQueued: true,
+                          };
+                          setEditingLog(matchingRow);
+                          setIsReadOnlyDrawer(false);
+                          setShowDrawer(true);
+                        }}
+                      >
+                        Edit &amp; Resolve
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      className="btn btn--secondary btn--sm"
+                      onClick={() => void retryEntry(item.clientId)}
+                      disabled={!isOnline || isSyncing}
+                    >
+                      Retry Sync
+                    </button>
+                    <button
+                      type="button"
+                      className="btn btn--ghost btn--sm"
+                      onClick={() => {
+                        setModalConfig({
+                          isOpen: true,
+                          title: 'Discard Unsynced Entry',
+                          message: `Discard queued offline entry "${item.taskName}"? This cannot be undone.`,
+                          type: 'confirm',
+                          onConfirm: () => {
+                            void discardEntry(item.clientId);
+                            setModalConfig(null);
+                          },
+                        });
+                      }}
+                    >
+                      Discard
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ── Single Unified Toolbar (Search Left, View & Actions Right) ── */}
       <div className="worklogs__toolbar">
         {/* Search on Left */}
@@ -443,11 +634,34 @@ export const WorkLogs: React.FC = () => {
               onClick={() => { setView('grid'); setDateMode('week'); }}
             >Weekly Grid</button>
           </div>
-          <button type="button" className="btn btn--ghost" onClick={handleSubmitWeek} disabled={submitWeekMutation.isPending}>
+          <button
+            type="button"
+            className="btn btn--secondary worklogs__summary-btn"
+            onClick={() => setShowWeeklySummaryModal(true)}
+            title="Generate an editable AI weekly summary draft for the selected week"
+          >
+            <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" width="15" height="15" aria-hidden="true">
+              <path d="M8 1.5l1.6 3.9L13.5 7l-3.9 1.6L8 12.5 6.4 8.6 2.5 7l3.9-1.6L8 1.5z" strokeLinejoin="round" />
+            </svg>
+            <span>Draft weekly summary</span>
+          </button>
+          <button
+            type="button"
+            className="btn btn--ghost worklogs__submit-week-btn"
+            onClick={handleSubmitWeek}
+            disabled={submitWeekMutation.isPending || isSubmitBlockedByOffline || isSubmitBlockedByUnsynced}
+            title={submitBlockReason || 'Submit this week’s timesheet for manager approval'}
+          >
             <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path d="M14 2L2 7l4 2 2 4 6-11z"/><path d="M6 9l3 3"/>
             </svg>
-            {submitWeekMutation.isPending ? 'Submitting…' : 'Submit Week'}
+            {submitWeekMutation.isPending
+              ? 'Submitting…'
+              : isSubmitBlockedByOffline
+              ? 'Submit Week (Online Only)'
+              : isSubmitBlockedByUnsynced
+              ? `Submit Week (${selectedWeekUnsyncedLogs.length} Unsynced)`
+              : 'Submit Week'}
           </button>
         </div>
       </div>
@@ -499,6 +713,20 @@ export const WorkLogs: React.FC = () => {
                     >
                       {log.taskName}
                     </button>
+                    {log.isOfflineQueued && log.syncError && (
+                      <div className="wl-panel__sync-error-note" role="alert">
+                        <span>{log.syncError}</span>
+                        {isOnline && (
+                          <button
+                            type="button"
+                            className="wl-panel__sync-retry-inline"
+                            onClick={() => void retryEntry(log.clientId || log.id)}
+                          >
+                            Retry
+                          </button>
+                        )}
+                      </div>
+                    )}
                   </div>
 
                   {/* Project (Second Column) */}
@@ -588,7 +816,11 @@ export const WorkLogs: React.FC = () => {
                             message: `Delete timesheet entry "${log.taskName}"?`,
                             type: 'confirm',
                             onConfirm: () => {
-                              deleteWorkLogMutation.mutate(log.id);
+                              if (log.isOfflineQueued) {
+                                void discardEntry(log.clientId || log.id);
+                              } else {
+                                deleteWorkLogMutation.mutate(log.id);
+                              }
                               setModalConfig(null);
                             }
                           });
@@ -840,6 +1072,25 @@ export const WorkLogs: React.FC = () => {
         <TaskDescriptionModal
           log={viewDescLog}
           onClose={() => setViewDescLog(null)}
+        />
+      )}
+
+      {showWeeklySummaryModal && (
+        <WeeklySummaryModal
+          weekStart={selectedWeekRange.start}
+          weekEnd={selectedWeekRange.end}
+          weekLabel={formatWeekRangeLabel(selectedWeekRange.start, selectedWeekRange.end)}
+          entries={selectedWeekLogs.map((l: any) => ({
+            projectName: l.projectName || 'Internal Task',
+            taskName: l.taskName,
+            taskDescription: l.taskDescription || l.description || '',
+            hours: Number(l.hours) || 0,
+            date: String(l.date || '').split('T')[0],
+            taskStatus: l.taskStatus || l.status,
+            isOfflineQueued: Boolean(l.isOfflineQueued),
+          }))}
+          isOnline={isOnline}
+          onClose={() => setShowWeeklySummaryModal(false)}
         />
       )}
 
