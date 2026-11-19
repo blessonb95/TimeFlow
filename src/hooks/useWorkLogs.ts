@@ -3,13 +3,16 @@ import { workLogsApi, type CreateWorkLogPayload } from '../api/workLogs';
 import { useAppStore } from '../store/useAppStore';
 import {
   cacheUserWorkLogs,
+  enqueueWorkLogMutation,
   generateClientId,
   getCachedUserProjects,
   getCachedUserWorkLogs,
+  getQueuedMutationsForUser,
   getQueuedWorkLogsForUser,
   isNetworkOnline,
   upsertQueuedWorkLog,
   type QueuedWorkLogEntry,
+  type WorkLogUpdatePatch,
 } from '../utils/offlineQueue';
 
 const getActiveUserId = (storeUserId?: string): string => {
@@ -88,6 +91,43 @@ export const useWorkLogs = (params?: { weekStart?: string; search?: string }) =>
         } else {
           throw err;
         }
+      }
+
+      // Overlay offline edits/deletes of logs that already exist on the server
+      const mutations = await getQueuedMutationsForUser(userId);
+      if (mutations.length > 0) {
+        const byId = new Map(mutations.map((m) => [String(m.workLogId), m]));
+        const needsProjects = mutations.some((m) => m.patch?.projectId);
+        const cachedProjects = needsProjects ? await getCachedUserProjects(userId) : [];
+        baseLogs = baseLogs.flatMap((log: any) => {
+          const m = byId.get(String(log.id));
+          if (!m) return [log];
+          const sync = {
+            pendingMutation: m.op,
+            syncState: m.syncState,
+            syncError: m.syncError,
+            syncErrorCode: m.syncErrorCode,
+          };
+          if (m.op === 'delete') {
+            // Hide while waiting/syncing; keep visible with the error if the delete was rejected
+            return m.syncState === 'failed' ? [{ ...log, ...sync }] : [];
+          }
+          const patch = m.patch || {};
+          const project = patch.projectId
+            ? cachedProjects.find((p: any) => p.id === patch.projectId)
+            : undefined;
+          return [
+            {
+              ...log,
+              ...patch,
+              taskStatus: patch.taskStatus ?? log.taskStatus,
+              ...(project
+                ? { projectName: project.name, projectColor: project.color || log.projectColor }
+                : {}),
+              ...sync,
+            },
+          ];
+        });
       }
 
       const queued = await getQueuedWorkLogsForUser(userId);
@@ -203,32 +243,67 @@ export const useCreateWorkLog = () => {
   });
 };
 
+const isNetworkFailure = (err: any) =>
+  !err?.response || err?.isOfflineError || err?.code === 'ERR_NETWORK';
+
+const invalidateWorkLogQueries = (qc: ReturnType<typeof useQueryClient>) => {
+  qc.invalidateQueries({ queryKey: ['workLogs'] });
+  qc.invalidateQueries({ queryKey: ['projects'] });
+  qc.invalidateQueries({ queryKey: ['project'] });
+  qc.invalidateQueries({ queryKey: ['dashboard'] });
+  qc.invalidateQueries({ queryKey: ['reports'] });
+};
+
 export const useUpdateWorkLog = () => {
   const qc = useQueryClient();
+  const { currentUser } = useAppStore();
+  const userId = getActiveUserId(currentUser?.id);
+
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Parameters<typeof workLogsApi.update>[1] }) =>
-      workLogsApi.update(id, data),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workLogs'] });
-      qc.invalidateQueries({ queryKey: ['projects'] });
-      qc.invalidateQueries({ queryKey: ['project'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
-      qc.invalidateQueries({ queryKey: ['reports'] });
+    mutationFn: async ({ id, data }: { id: string; data: WorkLogUpdatePatch }) => {
+      // Offline (or connection drops mid-request): keep the edit on the device and sync later
+      if (!isNetworkOnline()) {
+        await enqueueWorkLogMutation(userId, id, 'update', data);
+        return { id, ...data, queuedOffline: true };
+      }
+      try {
+        const saved = await workLogsApi.update(id, data);
+        return { ...saved, queuedOffline: false };
+      } catch (err: any) {
+        if (isNetworkFailure(err)) {
+          await enqueueWorkLogMutation(userId, id, 'update', data);
+          return { id, ...data, queuedOffline: true };
+        }
+        throw err;
+      }
     },
+    onSuccess: () => invalidateWorkLogQueries(qc),
   });
 };
 
 export const useDeleteWorkLog = () => {
   const qc = useQueryClient();
+  const { currentUser } = useAppStore();
+  const userId = getActiveUserId(currentUser?.id);
+
   return useMutation({
-    mutationFn: workLogsApi.delete,
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['workLogs'] });
-      qc.invalidateQueries({ queryKey: ['projects'] });
-      qc.invalidateQueries({ queryKey: ['project'] });
-      qc.invalidateQueries({ queryKey: ['dashboard'] });
-      qc.invalidateQueries({ queryKey: ['reports'] });
+    mutationFn: async (id: string) => {
+      if (!isNetworkOnline()) {
+        await enqueueWorkLogMutation(userId, id, 'delete');
+        return { id, queuedOffline: true };
+      }
+      try {
+        const res = await workLogsApi.delete(id);
+        return { ...(res || {}), id, queuedOffline: false };
+      } catch (err: any) {
+        if (isNetworkFailure(err)) {
+          await enqueueWorkLogMutation(userId, id, 'delete');
+          return { id, queuedOffline: true };
+        }
+        throw err;
+      }
     },
+    onSuccess: () => invalidateWorkLogQueries(qc),
   });
 };
 

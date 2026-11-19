@@ -39,6 +39,9 @@ const BASE_URL = import.meta.env.MODE === 'vercel'
   ? '/api'
   : import.meta.env.VITE_API_URL || '/api';
 
+/** Exposed so the offline Background Sync snapshot knows where to send queued changes. */
+export const API_BASE_URL: string = BASE_URL;
+
 export const apiClient = axios.create({
   baseURL: BASE_URL,
   headers: { 'Content-Type': 'application/json' },

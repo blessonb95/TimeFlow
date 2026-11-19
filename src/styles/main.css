@@ -759,7 +759,7 @@
 }
 .page-inner {
   padding: 1.5rem;
-  max-width: 87.5rem;
+  max-width: none;
   width: 100%;
   min-width: 0;
   box-sizing: border-box;

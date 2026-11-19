@@ -1,4 +1,5 @@
 import React, { useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { Pagination } from "../components/ui/Pagination";
 import { ConfirmModal } from "../components/ui/ConfirmModal";
 import { LoadingSpinner } from "../components/ui/LoadingSpinner";
@@ -1479,118 +1480,84 @@ export const Reports: React.FC = () => {
 			)}
 
 			{/* ── PREVIEW MODAL ── */}
-			{previewOpen && (
-				<div
-					className="reports__preview-overlay"
-					onClick={(e) => {
-						if (e.target === e.currentTarget) setPreviewOpen(false);
-					}}
-				>
-					<div ref={previewDialogRef} className="reports__preview-modal" role="dialog" aria-modal="true" aria-labelledby="report-preview-title" tabIndex={-1}>
-						{/* Modal Header */}
-						<div className="reports__preview-modal-header">
-							<div>
-								<h2 id="report-preview-title" className="reports__preview-modal-title">
-									Timesheet Preview
-								</h2>
-								<div className="reports__preview-modal-meta">
-									Period: {fmtDate(exportFrom)} — {fmtDate(exportTo)}
-									{selectedEmp && exportScope === "employee_single" && (
-										<> · {selectedEmp}</>
-									)}
+			{previewOpen &&
+				createPortal(
+					<div
+						className="modal-overlay"
+						onClick={(e) => {
+							if (e.target === e.currentTarget) setPreviewOpen(false);
+						}}
+						role="presentation"
+					>
+						<div
+							ref={previewDialogRef}
+							className="modal reports__preview-modal"
+							role="dialog"
+							aria-modal="true"
+							aria-labelledby="report-preview-title"
+							tabIndex={-1}
+						>
+							{/* Modal Header */}
+							<div className="modal__header reports__preview-modal-header">
+								<div>
+									<h2 id="report-preview-title" className="modal__header-title">
+										Timesheet Preview
+									</h2>
+									<div className="reports__preview-modal-meta">
+										Period: {fmtDate(exportFrom)} — {fmtDate(exportTo)}
+										{selectedEmp && exportScope === "employee_single" && (
+											<> · {selectedEmp}</>
+										)}
+									</div>
 								</div>
-							</div>
-							<div className="reports__preview-modal-actions">
 								<button
 									type="button"
-									className="reports__export-dl-btn"
-									onClick={() => {
-										setPreviewOpen(false);
-										handleDownloadPdf();
-									}}
-								>
-									<svg
-										width="13"
-										height="13"
-										viewBox="0 0 16 16"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-									>
-										<path d="M8 2v8M4 8l4 4 4-4" />
-										<path d="M2 14h12" />
-									</svg>
-									Download PDF
-								</button>
-								<button
-									type="button"
-									className="reports__export-dl-btn"
-									onClick={() => {
-										setPreviewOpen(false);
-										handleDownloadCsv();
-									}}
-								>
-									<svg
-										width="13"
-										height="13"
-										viewBox="0 0 16 16"
-										fill="none"
-										stroke="currentColor"
-										strokeWidth="2"
-									>
-										<path d="M8 2v8M4 8l4 4 4-4" />
-										<path d="M2 14h12" />
-									</svg>
-									Download CSV
-								</button>
-								<button
-									type="button"
-									className="reports__preview-close-btn"
+									className="modal__header-close"
 									onClick={() => setPreviewOpen(false)}
 									aria-label="Close preview"
 								>
 									<svg
-										width="14"
-										height="14"
+										width="16"
+										height="16"
 										viewBox="0 0 16 16"
 										fill="none"
 										stroke="currentColor"
 										strokeWidth="2"
+										aria-hidden="true"
 									>
 										<path d="M2 2l12 12M14 2L2 14" />
 									</svg>
 								</button>
 							</div>
-						</div>
 
-						{/* Page tab switcher */}
-						<div className="reports__preview-page-tabs">
-							<button
-								type="button"
-								aria-pressed={previewPage === 1}
-								className={`reports__preview-page-tab${previewPage === 1 ? " reports__preview-page-tab--active" : ""}`}
-								onClick={() => setPreviewPage(1)}
-							>
-								Summary
-							</button>
-							<button
-								type="button"
-								aria-pressed={previewPage === 2}
-								className={`reports__preview-page-tab${previewPage === 2 ? " reports__preview-page-tab--active" : ""}`}
-								onClick={() => setPreviewPage(2)}
-							>
-								Detailed Timesheet
-								<span
-									className={`reports__preview-count-pill${previewDetailed.length === 0 ? " reports__preview-count-pill--zero" : ""}`}
+							{/* Page tab switcher */}
+							<div className="reports__preview-page-tabs">
+								<button
+									type="button"
+									aria-pressed={previewPage === 1}
+									className={`reports__preview-page-tab${previewPage === 1 ? " reports__preview-page-tab--active" : ""}`}
+									onClick={() => setPreviewPage(1)}
 								>
-									{previewDetailed.length}{" "}
-									{previewDetailed.length === 1 ? "entry" : "entries"}
-								</span>
-							</button>
-						</div>
+									Summary
+								</button>
+								<button
+									type="button"
+									aria-pressed={previewPage === 2}
+									className={`reports__preview-page-tab${previewPage === 2 ? " reports__preview-page-tab--active" : ""}`}
+									onClick={() => setPreviewPage(2)}
+								>
+									Detailed Timesheet
+									<span
+										className={`reports__preview-count-pill${previewDetailed.length === 0 ? " reports__preview-count-pill--zero" : ""}`}
+									>
+										{previewDetailed.length}{" "}
+										{previewDetailed.length === 1 ? "entry" : "entries"}
+									</span>
+								</button>
+							</div>
 
-						{/* Modal Body */}
-						<div className="reports__preview-modal-body">
+							{/* Modal Body */}
+							<div className="modal__body reports__preview-modal-body">
 							{previewLoading ? (
 								<div className="reports__preview-loading">
 									<LoadingSpinner message="Loading timesheet data…" size="md" />
@@ -1948,10 +1915,66 @@ export const Reports: React.FC = () => {
 									)}
 								</>
 							)}
+							</div>
+
+							{/* Modal Footer */}
+							<div className="modal__footer reports__preview-modal-footer">
+								<button
+									type="button"
+									className="btn btn--secondary"
+									onClick={() => setPreviewOpen(false)}
+								>
+									Close
+								</button>
+								<button
+									type="button"
+									className="btn btn--secondary"
+									onClick={() => {
+										setPreviewOpen(false);
+										handleDownloadCsv();
+									}}
+								>
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 16 16"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										aria-hidden="true"
+									>
+										<path d="M8 2v8M4 8l4 4 4-4" />
+										<path d="M2 14h12" />
+									</svg>
+									Download CSV
+								</button>
+								<button
+									type="button"
+									className="btn btn--primary"
+									onClick={() => {
+										setPreviewOpen(false);
+										handleDownloadPdf();
+									}}
+								>
+									<svg
+										width="14"
+										height="14"
+										viewBox="0 0 16 16"
+										fill="none"
+										stroke="currentColor"
+										strokeWidth="2"
+										aria-hidden="true"
+									>
+										<path d="M8 2v8M4 8l4 4 4-4" />
+										<path d="M2 14h12" />
+									</svg>
+									Download PDF
+								</button>
+							</div>
 						</div>
-					</div>
-				</div>
-			)}
+					</div>,
+					document.body
+				)}
 		</div>
 	);
 };

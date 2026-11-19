@@ -479,74 +479,27 @@
 		}
 	}
 
-	// ── Preview modal overlay ─────────────────────────────────────────────────
-	&__preview-overlay {
-		position: fixed;
-		inset: 0;
-		z-index: 1000;
-		background: rgba(0, 0, 0, 0.45);
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		padding: @space-6;
-		backdrop-filter: blur(0.125rem);
-	}
-
+	// ── Preview modal (extends shared .modal) ────────────────────────────────
 	&__preview-modal {
-		background: @white;
-		border-radius: @radius-xl;
-		box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.18);
-		width: 100%;
-		max-width: 53.75rem;
+		width: 53.75rem;
+		max-width: 92vw;
 		max-height: 88vh;
-		display: flex;
-		flex-direction: column;
+		max-height: 88dvh;
 		overflow: hidden;
-		animation: previewSlideIn 0.22s ease;
 	}
 
 	&__preview-modal-header {
-		.flex-between();
-		padding: 1.125rem 1.5rem;
-		border-bottom: 0.0625rem solid @color-border;
-		flex-shrink: 0;
-	}
-
-	&__preview-modal-title {
-		font-size: @font-size-lg;
-		font-weight: 700;
-		color: @color-text-primary;
+		align-items: flex-start;
 	}
 
 	&__preview-modal-meta {
 		font-size: @font-size-sm;
 		color: @color-text-secondary;
-		margin-top: 0.125rem;
+		margin-top: 0.25rem;
 	}
 
-	&__preview-modal-actions {
-		.flex-center();
-		gap: @space-2;
-	}
-
-	&__preview-close-btn {
-		width: 2rem;
-		height: 2rem;
-		display: flex;
-		align-items: center;
-		justify-content: center;
-		border: 0.0625rem solid @color-border;
-		border-radius: @radius-lg;
-		background: @white;
-		cursor: pointer;
-		color: @color-text-secondary;
-		transition: @transition-fast;
-		flex-shrink: 0;
-		&:hover {
-			background: @gray-100;
-			color: @color-text-primary;
-			border-color: @gray-400;
-		}
+	&__preview-modal-footer {
+		flex-wrap: wrap;
 	}
 
 	// ── Page tab switcher ────────────────────────────────────────────────────
@@ -968,12 +921,17 @@
 			width: 100%;
 		}
 		&__preview-modal-header {
-			flex-wrap: wrap;
-			gap: @space-2;
-			padding: 1rem;
+			padding: 1rem 1.25rem;
 		}
-		&__preview-modal-actions {
-			flex-wrap: wrap;
+		&__preview-page-tabs {
+			padding: 0 1.25rem;
+		}
+		&__preview-summary-grid {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+			gap: @space-3;
+		}
+		&__preview-modal-footer {
+			padding: 0.875rem 1.25rem;
 		}
 		&__flex-wrap-col {
 			flex-basis: 100%;
@@ -985,10 +943,12 @@
 			min-width: 38rem;
 		}
 		&__preview-modal-body {
-			padding: 1rem;
+			padding: 1rem 1.25rem;
 			-webkit-overflow-scrolling: touch;
 		}
 		&__preview-modal {
+			width: calc(100vw - 1.5rem);
+			max-width: 100%;
 			max-height: calc(100dvh - 2rem);
 		}
 		&__table-card {

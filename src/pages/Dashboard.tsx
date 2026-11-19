@@ -19,6 +19,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { LogTaskDrawer } from "../components/ui/LogTaskDrawer";
 import { DashboardWeeklySummaryModal } from "../components/ui/DashboardWeeklySummaryModal";
 import { DashboardSkeleton } from "../components/ui/LoadingState";
+import { FestiveBannerArt, useFestiveBanner } from "../components/ui/FestiveBannerArt";
 import { EmptyState } from "../components/ui/EmptyState";
 import { DEFAULT_HR_USER, getSystemAuditLogs } from "../data/dummy";
 
@@ -208,6 +209,7 @@ const EmployeeDashboard: React.FC = () => {
 		hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
 	const [showLogTask, setShowLogTask] = useState(false);
 	const [selectedDayIdx, setSelectedDayIdx] = useState<number | null>(null);
+	const festive = useFestiveBanner();
 
 	if (isLoading) { return <DashboardSkeleton />; }
 	if (isError || !data) {
@@ -305,7 +307,12 @@ const EmployeeDashboard: React.FC = () => {
 				</div>
 			</div>
 
-			<section className="dashboard__week-hero" aria-labelledby="week-overview-title">
+			<section
+				className={`dashboard__week-hero${festive.className}`}
+				style={festive.style}
+				{...festive.dataAttrs}
+				aria-labelledby="week-overview-title"
+			>
 				<div className="dashboard__week-hero-copy">
 					<div className="dashboard__week-hero-eyebrow-row">
 						<p className="dashboard__week-hero-eyebrow">
@@ -371,6 +378,7 @@ const EmployeeDashboard: React.FC = () => {
 						</span>
 					</div>
 				</div>
+				<FestiveBannerArt theme={festive.theme} />
 			</section>
 
 			<div className="dashboard__emp-widgets">
@@ -607,6 +615,7 @@ const ManagerDashboard: React.FC = () => {
 	const [activeFilter, setActiveFilter] = useState<"all" | "pending" | "approved">("all");
 	const [locallyApprovedIds, setLocallyApprovedIds] = useState<string[]>([]);
 	const [showLogTask, setShowLogTask] = useState(false);
+	const festive = useFestiveBanner();
 
 	const hour = new Date().getHours();
 	const greeting =
@@ -896,7 +905,9 @@ const ManagerDashboard: React.FC = () => {
 
 			{/* 1. CLEAN HEADER BANNER */}
 			<section
-				className="dashboard__mgr-banner"
+				className={`dashboard__mgr-banner${festive.className}`}
+				style={festive.style}
+				{...festive.dataAttrs}
 				aria-labelledby="manager-overview-title"
 			>
 				<div className="dashboard__mgr-banner-accent" aria-hidden="true" />
@@ -920,25 +931,8 @@ const ManagerDashboard: React.FC = () => {
 						</div>
 					</div>
 
-					<div className="dashboard__mgr-week-pill">
-						<svg
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="2"
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							aria-hidden="true"
-							focusable="false"
-						>
-							<rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-							<line x1="16" x2="16" y1="2" y2="6" />
-							<line x1="8" x2="8" y1="2" y2="6" />
-							<line x1="3" x2="21" y1="10" y2="10" />
-						</svg>
-						<span>{weekLabel}</span>
-					</div>
 				</div>
+				<FestiveBannerArt theme={festive.theme} />
 			</section>
 
 			{/* 3. FOUR MINIMALIST KPI CARDS WITH LIGHT GRADIENTS & 3D ICONS */}
@@ -2308,6 +2302,7 @@ const AdminDashboard: React.FC = () => {
 	const navigate = useNavigate();
 	const { data, isLoading, isError, isFetching, refetch } = useManagerDashboard();
 	const { data: approvals = [] } = useApprovals();
+	const festive = useFestiveBanner();
 
 	if (isLoading) {
 		return <DashboardSkeleton />;
@@ -2386,7 +2381,12 @@ const AdminDashboard: React.FC = () => {
 				</div>
 			</div>
 
-			<section className="dashboard__admin-hero" aria-labelledby="admin-overview-title">
+			<section
+				className={`dashboard__admin-hero${festive.className}`}
+				style={festive.style}
+				{...festive.dataAttrs}
+				aria-labelledby="admin-overview-title"
+			>
 				<div className="dashboard__admin-hero-copy">
 					<p className="dashboard__admin-hero-eyebrow">SYSTEM ADMINISTRATION</p>
 					<h2 id="admin-overview-title">Platform at a glance</h2>
@@ -2397,6 +2397,7 @@ const AdminDashboard: React.FC = () => {
 					<li><span aria-hidden="true" />Database connected</li>
 					<li><span aria-hidden="true" />Auth engine active</li>
 				</ul>
+				<FestiveBannerArt theme={festive.theme} />
 			</section>
 
 			{/* Admin KPI Stats Bar */}

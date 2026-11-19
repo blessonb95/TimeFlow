@@ -1,0 +1,113 @@
+.dashboard__festive {
+  position: relative;
+  overflow: hidden;
+  border-color: var(--festive-border);
+  background: linear-gradient(110deg, var(--festive-from) 0%, var(--festive-mid) 55%, var(--festive-to) 100%);
+  color: #ffffff;
+}
+.dashboard__festive.dashboard__week-hero,
+.dashboard__festive.dashboard__admin-hero {
+  border-left: 1px solid var(--festive-border);
+}
+.dashboard__festive .dashboard__mgr-banner-accent {
+  display: none;
+}
+.dashboard__festive .dashboard__week-hero-eyebrow,
+.dashboard__festive .dashboard__mgr-banner-eyebrow,
+.dashboard__festive .dashboard__admin-hero-eyebrow {
+  color: var(--festive-ink);
+}
+.dashboard__festive .dashboard__week-hero-title,
+.dashboard__festive .dashboard__mgr-banner-title,
+.dashboard__festive .dashboard__admin-hero-copy h2 {
+  color: #ffffff;
+}
+.dashboard__festive .dashboard__week-hero-description,
+.dashboard__festive .dashboard__mgr-banner-desc,
+.dashboard__festive .dashboard__admin-hero-copy p:last-child {
+  color: rgba(255, 255, 255, 0.86);
+}
+.dashboard__festive .dashboard__week-hero-description strong {
+  color: #ffffff;
+}
+@media (min-width: 64rem) {
+  .dashboard__festive {
+    padding-right: calc(9.5rem + 2.5rem);
+  }
+}
+@media (min-width: 48rem) and (max-width: 63.9375rem) {
+  .dashboard__festive {
+    padding-right: calc(6rem + 2rem);
+  }
+}
+.festive-art {
+  position: absolute;
+  top: 50%;
+  right: 1.25rem;
+  width: 9.5rem;
+  aspect-ratio: 1;
+  transform: translateY(-50%);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+@media (max-width: 47.9375rem) {
+  .festive-art {
+    display: none;
+  }
+}
+@media (min-width: 48rem) and (max-width: 63.9375rem) {
+  .festive-art {
+    width: 6rem;
+    right: 1rem;
+  }
+}
+.festive-art__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  filter: drop-shadow(0 0.375rem 0.75rem rgba(0, 0, 0, 0.35)) drop-shadow(0 0 1rem rgba(255, 255, 255, 0.12));
+}
+@media (prefers-reduced-motion: no-preference) {
+  .festive-art__flame {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    animation: festiveFlame 2.8s ease-in-out infinite;
+  }
+  .festive-art__twinkle {
+    animation: festiveTwinkle 4s ease-in-out infinite;
+  }
+  .festive-art__wave {
+    transform-box: fill-box;
+    transform-origin: 0 50%;
+    animation: festiveWave 5s ease-in-out infinite;
+  }
+}
+@keyframes festiveFlame {
+  0%,
+  100% {
+    transform: scale(1, 1);
+  }
+  50% {
+    transform: scale(0.96, 1.05);
+  }
+}
+@keyframes festiveTwinkle {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes festiveWave {
+  0%,
+  100% {
+    transform: skewY(0deg);
+  }
+  50% {
+    transform: skewY(-1.5deg);
+  }
+}
