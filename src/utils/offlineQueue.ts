@@ -40,10 +40,15 @@ export interface OfflineQueuedWorkLog {
 export type QueuedWorkLogEntry = OfflineQueuedWorkLog;
 
 const DB_NAME = 'timeflow_offline_db';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_QUEUED_LOGS = 'queued_work_logs';
 const STORE_CACHED_PROJECTS = 'cached_projects';
 const STORE_CACHED_LOGS = 'cached_work_logs';
+// v2: offline edits/deletes of already-synced logs, and the auth snapshot used by Background Sync
+const STORE_MUTATIONS = 'queued_work_log_mutations';
+const STORE_META = 'sync_meta';
+
+export const BACKGROUND_SYNC_TAG = 'timeflow-sync-queue';
 
 export const OFFLINE_QUEUE_EVENT = 'timeflow:offline-queue-change';
 export const OFFLINE_MODE_EVENT = 'timeflow:network-change';
@@ -115,6 +120,13 @@ const openDatabase = (): Promise<IDBDatabase> =>
       if (!db.objectStoreNames.contains(STORE_CACHED_LOGS)) {
         db.createObjectStore(STORE_CACHED_LOGS, { keyPath: 'userId' });
       }
+      if (!db.objectStoreNames.contains(STORE_MUTATIONS)) {
+        const store = db.createObjectStore(STORE_MUTATIONS, { keyPath: 'workLogId' });
+        store.createIndex('by_user', 'userId', { unique: false });
+      }
+      if (!db.objectStoreNames.contains(STORE_META)) {
+        db.createObjectStore(STORE_META, { keyPath: 'key' });
+      }
     };
     request.onsuccess = () => resolve(request.result);
     request.onerror = () => reject(request.error || new Error('Failed to open IndexedDB'));
@@ -166,6 +178,7 @@ export const upsertQueuedWorkLog = async (
     req.onerror = () => reject(req.error);
   });
   notifyQueueChanged();
+  if (normalized.syncState === 'waiting') requestBackgroundSync();
   return normalized;
 };
 
@@ -328,5 +341,195 @@ export const getCachedUserWorkLogs = async <T = any>(
     });
   } catch {
     return [];
+  }
+};
+
+// ─── Offline edits / deletes of logs that already exist on the server ─────────
+
+export type MutationOp = 'update' | 'delete';
+
+export interface WorkLogUpdatePatch {
+  projectId?: string;
+  taskName?: string;
+  taskDescription?: string;
+  hours?: number;
+  date?: string;
+  status?: string;
+  taskStatus?: string;
+}
+
+/** One pending change per server work log (later edits are merged; a delete replaces edits). */
+export interface QueuedWorkLogMutation {
+  workLogId: string;
+  userId: string;
+  op: MutationOp;
+  patch?: WorkLogUpdatePatch;
+  createdAt: string;
+  updatedAt: string;
+  syncState: 'waiting' | 'syncing' | 'failed';
+  syncError?: string;
+  syncErrorCode?: OfflineSyncErrorCode;
+  retryCount?: number;
+  lastSyncAttemptAt?: string;
+}
+
+const idbRequest = async <T>(
+  storeName: string,
+  mode: IDBTransactionMode,
+  run: (store: IDBObjectStore) => IDBRequest<T>
+): Promise<T> => {
+  const db = await openDatabase();
+  return new Promise<T>((resolve, reject) => {
+    const tx = db.transaction(storeName, mode);
+    const req = run(tx.objectStore(storeName));
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
+  });
+};
+
+export const getQueuedMutationsForUser = async (
+  userId: string
+): Promise<QueuedWorkLogMutation[]> => {
+  if (!userId) return [];
+  try {
+    const items = await idbRequest<QueuedWorkLogMutation[]>(STORE_MUTATIONS, 'readonly', (s) =>
+      s.index('by_user').getAll(IDBKeyRange.only(String(userId)))
+    );
+    const list = Array.isArray(items) ? items : [];
+    list.sort((a, b) => (a.createdAt || '').localeCompare(b.createdAt || ''));
+    return list;
+  } catch {
+    return [];
+  }
+};
+
+export const enqueueWorkLogMutation = async (
+  userId: string,
+  workLogId: string,
+  op: MutationOp,
+  patch?: WorkLogUpdatePatch
+): Promise<QueuedWorkLogMutation> => {
+  const existing = await idbRequest<QueuedWorkLogMutation | undefined>(
+    STORE_MUTATIONS,
+    'readonly',
+    (s) => s.get(workLogId)
+  );
+  // Already scheduled for deletion: nothing else to do for this log.
+  if (existing?.op === 'delete' && String(existing.userId) === String(userId)) return existing;
+
+  const now = new Date().toISOString();
+  const next: QueuedWorkLogMutation = {
+    workLogId,
+    userId: String(userId),
+    op,
+    patch: op === 'update' ? { ...(existing?.patch || {}), ...(patch || {}) } : undefined,
+    createdAt: existing?.createdAt || now,
+    updatedAt: now,
+    syncState: 'waiting',
+    retryCount: 0,
+  };
+  await idbRequest(STORE_MUTATIONS, 'readwrite', (s) => s.put(next));
+  notifyQueueChanged();
+  requestBackgroundSync();
+  return next;
+};
+
+export const updateQueuedMutationState = async (
+  workLogId: string,
+  userId: string,
+  patch: Partial<
+    Pick<
+      QueuedWorkLogMutation,
+      'syncState' | 'syncError' | 'syncErrorCode' | 'retryCount' | 'lastSyncAttemptAt'
+    >
+  >
+): Promise<void> => {
+  const existing = await idbRequest<QueuedWorkLogMutation | undefined>(
+    STORE_MUTATIONS,
+    'readonly',
+    (s) => s.get(workLogId)
+  );
+  if (!existing || String(existing.userId) !== String(userId)) return;
+  await idbRequest(STORE_MUTATIONS, 'readwrite', (s) => s.put({ ...existing, ...patch }));
+  notifyQueueChanged();
+  if (patch.syncState === 'waiting') requestBackgroundSync();
+};
+
+export const removeQueuedMutation = async (workLogId: string): Promise<void> => {
+  if (!workLogId) return;
+  await idbRequest(STORE_MUTATIONS, 'readwrite', (s) => s.delete(workLogId));
+  notifyQueueChanged();
+};
+
+// ─── Recovery: entries left in "syncing" by a closed tab / crash ──────────────
+
+const staleResetDone = new Set<string>();
+
+/**
+ * Runs once per page load per user. The in-memory sync lock does not survive a reload, so any entry
+ * still marked "syncing" at startup was interrupted. Put it back to "waiting" so it is retried.
+ */
+export const resetInterruptedSyncs = async (userId: string): Promise<void> => {
+  if (!userId || staleResetDone.has(userId)) return;
+  staleResetDone.add(userId);
+  try {
+    const creates = await getQueuedWorkLogsForUser(userId);
+    for (const entry of creates) {
+      if (entry.syncState === 'syncing') {
+        await upsertQueuedWorkLog({ ...entry, syncState: 'waiting' });
+      }
+    }
+    const mutations = await getQueuedMutationsForUser(userId);
+    for (const m of mutations) {
+      if (m.syncState === 'syncing') {
+        await updateQueuedMutationState(m.workLogId, userId, { syncState: 'waiting' });
+      }
+    }
+  } catch {
+    // best effort
+  }
+};
+
+// ─── Background Sync (sync while the app is closed) ───────────────────────────
+
+/**
+ * Snapshot the service worker needs to push the queue when no tab is open.
+ * Only stored for "remember me" sessions (the token is already persisted in localStorage for those),
+ * and removed on sign-out. Session-only and guest sessions are never copied.
+ */
+export interface BackgroundSyncAuth {
+  userId: string;
+  token: string;
+  apiBaseUrl: string;
+  email?: string;
+  role?: string;
+}
+
+export const setBackgroundSyncAuth = async (auth: BackgroundSyncAuth | null): Promise<void> => {
+  try {
+    if (auth) {
+      await idbRequest(STORE_META, 'readwrite', (s) => s.put({ key: 'auth', ...auth }));
+    } else {
+      await idbRequest(STORE_META, 'readwrite', (s) => s.delete('auth'));
+    }
+  } catch {
+    // best effort
+  }
+};
+
+/** Ask the browser to wake the service worker and sync once connectivity returns. */
+export const requestBackgroundSync = (): void => {
+  try {
+    if (typeof navigator === 'undefined' || !('serviceWorker' in navigator)) return;
+    void navigator.serviceWorker.ready
+      .then((reg) => {
+        const syncManager = (reg as ServiceWorkerRegistration & {
+          sync?: { register: (tag: string) => Promise<void> };
+        }).sync;
+        return syncManager?.register(BACKGROUND_SYNC_TAG);
+      })
+      .catch(() => undefined);
+  } catch {
+    // Background Sync is a progressive enhancement (Chromium only)
   }
 };

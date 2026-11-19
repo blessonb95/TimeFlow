@@ -36,11 +36,21 @@ export const workLogsApi = {
       date: string;
       status: string;
       taskStatus: string;
-    }>
-  ) => apiClient.put(`/work-logs/${id}`, data).then((r) => r.data),
+    }>,
+    options?: { isBackgroundSync?: boolean }
+  ) =>
+    apiClient
+      .put(`/work-logs/${id}`, data, {
+        headers: options?.isBackgroundSync ? { 'X-Background-Sync': 'true' } : undefined,
+      })
+      .then((r) => r.data),
 
-  delete: (id: string) =>
-    apiClient.delete(`/work-logs/${id}`).then((r) => r.data),
+  delete: (id: string, options?: { isBackgroundSync?: boolean }) =>
+    apiClient
+      .delete(`/work-logs/${id}`, {
+        headers: options?.isBackgroundSync ? { 'X-Background-Sync': 'true' } : undefined,
+      })
+      .then((r) => r.data),
 
   submitWeek: (weekStart: string) =>
     apiClient.post('/work-logs/submit-week', { weekStart }).then((r) => r.data),

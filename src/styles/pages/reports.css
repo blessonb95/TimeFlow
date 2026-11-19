@@ -441,70 +441,23 @@
   opacity: 0.4;
   cursor: not-allowed;
 }
-.reports__preview-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  background: rgba(0, 0, 0, 0.45);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  backdrop-filter: blur(0.125rem);
-}
 .reports__preview-modal {
-  background: #ffffff;
-  border-radius: 0.75rem;
-  box-shadow: 0 1.25rem 3.75rem rgba(0, 0, 0, 0.18);
-  width: 100%;
-  max-width: 53.75rem;
+  width: 53.75rem;
+  max-width: 92vw;
   max-height: 88vh;
-  display: flex;
-  flex-direction: column;
+  max-height: 88dvh;
   overflow: hidden;
-  animation: previewSlideIn 0.22s ease;
 }
 .reports__preview-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1.125rem 1.5rem;
-  border-bottom: 0.0625rem solid #e5e7eb;
-  flex-shrink: 0;
-}
-.reports__preview-modal-title {
-  font-size: 1rem;
-  font-weight: 700;
-  color: #111827;
+  align-items: flex-start;
 }
 .reports__preview-modal-meta {
   font-size: 0.8125rem;
   color: #4b5563;
-  margin-top: 0.125rem;
+  margin-top: 0.25rem;
 }
-.reports__preview-modal-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-.reports__preview-close-btn {
-  width: 2rem;
-  height: 2rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: 0.0625rem solid #e5e7eb;
-  border-radius: 0.5rem;
-  background: #ffffff;
-  cursor: pointer;
-  color: #4b5563;
-  transition: all 0.12s ease;
-  flex-shrink: 0;
-}
-.reports__preview-close-btn:hover {
-  background: #f3f4f6;
-  color: #111827;
-  border-color: #9ca3af;
+.reports__preview-modal-footer {
+  flex-wrap: wrap;
 }
 .reports__preview-page-tabs {
   display: flex;
@@ -898,12 +851,17 @@
     width: 100%;
   }
   .reports__preview-modal-header {
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 1rem;
+    padding: 1rem 1.25rem;
   }
-  .reports__preview-modal-actions {
-    flex-wrap: wrap;
+  .reports__preview-page-tabs {
+    padding: 0 1.25rem;
+  }
+  .reports__preview-summary-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+  .reports__preview-modal-footer {
+    padding: 0.875rem 1.25rem;
   }
   .reports__flex-wrap-col {
     flex-basis: 100%;
@@ -915,10 +873,12 @@
     min-width: 38rem;
   }
   .reports__preview-modal-body {
-    padding: 1rem;
+    padding: 1rem 1.25rem;
     -webkit-overflow-scrolling: touch;
   }
   .reports__preview-modal {
+    width: calc(100vw - 1.5rem);
+    max-width: 100%;
     max-height: calc(100dvh - 2rem);
   }
   .reports__table-card {

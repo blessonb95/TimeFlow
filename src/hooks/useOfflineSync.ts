@@ -2,15 +2,23 @@ import { useCallback, useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAppStore } from '../store/useAppStore';
 import { workLogsApi } from '../api/workLogs';
+import { API_BASE_URL } from '../api/client';
+import { getStoredAuthToken } from '../utils/authTokenStorage';
 import {
+  getQueuedMutationsForUser,
   getQueuedWorkLogsForUser,
   getSimulatedOffline,
   isNetworkOnline,
+  removeQueuedMutation,
   removeQueuedWorkLog,
+  resetInterruptedSyncs,
+  setBackgroundSyncAuth,
   setSimulatedOffline,
+  updateQueuedMutationState,
   upsertQueuedWorkLog,
   type OfflineSyncErrorCode,
   type QueuedWorkLogEntry,
+  type QueuedWorkLogMutation,
 } from '../utils/offlineQueue';
 
 const activeSyncPromises = new Map<string, Promise<{ synced: number; failed: number }>>();
@@ -52,6 +60,16 @@ function classifySyncError(err: any): {
     };
   }
 
+  if (status === 404) {
+    return {
+      isTransientNetworkError: false,
+      code: 'UNKNOWN',
+      message:
+        serverMsg ||
+        'This entry no longer exists on the server. Discard this change to continue.',
+    };
+  }
+
   if (serverCode === 'PROJECT_UNAVAILABLE' || /project.*(unavailable|deleted|not found)/i.test(serverMsg)) {
     return {
       isTransientNetworkError: false,
@@ -80,23 +98,29 @@ function classifySyncError(err: any): {
 }
 
 export function useOfflineSync() {
-  const { currentUser } = useAppStore();
+  const { currentUser, role } = useAppStore();
   const userId = currentUser?.id || localStorage.getItem('active_user_id') || 'guest-demo-user';
   const qc = useQueryClient();
 
   const [isOnline, setIsOnline] = useState<boolean>(() => isNetworkOnline());
   const [simulatedOffline, setSimulatedOfflineState] = useState<boolean>(() => getSimulatedOffline());
   const [queuedLogs, setQueuedLogs] = useState<QueuedWorkLogEntry[]>([]);
+  const [queuedMutations, setQueuedMutations] = useState<QueuedWorkLogMutation[]>([]);
   const [isSyncing, setIsSyncing] = useState<boolean>(false);
   const [lastSyncedCount, setLastSyncedCount] = useState<number>(0);
 
   const refreshQueue = useCallback(async () => {
     if (!userId) {
       setQueuedLogs([]);
+      setQueuedMutations([]);
       return [];
     }
-    const items = await getQueuedWorkLogsForUser(userId);
+    const [items, mutations] = await Promise.all([
+      getQueuedWorkLogsForUser(userId),
+      getQueuedMutationsForUser(userId),
+    ]);
     setQueuedLogs(items);
+    setQueuedMutations(mutations);
     return items;
   }, [userId]);
 
@@ -112,18 +136,18 @@ export function useOfflineSync() {
       }
 
       const run = (async () => {
-        const allUserEntries = await getQueuedWorkLogsForUser(userId);
-        const candidates = allUserEntries.filter((entry) => {
-          if (options?.targetClientId) {
-            return entry.clientId === options.targetClientId;
-          }
-          if (options?.includeFailed) {
-            return entry.syncState === 'waiting' || entry.syncState === 'failed';
-          }
-          return entry.syncState === 'waiting';
-        });
+        const matches = (state: string, id: string) => {
+          if (options?.targetClientId) return id === options.targetClientId;
+          if (options?.includeFailed) return state === 'waiting' || state === 'failed';
+          return state === 'waiting';
+        };
 
-        if (candidates.length === 0) {
+        const allUserEntries = await getQueuedWorkLogsForUser(userId);
+        const candidates = allUserEntries.filter((entry) => matches(entry.syncState, entry.clientId));
+        const allMutations = await getQueuedMutationsForUser(userId);
+        const mutationCandidates = allMutations.filter((m) => matches(m.syncState, m.workLogId));
+
+        if (candidates.length === 0 && mutationCandidates.length === 0) {
           return { synced: 0, failed: 0 };
         }
 
